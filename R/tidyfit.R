@@ -23,11 +23,12 @@ tidyfit <- function(
   .data,
   formula,
   ...,
-  .cv = c("none", "loo", "vfold"),
+  .cv = c("none", "loo", "vfold", "ts"),
   .cv_args = list(v = 10),
   .hyper_grid = NULL,
   .weights = NULL,
-  .mask = NULL
+  .mask = NULL,
+  .return_slices = FALSE
 ) {
 
   # TODO: check names
@@ -40,7 +41,8 @@ tidyfit <- function(
 
   df <- .data %>%
     do(result = .fit(., formula, model_list, .cv, .cv_args,
-                     .hyper_grid, .weights, gr_vars, .mask)) %>%
+                     .hyper_grid, .weights, gr_vars, .mask,
+                     .return_slices)) %>%
     unnest(result)
 
   df <- df %>%
@@ -55,6 +57,10 @@ tidyfit <- function(
 
   attr(df, "formula") <- formula
   attr(df, "structure") <- list(mask = .mask, col_names = colnames(df))
+
+  if (!is.null(.hyper_grid$family)) {
+    attr(df, "family") <- .hyper_grid$family
+  }
 
   return(df)
 
