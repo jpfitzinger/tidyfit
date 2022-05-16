@@ -9,7 +9,7 @@
 #' @param x input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
 #' @param y response variable.
 #' @param lambda shrinkage parameter or vector of shrinkage parameters.
-#' @param ...  Additional arguments passed to \code{lm}.
+#' @param ...  Additional arguments passed to \code{glmnet::glmnet}.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
 #' @references
@@ -32,10 +32,6 @@
 #'
 #' @importFrom glmnet glmnet
 #' @importFrom stats coef
-
-# x = matrix(rnorm(100 * 20), 100, 20)
-# y = rnorm(100)
-# m.lm(x, y, .ctr = list())
 
 m.adalasso <- function(x, y, lambda = NULL, ...) {
 
