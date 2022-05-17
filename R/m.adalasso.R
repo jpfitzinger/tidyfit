@@ -38,6 +38,11 @@ m.adalasso <- function(x, y, lambda = NULL, ...) {
   args <- list(...)
   args <- args[names(args) %in% names(formals(glmnet::glmnet))]
 
+  if (is.null(lambda)) {
+    lambda.max <- 0.25
+    lambda <- seq(lambda.max, lambda.max * 0.0001, length.out = 100)
+  }
+
   penalty_mod <- do.call(glmnet::glmnet, append(list(x = x, y = y, alpha = 0,
                                                      lambda = 0.01), args))
   penalty_factor <- abs(stats::coef(penalty_mod)[-1])^(-1)

@@ -32,6 +32,11 @@ m.lasso <- function(x, y, lambda = NULL, ...) {
   args <- list(...)
   args <- args[names(args) %in% names(formals(glmnet::glmnet))]
 
+  if (is.null(lambda)) {
+    lambda.max <- 0.25
+    lambda <- seq(lambda.max, lambda.max * 0.0001, length.out = 100)
+  }
+
   m <- do.call(glmnet::glmnet, append(list(x = x, y = y, alpha = 1,
                                            lambda = lambda), args))
 
