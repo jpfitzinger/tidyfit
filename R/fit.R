@@ -1,11 +1,21 @@
 
 
-.fit <- function(.data, formula, model_list, .cv, .cv_args, .hyper_grid, .weights, gr_vars, .mask, .return_slices) {
+.fit <- function(.data, formula, model_list, .cv, .cv_args, .control, .weights, gr_vars, .mask) {
 
   .data <- .data %>%
     select(-!!gr_vars, -!!.mask)
 
   m <- model.frame(formula = formula, data = .data)
+
+  family <- .control$family
+  if (!is.null(family)) {
+    if (!family %in% c("binomial", "gaussian"))
+      stop("'family' must be binomial or gaussian.")
+    if (family == "binomial") f <- binomial()
+    if (family == "gaussian") f <- gaussian()
+    # Needs to be integrated
+    if (family == "poisson") f <- poisson()
+  }
 
   # Prepare CV
   if (.cv == "none")
@@ -13,9 +23,9 @@
   if (.cv == "vfold")
     cv <- do.call(rsample::vfold_cv, append(list(data = m), .cv_args))
   if (.cv == "loo")
-    cv <- cv <- do.call(rsample::loo_cv, append(list(data = m), .cv_args))
+    cv <- do.call(rsample::loo_cv, append(list(data = m), .cv_args))
   if (.cv == "ts")
-    cv <- cv <- do.call(rsample::rolling_origin, append(list(data = m), .cv_args))
+    cv <- do.call(rsample::rolling_origin, append(list(data = m), .cv_args))
 
   # Evaluate methods
   result <-
@@ -23,15 +33,15 @@
 
       if (.cv != "none") {
 
-        result <- cv$splits %>%
-          furrr::future_map(function(split) {
+        result <- cv %>%
+          furrr::future_pmap_dfr(function(splits, id) {
 
-            df_train <- rsample::training(split)
-            df_test <- rsample::testing(split)
+            df_train <- rsample::training(splits)
+            df_test <- rsample::testing(splits)
 
             result <- do.call(model,
                             append(list(x = df_train[,-1], y = df_train[,1]),
-                                   .hyper_grid))
+                                   .control))
             beta <- result %>%
               select(grid_id, beta, variable) %>%
               spread(grid_id, beta)
@@ -40,36 +50,42 @@
             x_test <- x_test[, beta$variable]
             beta <- beta[, -1]
             fit <- data.matrix(x_test) %*% data.matrix(beta)
-            mse <- colMeans((df_test[, 1] - fit)^2)
 
-            return(list(mse = mse, result = result))
+            if (is.null(family)) {
+              # Calculate MSE
+              crit <- colMeans((df_test[, 1] - fit)^2)
+            } else {
+              if (family == "binomial") {
+                fit <- f$linkinv(fit)
+                # Calculate accuracy
+                fit <- (fit > 0.5) * 1
+                crit <- apply(fit, 2, function(x) mean(x == df_test[,1]))
+              } else if (family == "gaussian") {
+                crit <- colMeans((df_test[, 1] - fit)^2)
+              }
+            }
+
+            crit <- tibble(grid_id = names(crit), crit = crit)
+
+            result <- result %>%
+              mutate(slice_id = id) %>%
+              left_join(crit, by = "grid_id")
+
+            return(result)
 
           })
 
-        mse <- result %>% map_dfr(function(res) res$mse)
-        result <- result %>% map_dfr(function(res) res$result)
-        best_grid <- colnames(mse)[which.min(colMeans(mse))]
-
-      } else {
-
-        best_grid <- NULL
-
       }
 
-      if (!.return_slices) {
-        result <- do.call(model,
-                          append(list(x = m[,-1], y = m[,1]),
-                                 .hyper_grid))
-      }
+      result_all <- do.call(model,
+                            append(list(x = m[,-1], y = m[,1]),
+                                   .control)) %>%
+        mutate(slice_id = "FULL")
 
-      if (!is.null(best_grid)) {
-        result <- result %>%
-          filter(as.character(grid_id) == as.character(best_grid))
-      }
+      result <- bind_rows(result, result_all)
 
       result <- result %>%
-        mutate(model = nam) %>%
-        select(-grid_id)
+        mutate(model = nam)
 
       return(result)
 
