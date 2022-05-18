@@ -6,7 +6,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-![tidyfit](./man/figures/logo_nobackground.png "tidyfit")
+<img src="./man/figures/logo_nobackground.png" style="width:30.0%" />
 
 `tidyfit` is an `R`-package that facilitates and automates linear
 regression and classification modeling in a tidy environment. The
