@@ -1,0 +1,166 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+
+library(tidyverse)
+```
+
+# tidyfit
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+`tidyfit` is an `R`-package that facilitates and automates linear regression and classification modeling in a tidy environment. The package includes several methods, such as Lasso, PLS and ElasticNet regressions, and can be augmented with custom methods. `tidyfit` builds on the `tidymodels` suite, but emphasizes automated modeling with a focus on the linear regression and classification coefficients, which are the primary output of `tidyfit`. 
+
+## Installation
+
+You can install the development version of tidyfit from [GitHub](https://github.com/) with:
+
+```{r, eval=F}
+# install.packages("devtools")
+devtools::install_github("jpfitzinger/tidyfit")
+```
+
+## Example
+
+### Fama-French factor and industry data
+
+`tidyfit` includes a data set of financial factor returns freely available [here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html). The data set includes monthly industry returns for 10 industries, as well as monthly factor returns for 5 factors:
+
+```{r example}
+library(tidyfit)
+data <- tidyfit::Factor_Industry_Returns
+```
+
+### Fitting a linear regression
+
+Models are fitted using `tidyfit::tidyfit`. Below a linear regression is fitted using the `tidyfit::m.lm` wrapper. The date columns is masked and the industry column is one-hot encoded:
+
+```{r}
+fit <- data %>% 
+  tidyfit(Return ~ ., lin_reg = m.lm, .mask = "Date")
+fit
+```
+
+Detailed model and hyperparameter information is nested and can be expanded:
+
+```{r}
+fit %>% 
+  unnest(model_info)
+```
+
+Now, instead of fitting a single regression, we need to fit a regression per industry. This is achieved simply by grouping:
+
+```{r}
+fit <- data %>% 
+  group_by(Industry) %>% 
+  tidyfit(Return ~ ., lin_reg = m.lm, .mask = "Date")
+```
+
+Let's plot the factor loadings in a heatmap:
+
+```{r, fig.width=10, fig.height=5, fig.align="center"}
+fit %>% 
+  ggplot(aes(variable, Industry)) +
+  geom_tile(aes(fill = beta)) +
+  scale_fill_gradient2(low = "firebrick", high = "forestgreen")
+```
+
+### Fitting a Lasso regression
+
+Fitting a Lasso regression requires hyperparameter tuning for the penalty `lambda`. This can be done by passing values to `.cv` and `.cv_args`. Cross validation is performed using `rsample`. See `?rsample::vfold_cv`, `?rsample::loo_cv` or `?rsample::rolling_origin` for options that can be passed to `.cv_args`.
+
+```{r, fig.width=10, fig.height=5, fig.align="center"}
+fit <- data %>% 
+  group_by(Industry) %>% 
+  tidyfit(Return ~ ., lasso_reg = m.lasso, .mask = "Date", 
+          .cv = "vfold", .cv_args = list(v = 5))
+
+fit %>% 
+  ggplot(aes(variable, Industry)) +
+  geom_tile(aes(fill = beta)) +
+  scale_fill_gradient2(low = "firebrick", high = "forestgreen")
+```
+
+The results do not appear to be different from a linear regression. To compare methods, simply pass multiple models:
+
+```{r}
+fit <- data %>% 
+  group_by(Industry) %>% 
+  tidyfit(Return ~ ., lasso_reg = m.lasso, lin_reg = m.lm, .mask = "Date", 
+          .cv = "vfold", .cv_args = list(v = 5))
+```
+
+Of course, a v-fold cross validation is not valid for ordered data. Instead simply set a rolling cross validation:
+
+```{r, fig.width=10, fig.height=5, fig.align="center"}
+fit <- data %>% 
+  group_by(Industry) %>% 
+  tidyfit(Return ~ ., lasso_reg = m.lasso, .mask = "Date", 
+          .cv = "ts", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
+
+fit %>% 
+  ggplot(aes(variable, Industry)) +
+  geom_tile(aes(fill = beta)) +
+  scale_fill_gradient2(low = "firebrick", high = "forestgreen")
+```
+
+
+### Predicting with an ElasticNet classifier
+
+Let's predict out-of-sample return probabilities:
+
+```{r}
+data_train <- data %>% 
+  mutate(Return = ifelse(Return > 0, 1, 0)) %>% 
+  filter(Date <= 202112)
+
+data_test <- data %>% 
+  mutate(Return = ifelse(Return > 0, 1, 0)) %>% 
+  filter(Date > 202112)
+```
+
+Classification is possible with `tidyfit` by passing `family = "binomial"` to `.control`:
+
+```{r}
+fit <- data_train %>% 
+  mutate(Return = ifelse(Return > 0, 1, 0)) %>% 
+  group_by(Industry) %>% 
+  tidyfit(Return ~ ., enet_clf = m.enet, .mask = "Date", 
+          .cv = "ts", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE),
+          .control = list(family = "binomial"))
+```
+
+Predictions can be made for all models using `tidypredict`:
+
+```{r}
+pred <- fit %>% 
+  tidypredict(data_test) %>% 
+  mutate(Predicted = ifelse(pred > 0.5, 1, 0)) %>% 
+  rename(Truth = Return)
+
+# Print a confusion matrix
+table(pred$Truth, pred$Predicted)
+```
+
+### Additional functionality
+
+`tidyfit` makes a few things a little easier:
+
+ - Methods returned statistically comparable outputs. For instance, all covariates are standardized and the coefficients are back-transformed to the original scale. This is not done by all underlying packages (e.g. `pls`, which is used for the PCR and PLSR methods).
+ - Hyperparameter grids are set to reasonable starting values. Custom grids can be passed to `.control` (e.g. `.control = list(lambda = c(seq(0, 1, by = 0.1)))`).
+ - Hyperparameter can be tuned across all groups or separately within each group by setting the `.tune_each_group` flag.
+ - Results for the individual slices can be returned using the `.return_slices` flag. This is particularly useful for rolling window estimation, which can be done by returning the results of a rolling cross validation.
+
+
+
