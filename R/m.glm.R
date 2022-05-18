@@ -45,7 +45,7 @@ m.glm <- function(x, y, ...) {
   coefs <- stats::coef(m)
 
   out <- tibble(
-    variable = str_replace_all(names(coefs), "`", ""),
+    variable = c("(Intercept)", colnames(dat)[-1]),
     grid_id = "X",
     beta = coefs,
     `s.e.` = summary(m)$coefficients[, 2],

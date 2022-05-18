@@ -1,5 +1,5 @@
 #' @name m.lm
-#' @title Linear regression for tidyfit
+#' @title Linear regression for \code{tidyfit}
 #' @description Fits a linear regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
 #'
 #' @details
@@ -14,12 +14,11 @@
 #' @examples
 #' x = matrix(rnorm(100 * 20), 100, 20)
 #' y = rnorm(100)
-#' fit = hfr(x, y, kappa = 0.5)
-#' coef(fit)
+#' fit = m.lm(x, y)
 #'
 #' @export
 #'
-#' @seealso \code{tidypredict} method
+#' @seealso \code{m.lasso¸} method
 #'
 #' @importFrom stats lm coef
 
@@ -37,14 +36,14 @@ m.lm <- function(x, y, ...) {
   coefs <- stats::coef(m)
 
   out <- tibble(
-    variable = str_replace_all(names(coefs), "`", ""),
+    variable = c("(Intercept)", colnames(dat)[-1]),
     grid_id = "X",
     beta = coefs,
     `s.e.` = summary(m)$coefficients[, 2],
     `t value` = summary(m)$coefficients[, 3],
     `p value` = summary(m)$coefficients[, 4],
     R.squared = summary(m)$adj.r.squared
-  )
+    )
 
   return(out)
 
