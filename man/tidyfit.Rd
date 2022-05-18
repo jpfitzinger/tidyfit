@@ -2,33 +2,53 @@
 % Please edit documentation in R/tidyfit.R
 \name{tidyfit}
 \alias{tidyfit}
-\title{Linear model estimation on tidy data}
+\title{Linear regression of classification on tidy data}
 \usage{
 tidyfit(
   .data,
   formula,
   ...,
-  .cv = c("none", "loo", "vfold"),
+  .cv = c("none", "loo", "vfold", "ts"),
   .cv_args = list(v = 10),
-  .hyper_grid = NULL,
+  .control = NULL,
   .weights = NULL,
-  .mask = NULL
+  .mask = NULL,
+  .return_slices = FALSE,
+  .tune_each_group = TRUE
 )
 }
 \arguments{
-\item{...}{Additional arguments passed to \code{hclust}.}
+\item{.data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr). The data frame can be grouped.}
 
-\item{x}{Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted..}
+
+\item{...}{name-function pairs of models to be estimated. See 'Details'.}
+
+\item{.cv}{type of 'rsample' cross validation procedure to use to determine optimal hyperparameter values. Default is \code{.cv = "none"}. See 'Details'.}
+
+\item{.cv_args}{additional settings to pass to the 'rsample' cross validation function.}
+
+\item{.control}{named list of arguments passed to model functions. This includes the hyperparameter vectors. Default values will be used when \code{.control=NULL}.}
+
+\item{.weights}{optional name of column containing sample weights.}
+
+\item{.mask}{optional vector of columns names to ignore. Can be useful when using 'y ~ .' formula setup.}
+
+\item{.return_slices}{boolean. Should the output of individual slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.}
 }
 \value{
 A \code{tibble}.
 }
 \description{
 This function is a wrapper to fit many different types of linear
-regression of classification model on a (potentially grouped) `tibble`.
+regression or classification models on a (grouped) \code{tibble}.
 }
 \details{
+Cross validation is performed using the 'rsample' package with possible methods including 'vfold' (aka kfold) cross validation, 'loo' and time series ('ts') cross validation. \code{.cv = "ts"} implements either rolling or expanding window cross validation using 'rsample::rolling_sample'.
 
+Hyperparameter grids passed to \code{.control} are optimized using the MSE for regression problems, and Accuracy for classification problems.
+
+The method function passed to \code{...} must have a specific input and output format. The package includes a number of methods (see \code{m.lm}, \code{m.lasso}, \code{m.boost} for instance), but it is possible to pass custom functions here.
 }
 \examples{
 
