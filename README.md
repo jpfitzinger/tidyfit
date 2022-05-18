@@ -6,6 +6,8 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
+![tidyfit](./man/figures/logo_nobackground.png "tidyfit")
+
 `tidyfit` is an `R`-package that facilitates and automates linear
 regression and classification modeling in a tidy environment. The
 package includes several methods, such as Lasso, PLS and ElasticNet
