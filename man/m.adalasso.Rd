@@ -42,7 +42,7 @@ Regularization Paths for Generalized Linear Models via Coordinate Descent.
 Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
 }
 \seealso{
-\code{tidypredict} method
+\code{m.lasso}, \code{m.enet} and \code{m.ridge} methods
 }
 \author{
 Johann Pfitzinger

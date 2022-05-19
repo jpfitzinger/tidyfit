@@ -30,6 +30,7 @@ The function can be used for classification or regression, covariates are standa
 x = matrix(rnorm(100 * 20), 100, 20)
 y = rbinom(100, 1, 0.5)
 fit = m.boost(x, y, mstop = 100, family = "binomial")
+fit
 
 }
 \references{

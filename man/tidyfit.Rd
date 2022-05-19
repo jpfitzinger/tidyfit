@@ -3,24 +3,10 @@
 \name{tidyfit}
 \alias{tidyfit}
 \title{Linear regression of classification on tidy data}
-\usage{
-tidyfit(
-  .data,
-  formula,
-  ...,
-  .cv = c("none", "loo", "vfold", "ts"),
-  .cv_args = list(v = 10),
-  .control = NULL,
-  .weights = NULL,
-  .mask = NULL,
-  .return_slices = FALSE,
-  .tune_each_group = TRUE
-)
-}
 \arguments{
 \item{.data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr). The data frame can be grouped.}
 
-\item{formula}{an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted..}
+\item{formula}{an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted.}
 
 \item{...}{name-function pairs of models to be estimated. See 'Details'.}
 
@@ -35,6 +21,8 @@ tidyfit(
 \item{.mask}{optional vector of columns names to ignore. Can be useful when using 'y ~ .' formula setup.}
 
 \item{.return_slices}{boolean. Should the output of individual slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.}
+
+\item{.tune_each_group}{boolean. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.}
 }
 \value{
 A \code{tibble}.
@@ -51,6 +39,9 @@ Hyperparameter grids passed to \code{.control} are optimized using the MSE for r
 The method function passed to \code{...} must have a specific input and output format. The package includes a number of methods (see \code{m.lm}, \code{m.lasso}, \code{m.boost} for instance), but it is possible to pass custom functions here.
 }
 \examples{
+data <- tidyfit::Factor_Industry_Returns
+fit <- tidyfit(data, Return ~ ., lin_reg = m.lm, .mask = "Date")
+fit
 
 }
 \references{
