@@ -15,16 +15,14 @@
 #' x = matrix(rnorm(100 * 20), 100, 20)
 #' y = rnorm(100)
 #' fit = m.lm(x, y)
+#' fit
 #'
 #' @export
 #'
 #' @seealso \code{m.lasso¸} method
 #'
 #' @importFrom stats lm coef
-
-# x = matrix(rnorm(100 * 20), 100, 20)
-# y = rnorm(100)
-# m.lm(x, y, .ctr = list())
+#' @importFrom dplyr tibble
 
 m.lm <- function(x, y, ...) {
 
@@ -35,7 +33,7 @@ m.lm <- function(x, y, ...) {
   m <- do.call(stats::lm, append(list(formula = y~., data = dat), args))
   coefs <- stats::coef(m)
 
-  out <- tibble(
+  out <- dplyr::tibble(
     variable = c("(Intercept)", colnames(dat)[-1]),
     grid_id = "X",
     beta = coefs,

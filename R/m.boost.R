@@ -20,6 +20,7 @@
 #' x = matrix(rnorm(100 * 20), 100, 20)
 #' y = rbinom(100, 1, 0.5)
 #' fit = m.boost(x, y, mstop = 100, family = "binomial")
+#' fit
 #'
 #' @export
 #'
@@ -27,6 +28,10 @@
 #'
 #' @importFrom stats coef
 #' @importFrom mboost glmboost Gaussian Binomial
+#' @importFrom purrr map_dbl
+#' @importFrom dplyr mutate as_tibble
+#' @importFrom tidyr gather
+#' @importFrom rlang .data
 
 m.boost <- function(x, y, mstop = NULL, ...) {
 
@@ -53,7 +58,7 @@ m.boost <- function(x, y, mstop = NULL, ...) {
     m <- do.call(mboost::glmboost, append(list(x = data.matrix(x), y = y,
                                                control = ctr, center = T,
                                                family = family), args))
-    beta <- map_dbl(colnames(x), function(x) stats::coef(m, which = x, off2int = F)[x])
+    beta <- purrr::map_dbl(colnames(x), function(x) stats::coef(m, which = x, off2int = F)[x])
     beta[1] <- beta[1] + m$offset
     names(beta) <- colnames(x)
 
@@ -65,11 +70,11 @@ m.boost <- function(x, y, mstop = NULL, ...) {
 
   out <- coefs %>%
     data.matrix %>%
-    as_tibble %>%
-    mutate(variable = var_names) %>%
-    gather("grid_id", "beta", -variable) %>%
-    mutate(variable = ifelse(variable == "intercept", "(Intercept)", variable)) %>%
-    mutate(mstop = mstop[match(grid_id, colnames(coefs))])
+    dplyr::as_tibble( ) %>%
+    dplyr::mutate(variable = var_names) %>%
+    tidyr::gather("grid_id", "beta", -.data$variable) %>%
+    dplyr::mutate(variable = ifelse(.data$variable == "intercept", "(Intercept)", .data$variable)) %>%
+    dplyr::mutate(mstop = mstop[match(.data$grid_id, colnames(coefs))])
 
   return(out)
 

@@ -1,6 +1,6 @@
-#' @name m.lm
-#' @title Linear regression for tidyfit
-#' @description Fits a linear regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
+#' @name m.glm
+#' @title Logistic regression for tidyfit
+#' @description Fits a logistic regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
 #'
 #' @details
 #'
@@ -13,19 +13,16 @@
 #'
 #' @examples
 #' x = matrix(rnorm(100 * 20), 100, 20)
-#' y = rnorm(100)
-#' fit = hfr(x, y, kappa = 0.5)
-#' coef(fit)
+#' y = rbinom(100, 1, 0.5)
+#' fit = m.glm(x, y)
+#' fit
 #'
 #' @export
 #'
-#' @seealso \code{tidypredict} method
+#' @seealso \code{m.lm} method
 #'
-#' @importFrom stats lm coef
-
-# x = matrix(rnorm(100 * 20), 100, 20)
-# y = rnorm(100)
-# m.lm(x, y, .ctr = list())
+#' @importFrom stats glm coef binomial gaussian poisson
+#' @importFrom dplyr tibble
 
 m.glm <- function(x, y, ...) {
 
@@ -44,7 +41,7 @@ m.glm <- function(x, y, ...) {
   m <- do.call(stats::glm, append(list(formula = y~., data = dat), args))
   coefs <- stats::coef(m)
 
-  out <- tibble(
+  out <- dplyr::tibble(
     variable = c("(Intercept)", colnames(dat)[-1]),
     grid_id = "X",
     beta = coefs,

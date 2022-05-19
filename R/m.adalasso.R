@@ -28,10 +28,13 @@
 #'
 #' @export
 #'
-#' @seealso \code{tidypredict} method
+#' @seealso \code{m.lasso}, \code{m.enet} and \code{m.ridge} methods
 #'
 #' @importFrom glmnet glmnet
+#' @importFrom dplyr mutate as_tibble
+#' @importFrom tidyr gather
 #' @importFrom stats coef
+#' @importFrom rlang .data
 
 m.adalasso <- function(x, y, lambda = NULL, ...) {
 
@@ -59,10 +62,10 @@ m.adalasso <- function(x, y, lambda = NULL, ...) {
 
   out <- coefs %>%
     data.matrix %>%
-    as_tibble %>%
-    mutate(variable = var_names) %>%
-    gather("grid_id", "beta", -variable) %>%
-    mutate(lambda = lambda[match(grid_id, colnames(coefs))])
+    dplyr::as_tibble() %>%
+    dplyr::mutate(variable = var_names) %>%
+    tidyr::gather("grid_id", "beta", -.data$variable) %>%
+    dplyr::mutate(lambda = lambda[match(.data$grid_id, colnames(coefs))])
 
   return(out)
 

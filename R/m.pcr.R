@@ -1,11 +1,12 @@
-#' @name m.lm
-#' @title Linear regression for tidyfit
-#' @description Fits a linear regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
+#' @name m.pcr
+#' @title Principal Components Regression for tidyfit
+#' @description Fits a principal components regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
 #'
-#' @details
+#' @details The principal components regression is fitted using \code{pls} package. Covariates are standardized, with coefficients back-transformed to the original scale.
 #'
 #' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
 #' @param y Response variable.
+#' @param ncomp number of components or sequence of components.
 #' @param ...  Additional arguments passed to \code{lm}.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
@@ -14,22 +15,26 @@
 #' @examples
 #' x = matrix(rnorm(100 * 20), 100, 20)
 #' y = rnorm(100)
-#' fit = hfr(x, y, kappa = 0.5)
-#' coef(fit)
+#' fit = m.pcr(x, y, ncomp = 4)
+#' fit
 #'
 #' @export
 #'
-#' @seealso \code{tidypredict} method
+#' @seealso \code{m.plsr} method
 #'
 #' @importFrom pls pcr
-
-# x = matrix(rnorm(100 * 20), 100, 20)
-# y = rnorm(100)
-# m.lm(x, y, .ctr = list())
+#' @importFrom stats coef sd
+#' @importFrom dplyr as_tibble mutate
+#' @importFrom tidyr gather
+#' @importFrom rlang .data
 
 m.pcr <- function(x, y, ncomp = NULL, ...) {
 
   args <- list(...)
+  if (!is.null(args$family)) {
+    if (args$family == "binomial")
+      stop("pcr cannot be used for classification")
+  }
   args <- args[names(args) %in% names(formals(pls::pcr))]
 
   standard_mean <- apply(x, 2, mean)
@@ -44,7 +49,7 @@ m.pcr <- function(x, y, ncomp = NULL, ...) {
 
   coefs <- sapply(ncomps, function(ncomp) {
     m <- do.call(pls::pcr, append(list(formula = y~xs, scale=F, center=T, ncomp=ncomp), args))
-    beta <- drop(coef(m, intercept = T))
+    beta <- drop(stats::coef(m, intercept = T))
     beta[-1] <- beta[-1] / standard_sd
     beta[1] <- beta[1] - crossprod(beta[-1], standard_mean)
     return(beta)
@@ -55,10 +60,10 @@ m.pcr <- function(x, y, ncomp = NULL, ...) {
 
   out <- coefs %>%
     data.matrix %>%
-    as_tibble %>%
-    mutate(variable = var_names) %>%
-    gather("grid_id", "beta", -variable) %>%
-    mutate(ncomp = ncomps[match(grid_id, colnames(coefs))])
+    dplyr::as_tibble() %>%
+    dplyr::mutate(variable = var_names) %>%
+    tidyr::gather("grid_id", "beta", -.data$variable) %>%
+    dplyr::mutate(ncomp = ncomps[match(.data$grid_id, colnames(coefs))])
 
   return(out)
 
