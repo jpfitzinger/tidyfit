@@ -1,4 +1,9 @@
 
+#' @importFrom dplyr select filter right_join ungroup distinct any_of all_of
+#' @importFrom tidyr drop_na
+#' @importFrom purrr map_dfr
+#' @importFrom stats binomial gaussian poisson model.frame model.matrix model.response
+#' @importFrom rlang .data
 
 .predict <- function(.data, fit, gr_vars) {
 
@@ -6,43 +11,43 @@
 
   # Evaluate methods
   result <-
-    map_dfr(model_list, function(mod) {
+    purrr::map_dfr(model_list, function(mod) {
 
       mask <- attr(fit, "structure")$mask
       family <- attr(fit, "family")
       if (!is.null(family)) {
-        if (family == "binomial") f <- binomial()
-        if (family == "gaussian") f <- gaussian()
-        if (family == "poisson") f <- poisson()
+        if (family == "binomial") f <- stats::binomial()
+        if (family == "gaussian") f <- stats::gaussian()
+        if (family == "poisson") f <- stats::poisson()
       }
 
       .data_core <- .data %>%
-        select(-!!mask, -!!gr_vars)
+        dplyr::select(-!!mask, -!!gr_vars)
 
       fit_core <- fit %>%
-        filter(model == mod) %>%
-        right_join(.data %>% select(!!gr_vars), by = c(gr_vars)) %>%
-        ungroup
+        dplyr::filter(.data$model == mod) %>%
+        dplyr::right_join(.data %>% select(!!gr_vars), by = c(gr_vars)) %>%
+        dplyr::ungroup()
 
       formula <- attr(fit, "formula")
-      m <- model.frame(formula, data = .data_core)
-      x <- model.matrix(formula, data = .data_core)
-      y <- model.response(m)
+      m <- stats::model.frame(formula, data = .data_core)
+      x <- stats::model.matrix(formula, data = .data_core)
+      y <- stats::model.response(m)
 
       beta <- fit_core %>%
-        select(variable, beta) %>%
-        distinct %>%
-        drop_na
+        dplyr::select(.data$variable, .data$beta) %>%
+        dplyr::distinct() %>%
+        tidyr::drop_na()
 
       x <- x[, beta$variable]
-      beta <- beta %>% select(-variable)
+      beta <- beta %>% dplyr::select(-.data$variable)
       fit <- data.matrix(x) %*% data.matrix(beta)
       if (!is.null(family)) fit <- f$linkinv(fit)
 
       result <- .data %>%
-        mutate(pred = as.numeric(fit)) %>%
-        select(-any_of(colnames(m[,-1])), -all_of(gr_vars)) %>%
-        mutate(model = mod)
+        dplyr::mutate(pred = as.numeric(fit)) %>%
+        dplyr::select(-dplyr::any_of(colnames(m[,-1])), -dplyr::all_of(gr_vars)) %>%
+        dplyr::mutate(model = mod)
 
       return(result)
 

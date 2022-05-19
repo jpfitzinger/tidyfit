@@ -10,7 +10,7 @@
 #' The method function passed to \code{...} must have a specific input and output format. The package includes a number of methods (see \code{m.lm}, \code{m.lasso}, \code{m.boost} for instance), but it is possible to pass custom functions here.
 #'
 #' @param .data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr). The data frame can be grouped.
-#' @param formula an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted..
+#' @param formula an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted.
 #' @param ...  name-function pairs of models to be estimated. See 'Details'.
 #' @param .cv type of 'rsample' cross validation procedure to use to determine optimal hyperparameter values. Default is \code{.cv = "none"}. See 'Details'.
 #' @param .cv_args additional settings to pass to the 'rsample' cross validation function.
@@ -18,17 +18,28 @@
 #' @param .weights optional name of column containing sample weights.
 #' @param .mask optional vector of columns names to ignore. Can be useful when using 'y ~ .' formula setup.
 #' @param .return_slices boolean. Should the output of individual slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.
+#' @param .tune_each_group boolean. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.
 #' @return A \code{tibble}.
 #' @author Johann Pfitzinger
 #' @references
 #'
 #' @examples
+#' data <- tidyfit::Factor_Industry_Returns
+#' fit <- tidyfit(data, Return ~ ., lin_reg = m.lm, .mask = "Date")
+#' fit
 #'
 #' @export
 #'
 #' @seealso \code{tidypredict} method
 #'
-#' @importFrom magrittr `%>%`
+#' @importFrom magrittr %>%
+#' @importFrom tidyr unnest nest any_of
+#' @importFrom purrr map_dfr
+#' @importFrom dplyr group_vars group_by across all_of filter mutate ungroup select distinct left_join do select_if
+#' @importFrom rlang .data
+#' @importFrom utils globalVariables
+
+utils::globalVariables(c("."))
 
 tidyfit <- function(
   .data,
@@ -55,47 +66,59 @@ tidyfit <- function(
   if (class(.control) != "list") stop("'.control' must be a 'list'.")
   if (class(.cv_args) != "list") stop("'.cv_args' must be a 'list'.")
 
-  gr_vars <- group_vars(.data)
+  gr_vars <- dplyr::group_vars(.data)
 
   df <- .data %>%
     do(result = .fit(., formula, model_list, .cv, .cv_args,
                      .control, .weights, gr_vars, .mask)) %>%
-    unnest(result)
+    tidyr::unnest(.data$result)
 
-  # Select optimal hyperparameter setting
-  if (.tune_each_group) {
+  if (.cv == "none") {
     df <- df %>%
-      group_by(across(all_of(gr_vars)))
-  }
+      dplyr::select(-.data$grid_id)
 
-  df_slices <- df %>%
-    filter(slice_id != "FULL") %>%
-    group_by(model, grid_id, .add = T) %>%
-    mutate(crit = mean(crit)) %>%
-    ungroup(grid_id) %>%
-    filter(crit == min(crit)) %>%
-    select(-crit)
-
-  if (.return_slices) {
-    df <- df_slices %>%
-      select(-grid_id)
+    if (!.return_slices) {
+      df <- df %>%
+        dplyr::select(-.data$slice_id)
+    }
   } else {
-    df <- df_slices %>%
-      ungroup %>%
-      select(index, variable, grid_id, model) %>%
-      left_join(df %>% ungroup %>% filter(slice_id == "FULL"), by = c("index", "variable", "grid_id", "model")) %>%
-      select(-grid_id, -crit, -slice_id)
+    # Select optimal hyperparameter setting
+    if (.tune_each_group) {
+      df <- df %>%
+        dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))
+    }
+
+    df_slices <- df %>%
+      dplyr::filter(.data$slice_id != "FULL") %>%
+      dplyr::group_by(.data$model, .data$grid_id, .add = T) %>%
+      dplyr::mutate(crit = mean(.data$crit)) %>%
+      dplyr::ungroup(.data$grid_id) %>%
+      dplyr::filter(.data$crit == min(.data$crit)) %>%
+      dplyr::filter(.data$grid_id == unique(.data$grid_id)[1]) %>%
+      dplyr::select(-.data$crit)
+
+    if (.return_slices) {
+      df <- df_slices %>%
+        dplyr::select(-.data$grid_id)
+    } else {
+      df <- df_slices %>%
+        dplyr::ungroup() %>%
+        dplyr::select(!!gr_vars, .data$variable, .data$grid_id, .data$model) %>%
+        dplyr::left_join(df %>% dplyr::ungroup() %>% dplyr::filter(.data$slice_id == "FULL"), by = c(gr_vars, "variable", "grid_id", "model")) %>%
+        dplyr::select(-.data$grid_id, -.data$crit, -.data$slice_id)
+    }
   }
 
   df <- df %>%
-    group_by(model) %>%
-    do(temp = select(., where(~!all(is.na(.)))))
+    dplyr::distinct() %>%
+    dplyr::group_by(.data$model) %>%
+    dplyr::do(temp = dplyr::select_if(., ~!all(is.na(.))))
 
   df <- df$temp %>%
-    map_dfr(~nest(., model_info = -any_of(c(gr_vars, "variable", "beta", "model", "slice_id"))))
+    purrr::map_dfr(~tidyr::nest(., model_info = -tidyr::any_of(c(gr_vars, "variable", "beta", "model", "slice_id"))))
 
   df <- df %>%
-    group_by(across(all_of(gr_vars)))
+    dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))
 
   attr(df, "formula") <- formula
   attr(df, "structure") <- list(mask = .mask, col_names = colnames(df))
