@@ -2,7 +2,7 @@
 % Please edit documentation in R/m.lasso.R
 \name{m.lasso}
 \alias{m.lasso}
-\title{Linear regression for tidyfit}
+\title{Lasso regression and classification for \code{tidyfit}}
 \usage{
 m.lasso(x, y, lambda = NULL, ...)
 }

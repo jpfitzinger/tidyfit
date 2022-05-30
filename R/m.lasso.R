@@ -1,5 +1,5 @@
 #' @name m.lasso
-#' @title Linear regression for tidyfit
+#' @title Lasso regression and classification for \code{tidyfit}
 #' @description Fits a linear regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
 #'
 #' @details
