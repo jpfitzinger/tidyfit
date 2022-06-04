@@ -7,7 +7,7 @@
 #' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
 #' @param y Response variable.
 #' @param kappa shrinkage penalty or sequence of shrinkage penalties.
-#' @param ...  Additional arguments passed to \code{lm}.
+#' @param ...  Additional arguments passed to \code{hfr::cv.hfr}.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
 #' @references

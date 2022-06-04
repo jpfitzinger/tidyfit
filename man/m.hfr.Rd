@@ -13,7 +13,7 @@ m.hfr(x, y, kappa = NULL, ...)
 
 \item{kappa}{shrinkage penalty or sequence of shrinkage penalties.}
 
-\item{...}{Additional arguments passed to \code{lm}.}
+\item{...}{Additional arguments passed to \code{hfr::cv.hfr}.}
 }
 \value{
 A 'tibble'.
