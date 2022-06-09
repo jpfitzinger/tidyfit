@@ -69,9 +69,9 @@
             } else {
               if (family == "binomial") {
                 fit <- f$linkinv(fit)
-                # Calculate accuracy
+                # Calculate (inverse) accuracy
                 fit <- (fit > 0.5) * 1
-                crit <- apply(fit, 2, function(x) mean(x == df_test_y))
+                crit <- apply(fit, 2, function(x) mean(x != df_test_y))
               } else if (family == "gaussian") {
                 crit <- colMeans((df_test_y - fit)^2)
               }

@@ -55,6 +55,8 @@ tidyfit <- function(
 ) {
 
   model_list <- list(...)
+  if (length(model_list)==0)
+    stop("provide at least one method.")
   if (any(names(model_list)=="")) {
     warning("models should be name-function pairs. Names auto-assigned.")
     names(model_list)[names(model_list)==""] <- paste("MODEL", 1:sum(names(model_list)==""), sep = "_")
