@@ -1,7 +1,7 @@
 #' @importFrom purrr map2_dfr
 #' @importFrom stats model.frame model.matrix model.response binomial gaussian poisson
 #' @importFrom rsample vfold_cv loo_cv rolling_origin
-#' @importFrom furrr future_pmap_dfr
+#' @importFrom furrr future_pmap_dfr furrr_options
 #' @importFrom dplyr select tibble mutate left_join bind_rows
 #' @importFrom tidyr spread
 #' @importFrom rlang .data
@@ -85,7 +85,8 @@
 
             return(result)
 
-          })
+          },
+          .options = furrr::furrr_options(seed = TRUE))
 
       } else {
         result <- NULL
