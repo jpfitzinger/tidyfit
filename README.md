@@ -206,13 +206,28 @@ pred <- fit %>%
 table(pred$Truth, pred$Predicted)
 #>    
 #>      0  1
-#>   0  5 13
-#>   1  0 12
+#>   0 16  2
+#>   1  3  9
+```
+
+### Parallel computation
+
+`tidyfit` parallelizes cross-validation computations using the `future`
+package in conjunction with `furrr`. Parallel computation can therefore
+be activated by setting an appropriate plan:
+
+``` r
+library(future)
+plan(multisession(workers = 4))
+fit <- data %>% 
+  group_by(Industry) %>% 
+  tidyfit(Return ~ ., lasso_reg = m.lasso, .mask = "Date", 
+          .cv = "vfold", .cv_args = list(v = 5))
 ```
 
 ### Additional functionality
 
-`tidyfit` makes a few things a little easier:
+`tidyfit` makes a few things easier:
 
 -   Methods returned statistically comparable outputs. For instance, all
     covariates are standardized and the coefficients are
