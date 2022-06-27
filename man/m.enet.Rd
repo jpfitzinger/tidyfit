@@ -15,7 +15,7 @@ m.enet(x, y, lambda = NULL, alpha = NULL, ...)
 
 \item{alpha}{The elasticnet mixing parameter. \code{alpha=1} is the lasso penalty, and \code{alpha=0} the ridge penalty.}
 
-\item{...}{Additional arguments passed to \code{lm}.}
+\item{...}{Additional arguments passed to \code{glmnet}.}
 }
 \value{
 A 'tibble'.

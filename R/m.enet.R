@@ -8,7 +8,7 @@
 #' @param y Response variable.
 #' @param lambda shrinkage parameter or vector of shrinkage parameters.
 #' @param alpha The elasticnet mixing parameter. \code{alpha=1} is the lasso penalty, and \code{alpha=0} the ridge penalty.
-#' @param ...  Additional arguments passed to \code{lm}.
+#' @param ...  Additional arguments passed to \code{glmnet}.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
 #' @references
