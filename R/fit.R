@@ -69,9 +69,8 @@
             } else {
               if (family == "binomial") {
                 fit <- f$linkinv(fit)
-                # Calculate (inverse) accuracy
-                fit <- (fit > 0.5) * 1
-                crit <- apply(fit, 2, function(x) mean(x != df_test_y))
+                # Calculate cross-entropy loss
+                crit <- apply(fit, 2, function(x) -mean(df_test_y * log(x) + (1 - df_test_y) * log(1 - x)))
               } else if (family == "gaussian") {
                 crit <- colMeans((df_test_y - fit)^2)
               }
