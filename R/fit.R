@@ -6,7 +6,17 @@
 #' @importFrom tidyr spread
 #' @importFrom rlang .data
 
-.fit <- function(.data, formula, model_list, .cv, .cv_args, .control, .weights, gr_vars, .mask) {
+.fit <- function(
+    .data,
+    formula,
+    model_list,
+    .cv,
+    .cv_args,
+    .control,
+    .weights,
+    gr_vars,
+    .mask
+    ) {
 
   .data <- .data %>%
     dplyr::select(-!!gr_vars, -!!.mask)
