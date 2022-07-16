@@ -1,14 +1,18 @@
-#' @name m.adalasso
-#' @title Adaptive Lasso for tidyfit
-#' @description Fits an adaptive Lasso regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
+#' @name mod_adalasso
+#' @title Adaptive Lasso regression or classification for \code{tidyfit}
+#' @description Fits an adaptive Lasso regression or classification and returns the results as a tibble. The function can be used with \code{regress}.
 #'
 #' @details The adaptive Lasso is a weighted implementation of the Lasso algorithm, with covariate-specific weights obtained using an initial regression fit (in this case, a ridge regression with \code{lambda = 0.01}). The adaptive Lasso is computed using the 'glmnet' package.
 #'
-#' The function can be used for classification or regression, covariates are standardized and an intercept is always included.
+#' The function can be used for classification or regression, covariates are standardized and an intercept is always included. For classification pass \code{family = "binomial"} to \code{...}.
+#'
+#' If no hyperparameter grid is passed (\code{lambda = NULL}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100.
+#'
+#' When called without \code{x} and \code{y} arguments, the function returns a partialised version of the function that can be called with data to fit the model.
 #'
 #' @param x input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
 #' @param y response variable.
-#' @param lambda shrinkage parameter or vector of shrinkage parameters.
+#' @param lambda shrinkage parameter or vector of shrinkage parameters. See Details.
 #' @param ...  Additional arguments passed to \code{glmnet::glmnet}.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
@@ -22,9 +26,10 @@
 #' Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
 #'
 #' @examples
-#' x = matrix(rnorm(100 * 20), 100, 20)
-#' y = rnorm(100)
-#' fit = m.adalasso(x, y, lambda = 0.1)
+#' x <- matrix(rnorm(100 * 20), 100, 20)
+#' y <- rnorm(100)
+#' fit <- mod_adalasso(x, y, lambda = 0.1)
+#' fit
 #'
 #' @export
 #'
@@ -35,15 +40,31 @@
 #' @importFrom tidyr gather
 #' @importFrom stats coef
 #' @importFrom rlang .data
+#' @importFrom purrr partial
+#' @importFrom dials grid_regular penalty
 
-m.adalasso <- function(x, y, lambda = NULL, ...) {
+mod_adalasso <- function(
+    x = NULL,
+    y = NULL,
+    lambda = NULL,
+    ...
+    ) {
+
+  # Return a partial if no data is provided
+  if (is.null(x) & is.null(y)) {
+
+    args <- c(as.list(environment()), list(...))
+    args <- args[!names(args) %in% c("x", "y")]
+    args <- append(args, list(.f = tidyfit::mod_adalasso))
+    return(do.call(purrr::partial, args))
+
+  }
 
   args <- list(...)
   args <- args[names(args) %in% names(formals(glmnet::glmnet))]
 
   if (is.null(lambda)) {
-    lambda.max <- 0.25
-    lambda <- seq(lambda.max, lambda.max * 0.0001, length.out = 100)
+    lambda <- dials::grid_regular(dials::penalty(), levels = 100)$penalty
   }
 
   penalty_mod <- do.call(glmnet::glmnet, append(list(x = x, y = y, alpha = 0,
