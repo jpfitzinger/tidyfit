@@ -1,9 +1,9 @@
-#' @name tidyfit
+#' @name regress
 #' @title Linear regression of classification on tidy data
 #' @description This function is a wrapper to fit many different types of linear
 #' regression or classification models on a (grouped) \code{tibble}.
 #'
-#' @details Cross validation is performed using the 'rsample' package with possible methods including 'vfold' (aka kfold) cross validation, 'loo' and time series ('ts') cross validation. \code{.cv = "ts"} implements either rolling or expanding window cross validation using 'rsample::rolling_sample'.
+#' @details Cross validation is performed using the 'rsample' package with possible methods including 'initial_split' (simple train-test split), 'initial_time_split' (train-test split with retained order), 'vfold' (aka kfold) cross validation, 'loo' and time series ('rolling_origin') cross validation. \code{.cv = "rolling_origin"} implements either rolling or expanding window cross validation using 'rsample::rolling_origin'.
 #'
 #' Hyperparameter grids passed to \code{.control} are optimized using the MSE for regression problems, and Accuracy for classification problems.
 #'
@@ -25,8 +25,11 @@
 #'
 #' @examples
 #' data <- tidyfit::Factor_Industry_Returns
-#' fit <- tidyfit(data, Return ~ ., lin_reg = m.lm, .mask = "Date")
+#' fit <- regress(data, Return ~ ., lin_reg = mod_lm, .mask = "Date")
 #' fit
+#'
+#' # View additional model information
+#' tidyr::unnest(fit, model_info)
 #'
 #' @export
 #'
@@ -41,11 +44,11 @@
 
 utils::globalVariables(c("."))
 
-tidyfit <- function(
+regress <- function(
   .data,
   formula,
   ...,
-  .cv = c("none", "loo", "vfold", "ts"),
+  .cv = c("none", "initial_split", "initial_time_split", "loo", "vfold", "rolling_origin"),
   .cv_args = list(v = 10),
   .control = NULL,
   .weights = NULL,
@@ -123,7 +126,7 @@ tidyfit <- function(
     dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))
 
   attr(df, "formula") <- formula
-  attr(df, "structure") <- list(mask = .mask, col_names = colnames(df))
+  attr(df, "structure") <- list(mask = .mask, weights = .weights, col_names = colnames(df))
 
   if (!is.null(.control$family)) {
     attr(df, "family") <- .control$family
