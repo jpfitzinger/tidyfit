@@ -19,10 +19,10 @@ mod_lasso(x = NULL, y = NULL, lambda = NULL, ...)
 A 'tibble'.
 }
 \description{
-Fits a linear regression or classification and returns the results as a tibble. The function can be used with \code{tidyfit}.
+Fits a linear regression or classification with L1 penalty and returns the results as a tibble. The function can be used with \code{regress}.
 }
 \details{
-The Lasso regression is estimated using \code{glmnet::glmnet} with \code{alpha = 1}.
+The Lasso regression is estimated using \code{glmnet::glmnet} with \code{alpha = 1}. For classification pass \code{family = "binomial"} to \code{...}.
 
 If no hyperparameter grid is passed (\code{lambda = NULL}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100.
 

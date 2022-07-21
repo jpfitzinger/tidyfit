@@ -19,7 +19,7 @@ m.hfr(x, y, kappa = NULL, ...)
 A 'tibble'.
 }
 \description{
-Fits a hierarchical feature regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
+Fits a hierarchical feature regression and returns the results as a tibble. The function can be used with \code{regress}.
 }
 \details{
 

@@ -24,7 +24,7 @@ mod_lm(
 A 'tibble'.
 }
 \description{
-Fits a linear regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
+Fits a linear regression and returns the results as a tibble. The function can be used with \code{regress}.
 }
 \details{
 When called without \code{x} and \code{y} arguments, the function returns a partialised version of the function that can be called with data to fit the model.

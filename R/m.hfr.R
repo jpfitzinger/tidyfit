@@ -1,6 +1,6 @@
 #' @name m.hfr
 #' @title Hierarchical feature regression for tidyfit
-#' @description Fits a hierarchical feature regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
+#' @description Fits a hierarchical feature regression and returns the results as a tibble. The function can be used with \code{regress}.
 #'
 #' @details
 #'

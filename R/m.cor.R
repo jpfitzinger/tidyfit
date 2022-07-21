@@ -1,6 +1,6 @@
 #' @name m.cor
 #' @title Pearson correlation coefficients for tidyfit
-#' @description Calculates Pearson correlation coefficients and returns the results as a tibble. The function can be used with \code{tidyfit}.
+#' @description Calculates Pearson correlation coefficients and returns the results as a tibble. The function can be used with \code{regress}.
 #'
 #' @details
 #'

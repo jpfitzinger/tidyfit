@@ -1,6 +1,6 @@
 #' @name mod_lm
 #' @title Linear regression for \code{tidyfit}
-#' @description Fits a linear regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
+#' @description Fits a linear regression and returns the results as a tibble. The function can be used with \code{regress}.
 #'
 #' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
 #' @param y Response variable.

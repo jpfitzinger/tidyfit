@@ -19,7 +19,7 @@ m.boost(x, y, mstop = NULL, ...)
 A 'tibble'.
 }
 \description{
-Fits a gradient boosting regression and returns the results as a tibble. The function can be used with \code{tidyfit}.
+Fits a gradient boosting regression and returns the results as a tibble. The function can be used with \code{regress}.
 }
 \details{
 The gradient boosting regression is performed using 'mboost::glmboost'.

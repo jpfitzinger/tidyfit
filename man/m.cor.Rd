@@ -17,7 +17,7 @@ m.cor(x, y, ...)
 A 'tibble'.
 }
 \description{
-Calculates Pearson correlation coefficients and returns the results as a tibble. The function can be used with \code{tidyfit}.
+Calculates Pearson correlation coefficients and returns the results as a tibble. The function can be used with \code{regress}.
 }
 \details{
 
