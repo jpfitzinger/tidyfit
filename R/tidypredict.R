@@ -12,7 +12,7 @@
 #'
 #' @examples
 #' data <- tidyfit::Factor_Industry_Returns
-#' fit <- tidyfit(data, Return ~ ., lin_reg = m.lm, .mask = "Date")
+#' fit <- regress(data, Return ~ ., lin_reg = mod_lm, .mask = "Date")
 #' tidypredict(fit, data)
 #'
 #' @export
