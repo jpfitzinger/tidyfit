@@ -14,6 +14,7 @@
     purrr::map_dfr(model_list, function(mod) {
 
       mask <- attr(fit, "structure")$mask
+      weights <- attr(fit, "structure")$weights
       family <- attr(fit, "family")
       if (!is.null(family)) {
         if (family == "binomial") f <- stats::binomial()
@@ -22,7 +23,7 @@
       }
 
       .data_core <- .data %>%
-        dplyr::select(-!!mask, -!!gr_vars)
+        dplyr::select(-dplyr::any_of(mask), -dplyr::all_of(gr_vars), -dplyr::any_of(weights))
 
       fit_core <- fit %>%
         dplyr::filter(.data$model == mod) %>%
@@ -46,7 +47,7 @@
 
       result <- .data %>%
         dplyr::mutate(pred = as.numeric(fit)) %>%
-        dplyr::select(-dplyr::any_of(colnames(m[,-1])), -dplyr::all_of(gr_vars)) %>%
+        dplyr::select(-dplyr::any_of(colnames(m[,-1])), -dplyr::all_of(gr_vars), -dplyr::any_of(weights)) %>%
         dplyr::mutate(model = mod)
 
       return(result)
