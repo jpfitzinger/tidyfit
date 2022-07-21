@@ -46,11 +46,11 @@ data <- tidyfit::Factor_Industry_Returns
 
 ### Fitting a linear regression
 
-Models are fitted using `tidyfit::tidyfit`. Below a linear regression is fitted using the `tidyfit::m.lm` wrapper. The date columns is masked and the industry column is one-hot encoded:
+Models are fitted using `tidyfit::regress`. Below a linear regression is fitted using the `tidyfit::mod_lm` wrapper. The date columns is masked and the industry column is one-hot encoded:
 
 ```{r}
 fit <- data %>% 
-  tidyfit(Return ~ ., lin_reg = m.lm, .mask = "Date")
+  regress(Return ~ ., lin_reg = mod_lm, .mask = "Date")
 fit
 ```
 
@@ -66,7 +66,7 @@ Now, instead of fitting a single regression, we need to fit a regression per ind
 ```{r}
 fit <- data %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., lin_reg = m.lm, .mask = "Date")
+  regress(Return ~ ., lin_reg = mod_lm, .mask = "Date")
 ```
 
 Let's plot the factor loadings in a heatmap:
@@ -80,12 +80,12 @@ fit %>%
 
 ### Fitting a Lasso regression
 
-Fitting a Lasso regression requires hyperparameter tuning for the penalty `lambda`. This can be done by passing values to `.cv` and `.cv_args`. Cross validation is performed using `rsample`. See `?rsample::vfold_cv`, `?rsample::loo_cv` or `?rsample::rolling_origin` for options that can be passed to `.cv_args`.
+Fitting a Lasso regression requires hyperparameter tuning for the penalty `lambda`. This can be done by passing values to `.cv` and `.cv_args`. Cross validation is performed using `rsample`. See `?rsample::vfold_cv`, `?rsample::loo_cv`, `?rsample::initial_split`, `?rsample::initial_time_split` or `?rsample::rolling_origin` for options that can be passed to `.cv_args`. A reasonable hyperparameter grid is determined using the `dials` package.
 
 ```{r, fig.width=10, fig.height=5, fig.align="center"}
 fit <- data %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., lasso_reg = m.lasso, .mask = "Date", 
+  regress(Return ~ ., lasso_reg = mod_lasso, .mask = "Date", 
           .cv = "vfold", .cv_args = list(v = 5))
 
 fit %>% 
@@ -99,17 +99,17 @@ The results do not appear to be different from a linear regression. To compare m
 ```{r}
 fit <- data %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., lasso_reg = m.lasso, lin_reg = m.lm, .mask = "Date", 
+  regress(Return ~ ., lasso_reg = mod_lasso, lin_reg = mod_lm, .mask = "Date", 
           .cv = "vfold", .cv_args = list(v = 5))
 ```
 
-Of course, a v-fold cross validation is not valid for ordered data. Instead simply set a rolling cross validation:
+Of course, a v-fold cross validation is not valid for ordered data. Instead simply set a rolling cross validation. In addition, we can pass a custom grid for `lambda` by adding the argument to `mod_lasso`:
 
 ```{r, fig.width=10, fig.height=5, fig.align="center"}
 fit <- data %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., lasso_reg = m.lasso, .mask = "Date", 
-          .cv = "ts", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
+  regress(Return ~ ., lasso_reg = mod_lasso(lambda = seq(0, 0.4, by = 0.05)), .mask = "Date", 
+          .cv = "rolling_origin", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
 
 fit %>% 
   ggplot(aes(variable, Industry)) +
@@ -132,15 +132,14 @@ data_test <- data %>%
   filter(Date > 202112)
 ```
 
-Classification is possible with `tidyfit` by passing `family = "binomial"` to `.control`:
+Classification is possible with `tidyfit` by passing `family = "binomial"` argument to the model function. Note that additional arguments can be passed to the model function that are passed to the underlying estimator (in this case `glmnet::glmnet`):
 
 ```{r}
 fit <- data_train %>% 
   mutate(Return = ifelse(Return > 0, 1, 0)) %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., enet_clf = m.enet, .mask = "Date", 
-          .cv = "ts", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE),
-          .control = list(family = "binomial"))
+  regress(Return ~ ., enet_clf = mod_enet(family = "binomial", maxit = 1e+06), .mask = "Date", 
+          .cv = "rolling_origin", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
 ```
 
 Predictions can be made for all models using `tidypredict`:
@@ -160,11 +159,11 @@ table(pred$Truth, pred$Predicted)
 `tidyfit` parallelizes cross-validation computations using the `future` package in conjunction with `furrr`. Parallel computation can therefore be activated by setting an appropriate plan:
 
 ```{r}
-library(future)
+library(furrr)
 plan(multisession(workers = 4))
 fit <- data %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., lasso_reg = m.lasso, .mask = "Date", 
+  regress(Return ~ ., lasso_reg = mod_lasso, .mask = "Date", 
           .cv = "vfold", .cv_args = list(v = 5))
 ```
 
@@ -174,7 +173,7 @@ fit <- data %>%
 `tidyfit` makes a few things easier:
 
  - Methods returned statistically comparable outputs. For instance, all covariates are standardized and the coefficients are back-transformed to the original scale. This is not done by all underlying packages (e.g. `pls`, which is used for the PCR and PLSR methods).
- - Hyperparameter grids are set to reasonable starting values. Custom grids can be passed to `.control` (e.g. `.control = list(lambda = c(seq(0, 1, by = 0.1)))`).
+ - Hyperparameter grids are set to reasonable starting values. Custom grids can be passed to the model wrappers (e.g. `mod_lasso(lambda = seq(0, 1, by = 0.1))`).
  - Hyperparameter can be tuned across all groups or separately within each group by setting the `.tune_each_group` flag.
  - Results for the individual slices can be returned using the `.return_slices` flag. This is particularly useful for rolling window estimation, which can be done by returning the results of a rolling cross validation.
 

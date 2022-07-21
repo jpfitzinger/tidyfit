@@ -43,13 +43,13 @@ data <- tidyfit::Factor_Industry_Returns
 
 ### Fitting a linear regression
 
-Models are fitted using `tidyfit::tidyfit`. Below a linear regression is
-fitted using the `tidyfit::m.lm` wrapper. The date columns is masked and
-the industry column is one-hot encoded:
+Models are fitted using `tidyfit::regress`. Below a linear regression is
+fitted using the `tidyfit::mod_lm` wrapper. The date columns is masked
+and the industry column is one-hot encoded:
 
 ``` r
 fit <- data %>% 
-  tidyfit(Return ~ ., lin_reg = m.lm, .mask = "Date")
+  regress(Return ~ ., lin_reg = mod_lm, .mask = "Date")
 fit
 #> # A tibble: 16 × 4
 #>    variable          beta model   model_info      
@@ -79,24 +79,24 @@ expanded:
 fit %>% 
   unnest(model_info)
 #> # A tibble: 16 × 7
-#>    variable          beta model      s.e. `t value` `p value` R.squared
-#>    <chr>            <dbl> <chr>     <dbl>     <dbl>     <dbl>     <dbl>
-#>  1 (Intercept)   -0.00408 lin_reg 0.133     -0.0306  9.76e- 1     0.625
-#>  2 IndustryEnrgy -0.00409 lin_reg 0.172     -0.0237  9.81e- 1     0.625
-#>  3 IndustryHiTec  0.0559  lin_reg 0.172      0.325   7.45e- 1     0.625
-#>  4 IndustryHlth   0.0506  lin_reg 0.172      0.294   7.69e- 1     0.625
-#>  5 IndustryManuf -0.0469  lin_reg 0.172     -0.272   7.85e- 1     0.625
-#>  6 IndustryNoDur  0.0171  lin_reg 0.172      0.0994  9.21e- 1     0.625
-#>  7 IndustryOther -0.0707  lin_reg 0.172     -0.411   6.81e- 1     0.625
-#>  8 IndustryShops  0.0405  lin_reg 0.172      0.235   8.14e- 1     0.625
-#>  9 IndustryTelcm -0.184   lin_reg 0.172     -1.07    2.85e- 1     0.625
-#> 10 IndustryUtils -0.181   lin_reg 0.172     -1.05    2.93e- 1     0.625
-#> 11 CMA            0.117   lin_reg 0.0281     4.18    2.94e- 5     0.625
-#> 12 HML            0.0601  lin_reg 0.0182     3.31    9.30e- 4     0.625
-#> 13 `Mkt-RF`       0.977   lin_reg 0.00985   99.3     0            0.625
-#> 14 RF             1.01    lin_reg 0.145      6.99    2.91e-12     0.625
-#> 15 RMW            0.164   lin_reg 0.0191     8.56    1.41e-17     0.625
-#> 16 SMB            0.0178  lin_reg 0.0140     1.27    2.03e- 1     0.625
+#>    variable          beta model      s.e. `t value` `p value` `Adj. R-squared`
+#>    <chr>            <dbl> <chr>     <dbl>     <dbl>     <dbl>            <dbl>
+#>  1 (Intercept)   -0.00408 lin_reg 0.133     -0.0306  9.76e- 1            0.625
+#>  2 IndustryEnrgy -0.00409 lin_reg 0.172     -0.0237  9.81e- 1            0.625
+#>  3 IndustryHiTec  0.0559  lin_reg 0.172      0.325   7.45e- 1            0.625
+#>  4 IndustryHlth   0.0506  lin_reg 0.172      0.294   7.69e- 1            0.625
+#>  5 IndustryManuf -0.0469  lin_reg 0.172     -0.272   7.85e- 1            0.625
+#>  6 IndustryNoDur  0.0171  lin_reg 0.172      0.0994  9.21e- 1            0.625
+#>  7 IndustryOther -0.0707  lin_reg 0.172     -0.411   6.81e- 1            0.625
+#>  8 IndustryShops  0.0405  lin_reg 0.172      0.235   8.14e- 1            0.625
+#>  9 IndustryTelcm -0.184   lin_reg 0.172     -1.07    2.85e- 1            0.625
+#> 10 IndustryUtils -0.181   lin_reg 0.172     -1.05    2.93e- 1            0.625
+#> 11 CMA            0.117   lin_reg 0.0281     4.18    2.94e- 5            0.625
+#> 12 HML            0.0601  lin_reg 0.0182     3.31    9.30e- 4            0.625
+#> 13 `Mkt-RF`       0.977   lin_reg 0.00985   99.3     0                   0.625
+#> 14 RF             1.01    lin_reg 0.145      6.99    2.91e-12            0.625
+#> 15 RMW            0.164   lin_reg 0.0191     8.56    1.41e-17            0.625
+#> 16 SMB            0.0178  lin_reg 0.0140     1.27    2.03e- 1            0.625
 ```
 
 Now, instead of fitting a single regression, we need to fit a regression
@@ -105,7 +105,7 @@ per industry. This is achieved simply by grouping:
 ``` r
 fit <- data %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., lin_reg = m.lm, .mask = "Date")
+  regress(Return ~ ., lin_reg = mod_lm, .mask = "Date")
 ```
 
 Let’s plot the factor loadings in a heatmap:
@@ -124,13 +124,15 @@ fit %>%
 Fitting a Lasso regression requires hyperparameter tuning for the
 penalty `lambda`. This can be done by passing values to `.cv` and
 `.cv_args`. Cross validation is performed using `rsample`. See
-`?rsample::vfold_cv`, `?rsample::loo_cv` or `?rsample::rolling_origin`
-for options that can be passed to `.cv_args`.
+`?rsample::vfold_cv`, `?rsample::loo_cv`, `?rsample::initial_split`,
+`?rsample::initial_time_split` or `?rsample::rolling_origin` for options
+that can be passed to `.cv_args`. A reasonable hyperparameter grid is
+determined using the `dials` package.
 
 ``` r
 fit <- data %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., lasso_reg = m.lasso, .mask = "Date", 
+  regress(Return ~ ., lasso_reg = mod_lasso, .mask = "Date", 
           .cv = "vfold", .cv_args = list(v = 5))
 
 fit %>% 
@@ -147,18 +149,19 @@ compare methods, simply pass multiple models:
 ``` r
 fit <- data %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., lasso_reg = m.lasso, lin_reg = m.lm, .mask = "Date", 
+  regress(Return ~ ., lasso_reg = mod_lasso, lin_reg = mod_lm, .mask = "Date", 
           .cv = "vfold", .cv_args = list(v = 5))
 ```
 
 Of course, a v-fold cross validation is not valid for ordered data.
-Instead simply set a rolling cross validation:
+Instead simply set a rolling cross validation. In addition, we can pass
+a custom grid for `lambda` by adding the argument to `mod_lasso`:
 
 ``` r
 fit <- data %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., lasso_reg = m.lasso, .mask = "Date", 
-          .cv = "ts", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
+  regress(Return ~ ., lasso_reg = mod_lasso(lambda = seq(0, 0.4, by = 0.05)), .mask = "Date", 
+          .cv = "rolling_origin", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
 
 fit %>% 
   ggplot(aes(variable, Industry)) +
@@ -183,15 +186,16 @@ data_test <- data %>%
 ```
 
 Classification is possible with `tidyfit` by passing
-`family = "binomial"` to `.control`:
+`family = "binomial"` argument to the model function. Note that
+additional arguments can be passed to the model function that are passed
+to the underlying estimator (in this case `glmnet::glmnet`):
 
 ``` r
 fit <- data_train %>% 
   mutate(Return = ifelse(Return > 0, 1, 0)) %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., enet_clf = m.enet, .mask = "Date", 
-          .cv = "ts", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE),
-          .control = list(family = "binomial"))
+  regress(Return ~ ., enet_clf = mod_enet(family = "binomial", maxit = 1e+06), .mask = "Date", 
+          .cv = "rolling_origin", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
 ```
 
 Predictions can be made for all models using `tidypredict`:
@@ -206,8 +210,8 @@ pred <- fit %>%
 table(pred$Truth, pred$Predicted)
 #>    
 #>      0  1
-#>   0 16  2
-#>   1  3  9
+#>   0 17  1
+#>   1  6  6
 ```
 
 ### Parallel computation
@@ -217,11 +221,12 @@ package in conjunction with `furrr`. Parallel computation can therefore
 be activated by setting an appropriate plan:
 
 ``` r
-library(future)
+library(furrr)
+#> Loading required package: future
 plan(multisession(workers = 4))
 fit <- data %>% 
   group_by(Industry) %>% 
-  tidyfit(Return ~ ., lasso_reg = m.lasso, .mask = "Date", 
+  regress(Return ~ ., lasso_reg = mod_lasso, .mask = "Date", 
           .cv = "vfold", .cv_args = list(v = 5))
 ```
 
@@ -235,8 +240,8 @@ fit <- data %>%
     underlying packages (e.g. `pls`, which is used for the PCR and PLSR
     methods).
 -   Hyperparameter grids are set to reasonable starting values. Custom
-    grids can be passed to `.control`
-    (e.g. `.control = list(lambda = c(seq(0, 1, by = 0.1)))`).
+    grids can be passed to the model wrappers
+    (e.g. `mod_lasso(lambda = seq(0, 1, by = 0.1))`).
 -   Hyperparameter can be tuned across all groups or separately within
     each group by setting the `.tune_each_group` flag.
 -   Results for the individual slices can be returned using the
