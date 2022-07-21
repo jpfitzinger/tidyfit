@@ -21,6 +21,15 @@
   .data <- .data %>%
     dplyr::select(-!!gr_vars, -!!.mask)
 
+  if (!is.null(.weights)) {
+    wts <- .data %>%
+      dplyr::pull(!!.weights)
+    .data <- .data %>%
+      dplyr::select(-!!.weights)
+  } else {
+    wts = NULL
+  }
+
   m <- stats::model.frame(formula = formula, data = .data)
   x <- stats::model.matrix(formula, m)[, -1]
   y <- stats::model.response(m)
@@ -38,11 +47,21 @@
   # Prepare CV
   if (.cv == "none")
     cv <- dplyr::tibble(splits = list(m))
+  if (.cv == "initial_split")
+    cv <- dplyr::tibble(
+      splits = list(do.call(rsample::initial_split, append(list(data = m), .cv_args))),
+      id = "Initial_Split"
+    )
+  if (.cv == "initial_time_split")
+    cv <- dplyr::tibble(
+      splits = list(do.call(rsample::initial_time_split, append(list(data = m), .cv_args))),
+      id = "Initial_Split"
+    )
   if (.cv == "vfold")
     cv <- do.call(rsample::vfold_cv, append(list(data = m), .cv_args))
   if (.cv == "loo")
     cv <- do.call(rsample::loo_cv, append(list(data = m), .cv_args))
-  if (.cv == "ts")
+  if (.cv == "rolling_origin")
     cv <- do.call(rsample::rolling_origin, append(list(data = m), .cv_args))
 
   # Evaluate methods
@@ -62,9 +81,11 @@
             df_test_x <- stats::model.matrix(formula, df_test)
             df_test_y <- stats::model.response(df_test)
 
-            result <- do.call(model,
-                            append(list(x = df_train_x, y = df_train_y),
-                                   .control))
+            model_args <- append(list(x = df_train_x, y = df_train_y), .control)
+            if (!is.null(wts)) model_args <- append(model_args, list(weights = wts[splits$in_id]))
+
+            result <- do.call(model, model_args)
+
             beta <- result %>%
               dplyr::select(.data$grid_id, .data$beta, .data$variable) %>%
               tidyr::spread(.data$grid_id, .data$beta)
@@ -101,9 +122,10 @@
         result <- NULL
       }
 
-      result_all <- do.call(model,
-                            append(list(x = x, y = y),
-                                   .control)) %>%
+      model_args <- append(list(x = x, y = y), .control)
+      if (!is.null(wts)) model_args <- append(model_args, list(weights = wts))
+
+      result_all <- do.call(model, model_args) %>%
         mutate(slice_id = "FULL")
 
       result <- dplyr::bind_rows(result, result_all)
