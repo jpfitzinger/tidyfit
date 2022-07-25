@@ -12,10 +12,10 @@
     model_list,
     .cv,
     .cv_args,
-    .control,
     .weights,
     gr_vars,
-    .mask
+    .mask,
+    family
     ) {
 
   .data <- .data %>%
@@ -33,16 +33,6 @@
   m <- stats::model.frame(formula = formula, data = .data)
   x <- stats::model.matrix(formula, m)[, -1]
   y <- stats::model.response(m)
-
-  family <- .control$family
-  if (!is.null(family)) {
-    if (!family %in% c("binomial", "gaussian"))
-      stop("'family' must be binomial or gaussian.")
-    if (family == "binomial") f <- stats::binomial()
-    if (family == "gaussian") f <- stats::gaussian()
-    # Needs to be integrated
-    if (family == "poisson") f <- stats::poisson()
-  }
 
   # Prepare CV
   if (.cv == "none")
@@ -68,7 +58,8 @@
   result <-
     purrr::map2_dfr(model_list, names(model_list), function(model, nam) {
 
-      if (.cv != "none") {
+      do_cv <- .check_method(model(.return_method_name = TRUE), "cv")
+      if (.cv != "none" & do_cv) {
 
         result <- cv %>%
           furrr::future_pmap_dfr(function(splits, id) {
@@ -81,7 +72,10 @@
             df_test_x <- stats::model.matrix(formula, df_test)
             df_test_y <- stats::model.response(df_test)
 
-            model_args <- append(list(x = df_train_x, y = df_train_y), .control)
+            model_args <- list(x = df_train_x, y = df_train_y)
+            if (!model(.check_family = TRUE)) {
+              model_args <- append(model_args, list(family = family))
+            }
             if (!is.null(wts)) model_args <- append(model_args, list(weights = wts[splits$in_id]))
 
             result <- do.call(model, model_args)
@@ -94,17 +88,17 @@
             beta <- beta[, -1]
             fit <- df_test_x %*% data.matrix(beta)
 
-            if (is.null(family)) {
-              # Calculate MSE
+            f <- result %>%
+              dplyr::pull(family) %>%
+              unique %>%
+              .[[1]]
+            fit <- f$linkinv(fit)
+
+            if (f$family == "binomial") {
+              # Calculate cross-entropy loss
+              crit <- apply(fit, 2, function(x) -mean(df_test_y * log(x) + (1 - df_test_y) * log(1 - x)))
+            } else if (f$family == "gaussian") {
               crit <- colMeans((df_test_y - fit)^2)
-            } else {
-              if (family == "binomial") {
-                fit <- f$linkinv(fit)
-                # Calculate cross-entropy loss
-                crit <- apply(fit, 2, function(x) -mean(df_test_y * log(x) + (1 - df_test_y) * log(1 - x)))
-              } else if (family == "gaussian") {
-                crit <- colMeans((df_test_y - fit)^2)
-              }
             }
 
             crit <- dplyr::tibble(grid_id = names(crit), crit = crit)
@@ -122,7 +116,10 @@
         result <- NULL
       }
 
-      model_args <- append(list(x = x, y = y), .control)
+      model_args <- list(x = x, y = y)
+      if (!model(.check_family = TRUE)) {
+        model_args <- append(model_args, list(family = family))
+      }
       if (!is.null(wts)) model_args <- append(model_args, list(weights = wts))
 
       result_all <- do.call(model, model_args) %>%

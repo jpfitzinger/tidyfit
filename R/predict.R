@@ -1,6 +1,6 @@
 
-#' @importFrom dplyr select filter right_join ungroup distinct any_of all_of
-#' @importFrom tidyr drop_na
+#' @importFrom dplyr select filter right_join ungroup distinct any_of all_of pull
+#' @importFrom tidyr drop_na unnest
 #' @importFrom purrr map_dfr
 #' @importFrom stats binomial gaussian poisson model.frame model.matrix model.response
 #' @importFrom rlang .data
@@ -15,18 +15,20 @@
 
       mask <- attr(fit, "structure")$mask
       weights <- attr(fit, "structure")$weights
-      family <- attr(fit, "family")
-      if (!is.null(family)) {
-        if (family == "binomial") f <- stats::binomial()
-        if (family == "gaussian") f <- stats::gaussian()
-        if (family == "poisson") f <- stats::poisson()
-      }
 
       .data_core <- .data %>%
         dplyr::select(-dplyr::any_of(mask), -dplyr::all_of(gr_vars), -dplyr::any_of(weights))
 
-      fit_core <- fit %>%
-        dplyr::filter(.data$model == mod) %>%
+      fit_model <- fit %>%
+        dplyr::filter(.data$model == mod)
+
+      f <- fit_model %>%
+        tidyr::unnest(.data$model_info) %>%
+        dplyr::pull(.data$family) %>%
+        .[1] %>%
+        .[[1]]
+
+      fit_core <- fit_model %>%
         dplyr::right_join(.data %>% select(!!gr_vars), by = c(gr_vars)) %>%
         dplyr::ungroup()
 
@@ -43,7 +45,7 @@
       x <- x[, beta$variable]
       beta <- beta %>% dplyr::select(-.data$variable)
       fit <- data.matrix(x) %*% data.matrix(beta)
-      if (!is.null(family)) fit <- f$linkinv(fit)
+      if (!is.null(f)) fit <- f$linkinv(fit)
 
       result <- .data %>%
         dplyr::mutate(pred = as.numeric(fit)) %>%
