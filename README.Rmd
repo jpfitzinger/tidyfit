@@ -22,7 +22,7 @@ library(tidyverse)
 
 ![](./man/figures/logo_nobackground.png){width=30%}
 
-`tidyfit` is an `R`-package that facilitates and automates linear regression and classification modeling in a tidy environment. The package includes several methods, such as Lasso, PLS and ElasticNet regressions, and can be augmented with custom methods. `tidyfit` builds on the `tidymodels` suite, but emphasizes automated modeling with a focus on the linear regression and classification coefficients, which are the primary output of `tidyfit`. 
+`tidyfit` is an `R`-package that facilitates and automates linear regression and classification modeling in a tidy environment. The package includes several methods, such as Lasso, PLS and ElasticNet regressions. `tidyfit` builds on the `tidymodels` suite, but emphasizes automated modeling with a focus on the linear regression and classification coefficients, which are the primary output of `tidyfit`. The primary objective is to make model fitting, cross validation and model output very simple and standardized across all methods, with method-specific transformations handled in the background.
 
 ## Installation
 
@@ -46,11 +46,11 @@ data <- tidyfit::Factor_Industry_Returns
 
 ### Fitting a linear regression
 
-Models are fitted using `tidyfit::regress`. Below a linear regression is fitted using the `tidyfit::mod_lm` wrapper. The date columns is masked and the industry column is one-hot encoded:
+Models are fitted using `tidyfit::regress` for regression or `tidyfit::classify` for binomial classification problems. Below a linear regression is fitted using the `tidyfit::m` model wrapper, which standardizes a large number of regression and classification models. The date columns is masked and the industry column is one-hot encoded:
 
 ```{r}
 fit <- data %>% 
-  regress(Return ~ ., lin_reg = mod_lm, .mask = "Date")
+  regress(Return ~ ., lin_reg = m("lm"), .mask = "Date")
 fit
 ```
 
@@ -66,7 +66,7 @@ Now, instead of fitting a single regression, we need to fit a regression per ind
 ```{r}
 fit <- data %>% 
   group_by(Industry) %>% 
-  regress(Return ~ ., lin_reg = mod_lm, .mask = "Date")
+  regress(Return ~ ., lin_reg = m("lm"), .mask = "Date")
 ```
 
 Let's plot the factor loadings in a heatmap:
@@ -80,12 +80,12 @@ fit %>%
 
 ### Fitting a Lasso regression
 
-Fitting a Lasso regression requires hyperparameter tuning for the penalty `lambda`. This can be done by passing values to `.cv` and `.cv_args`. Cross validation is performed using `rsample`. See `?rsample::vfold_cv`, `?rsample::loo_cv`, `?rsample::initial_split`, `?rsample::initial_time_split` or `?rsample::rolling_origin` for options that can be passed to `.cv_args`. A reasonable hyperparameter grid is determined using the `dials` package.
+Fitting a Lasso regression requires hyperparameter tuning for the penalty `lambda`. This can be done by passing values to `.cv` and `.cv_args`. Cross validation is performed using `rsample`. See `?rsample::vfold_cv`, `?rsample::loo_cv`, `?rsample::initial_split`, `?rsample::initial_time_split` or `?rsample::rolling_origin` to see optional arguments that can be passed to `.cv_args`. A reasonable hyperparameter grid is determined using the `dials` package.
 
 ```{r, fig.width=10, fig.height=5, fig.align="center"}
 fit <- data %>% 
   group_by(Industry) %>% 
-  regress(Return ~ ., lasso_reg = mod_lasso, .mask = "Date", 
+  regress(Return ~ ., lasso_reg = m("lasso"), .mask = "Date", 
           .cv = "vfold", .cv_args = list(v = 5))
 
 fit %>% 
@@ -99,16 +99,16 @@ The results do not appear to be different from a linear regression. To compare m
 ```{r}
 fit <- data %>% 
   group_by(Industry) %>% 
-  regress(Return ~ ., lasso_reg = mod_lasso, lin_reg = mod_lm, .mask = "Date", 
+  regress(Return ~ ., lasso_reg = m("lasso"), lin_reg = m("lm"), .mask = "Date", 
           .cv = "vfold", .cv_args = list(v = 5))
 ```
 
-Of course, a v-fold cross validation is not valid for ordered data. Instead simply set a rolling cross validation. In addition, we can pass a custom grid for `lambda` by adding the argument to `mod_lasso`:
+Of course, a v-fold cross validation is not valid for ordered data. Instead simply set a rolling cross validation. In addition, we can pass a custom grid for `lambda` by adding the argument to `m`. Note also that it is not necessary to specify a model name:
 
 ```{r, fig.width=10, fig.height=5, fig.align="center"}
 fit <- data %>% 
   group_by(Industry) %>% 
-  regress(Return ~ ., lasso_reg = mod_lasso(lambda = seq(0, 0.4, by = 0.05)), .mask = "Date", 
+  regress(Return ~ ., m("lasso", lambda = seq(0, 0.4, by = 0.05)), .mask = "Date", 
           .cv = "rolling_origin", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
 
 fit %>% 
@@ -132,21 +132,21 @@ data_test <- data %>%
   filter(Date > 202112)
 ```
 
-Classification is possible with `tidyfit` by passing `family = "binomial"` argument to the model function. Note that additional arguments can be passed to the model function that are passed to the underlying estimator (in this case `glmnet::glmnet`):
+Classification is possible with `tidyfit` using the `classify` function instead of `regress`. This passes a `family = "binomial"` argument to the underlying model functions. Note that additional arguments can be specified in the model function that are passed on to the underlying estimator (in this case `glmnet::glmnet`):
 
 ```{r}
 fit <- data_train %>% 
   mutate(Return = ifelse(Return > 0, 1, 0)) %>% 
   group_by(Industry) %>% 
-  regress(Return ~ ., enet_clf = mod_enet(family = "binomial", maxit = 1e+06), .mask = "Date", 
+  classify(Return ~ ., enet_clf = m("enet", maxit = 1e+06), .mask = "Date", 
           .cv = "rolling_origin", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
 ```
 
-Predictions can be made for all models using `tidypredict`:
+Predictions can be made for all models using `cross_prod`. As the name indicates, this generates predictions by multiplying data and coefficients (and passing through the respective link function). No model-specific predict methods are used. Predictions automatically apply along the same groups as in the fitted object, and use the response family specified during fitting:
 
 ```{r}
 pred <- fit %>% 
-  tidypredict(data_test) %>% 
+  cross_prod(data_test) %>% 
   mutate(Predicted = ifelse(pred > 0.5, 1, 0)) %>% 
   rename(Truth = Return)
 
@@ -163,7 +163,7 @@ library(furrr)
 plan(multisession(workers = 4))
 fit <- data %>% 
   group_by(Industry) %>% 
-  regress(Return ~ ., lasso_reg = mod_lasso, .mask = "Date", 
+  regress(Return ~ ., lasso_reg = m("lasso"), .mask = "Date", 
           .cv = "vfold", .cv_args = list(v = 5))
 ```
 
