@@ -1,31 +1,31 @@
 #' @name regress
-#' @title Linear regression of classification on tidy data
+#' @title Linear regression on tidy data
 #' @description This function is a wrapper to fit many different types of linear
-#' regression or classification models on a (grouped) \code{tibble}.
+#' regression models on a (grouped) \code{tibble}.
 #'
-#' @details Cross validation is performed using the 'rsample' package with possible methods including 'initial_split' (simple train-test split), 'initial_time_split' (train-test split with retained order), 'vfold' (aka kfold) cross validation, 'loo' and time series ('rolling_origin') cross validation. \code{.cv = "rolling_origin"} implements either rolling or expanding window cross validation using 'rsample::rolling_origin'.
+#' @details Models are passed to \code{...} using the \code{\link{m}} function. The models can be passed as name-function pairs (e.g. \code{ols = m("lm")}) or without including a name. In the latter case the 'model_method' argument in \code{m()} becomes the name.
 #'
-#' Hyperparameter grids passed to \code{.control} are optimized using the MSE for regression problems, and Accuracy for classification problems.
+#' Hyperparameters are tuned automatically using the '.cv' and '.cv_args' arguments, or can be passed to \code{m()} (e.g. \code{lasso = m("lasso", lambda = 0.5)}). See the individual model functions (\code{?m()}) for an overview of hyperparameters.
 #'
-#' The method function passed to \code{...} must have a specific input and output format. The package includes a number of methods (see \code{m.lm}, \code{m.lasso}, \code{m.boost} for instance), but it is possible to pass custom functions here.
+#' Cross validation is performed using the 'rsample' package with possible methods including 'initial_split' (simple train-test split), 'initial_time_split' (train-test split with retained order), 'vfold' (aka kfold) cross validation, 'loo' and time series ('rolling_origin') cross validation. \code{.cv = "rolling_origin"} implements either rolling or expanding window cross validation using 'rsample::rolling_origin'. The mean-squared-error metric is used to validate performance in the cross-validation.
+#'
+#' Note that arguments for weights are automatically passed to the functions by setting the '.weights' argument.
 #'
 #' @param .data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr). The data frame can be grouped.
-#' @param formula an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted.
+#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
 #' @param ...  name-function pairs of models to be estimated. See 'Details'.
 #' @param .cv type of 'rsample' cross validation procedure to use to determine optimal hyperparameter values. Default is \code{.cv = "none"}. See 'Details'.
 #' @param .cv_args additional settings to pass to the 'rsample' cross validation function.
-#' @param .control named list of arguments passed to model functions. This includes the hyperparameter vectors. Default values will be used when \code{.control=NULL}.
 #' @param .weights optional name of column containing sample weights.
 #' @param .mask optional vector of columns names to ignore. Can be useful when using 'y ~ .' formula setup.
-#' @param .return_slices boolean. Should the output of individual slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.
+#' @param .return_slices boolean. Should the output of individual cross validation slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.
 #' @param .tune_each_group boolean. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.
-#' @return A \code{tibble}.
+#' @return A \code{tibble} containing estimated coefficients and model details for each group.
 #' @author Johann Pfitzinger
-#' @references
 #'
 #' @examples
 #' data <- tidyfit::Factor_Industry_Returns
-#' fit <- regress(data, Return ~ ., lin_reg = mod_lm, .mask = "Date")
+#' fit <- regress(data, Return ~ ., ols = m("lm"), .mask = "Date")
 #' fit
 #'
 #' # View additional model information
@@ -33,7 +33,7 @@
 #'
 #' @export
 #'
-#' @seealso \code{tidypredict} method
+#' @seealso \code{\link{classify}} and \code{\link{cross_prod}} method
 #'
 #' @importFrom magrittr %>%
 #' @importFrom tidyr unnest nest any_of
@@ -50,7 +50,6 @@ regress <- function(
   ...,
   .cv = c("none", "initial_split", "initial_time_split", "loo", "vfold", "rolling_origin"),
   .cv_args = list(v = 10),
-  .control = NULL,
   .weights = NULL,
   .mask = NULL,
   .return_slices = FALSE,
@@ -60,25 +59,32 @@ regress <- function(
   model_list <- list(...)
   if (length(model_list)==0)
     stop("provide at least one method.")
-  if (any(names(model_list)=="")) {
-    warning("models should be name-function pairs. Names auto-assigned.")
-    names(model_list)[names(model_list)==""] <- paste("MODEL", 1:sum(names(model_list)==""), sep = "_")
+  model_names <- names(model_list)
+  if (is.null(model_names)) model_names <- rep("", length(model_list))
+  for (i in seq_along(model_names)) {
+    if (model_names[i]=="") {
+      model_names[i] <- model_list[[i]](.return_method_name = TRUE)
+    }
   }
+  names(model_list) <- model_names
+  model_cv <- sapply(model_list,
+                     function(model) .check_method(model(.return_method_name = TRUE),
+                                                   "cv"))
+  sapply(model_list, function(model) .check_method(model(.return_method_name = TRUE),
+                                                   "regress"))
 
   .cv <- match.arg(.cv)
   if (is.null(.cv_args)) .cv_args <- list()
-  if (is.null(.control)) .control <- list()
-  if (class(.control) != "list") stop("'.control' must be a 'list'.")
-  if (class(.cv_args) != "list") stop("'.cv_args' must be a 'list'.")
+  if (!inherits(.cv_args, "list")) stop("'.cv_args' must be a 'list'.")
 
   gr_vars <- dplyr::group_vars(.data)
 
   df <- .data %>%
     do(result = .fit(., formula, model_list, .cv, .cv_args,
-                     .control, .weights, gr_vars, .mask)) %>%
+                     .weights, gr_vars, .mask, gaussian())) %>%
     tidyr::unnest(.data$result)
 
-  if (.cv == "none") {
+  if (.cv == "none" | !any(model_cv)) {
     df <- df %>%
       dplyr::select(-.data$grid_id)
 
@@ -88,6 +94,12 @@ regress <- function(
     }
   } else {
     # Select optimal hyperparameter setting
+    df_no_cv <- df %>%
+      dplyr::filter(.data$model %in% model_names[!model_cv]) %>%
+      dplyr::select(-.data$grid_id, -.data$slice_id)
+
+    df <- df %>%
+      dplyr::filter(.data$model %in% model_names[model_cv])
     if (.tune_each_group) {
       df <- df %>%
         dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))
@@ -110,7 +122,8 @@ regress <- function(
         dplyr::ungroup() %>%
         dplyr::select(!!gr_vars, .data$variable, .data$grid_id, .data$model) %>%
         dplyr::left_join(df %>% dplyr::ungroup() %>% dplyr::filter(.data$slice_id == "FULL"), by = c(gr_vars, "variable", "grid_id", "model")) %>%
-        dplyr::select(-.data$grid_id, -.data$crit, -.data$slice_id)
+        dplyr::select(-.data$grid_id, -.data$crit, -.data$slice_id) %>%
+        bind_rows(df_no_cv)
     }
   }
 
@@ -127,10 +140,6 @@ regress <- function(
 
   attr(df, "formula") <- formula
   attr(df, "structure") <- list(mask = .mask, weights = .weights, col_names = colnames(df))
-
-  if (!is.null(.control$family)) {
-    attr(df, "family") <- .control$family
-  }
 
   return(df)
 

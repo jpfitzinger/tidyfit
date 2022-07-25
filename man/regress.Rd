@@ -2,11 +2,11 @@
 % Please edit documentation in R/regress.R
 \name{regress}
 \alias{regress}
-\title{Linear regression of classification on tidy data}
+\title{Linear regression on tidy data}
 \arguments{
 \item{.data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr). The data frame can be grouped.}
 
-\item{formula}{an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
 \item{...}{name-function pairs of models to be estimated. See 'Details'.}
 
@@ -14,44 +14,41 @@
 
 \item{.cv_args}{additional settings to pass to the 'rsample' cross validation function.}
 
-\item{.control}{named list of arguments passed to model functions. This includes the hyperparameter vectors. Default values will be used when \code{.control=NULL}.}
-
 \item{.weights}{optional name of column containing sample weights.}
 
 \item{.mask}{optional vector of columns names to ignore. Can be useful when using 'y ~ .' formula setup.}
 
-\item{.return_slices}{boolean. Should the output of individual slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.}
+\item{.return_slices}{boolean. Should the output of individual cross validation slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.}
 
 \item{.tune_each_group}{boolean. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.}
 }
 \value{
-A \code{tibble}.
+A \code{tibble} containing estimated coefficients and model details for each group.
 }
 \description{
 This function is a wrapper to fit many different types of linear
-regression or classification models on a (grouped) \code{tibble}.
+regression models on a (grouped) \code{tibble}.
 }
 \details{
-Cross validation is performed using the 'rsample' package with possible methods including 'initial_split' (simple train-test split), 'initial_time_split' (train-test split with retained order), 'vfold' (aka kfold) cross validation, 'loo' and time series ('rolling_origin') cross validation. \code{.cv = "rolling_origin"} implements either rolling or expanding window cross validation using 'rsample::rolling_origin'.
+Models are passed to \code{...} using the \code{\link{m}} function. The models can be passed as name-function pairs (e.g. \code{ols = m("lm")}) or without including a name. In the latter case the 'model_method' argument in \code{m()} becomes the name.
 
-Hyperparameter grids passed to \code{.control} are optimized using the MSE for regression problems, and Accuracy for classification problems.
+Hyperparameters are tuned automatically using the '.cv' and '.cv_args' arguments, or can be passed to \code{m()} (e.g. \code{lasso = m("lasso", lambda = 0.5)}). See the individual model functions (\code{?m()}) for an overview of hyperparameters.
 
-The method function passed to \code{...} must have a specific input and output format. The package includes a number of methods (see \code{m.lm}, \code{m.lasso}, \code{m.boost} for instance), but it is possible to pass custom functions here.
+Cross validation is performed using the 'rsample' package with possible methods including 'initial_split' (simple train-test split), 'initial_time_split' (train-test split with retained order), 'vfold' (aka kfold) cross validation, 'loo' and time series ('rolling_origin') cross validation. \code{.cv = "rolling_origin"} implements either rolling or expanding window cross validation using 'rsample::rolling_origin'. The mean-squared-error metric is used to validate performance in the cross-validation.
+
+Note that arguments for weights are automatically passed to the functions by setting the '.weights' argument.
 }
 \examples{
 data <- tidyfit::Factor_Industry_Returns
-fit <- regress(data, Return ~ ., lin_reg = mod_lm, .mask = "Date")
+fit <- regress(data, Return ~ ., ols = m("lm"), .mask = "Date")
 fit
 
 # View additional model information
 tidyr::unnest(fit, model_info)
 
 }
-\references{
-
-}
 \seealso{
-\code{tidypredict} method
+\code{\link{classify}} and \code{\link{cross_prod}} method
 }
 \author{
 Johann Pfitzinger
