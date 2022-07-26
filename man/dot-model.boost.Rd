@@ -32,7 +32,7 @@ The gradient boosting regression is performed using \code{mboost::glmboost}. For
 
 An intercept is always included and features are standardized with coefficients transformed to the original scale.
 
-If no hyperparameter grid is passed (\code{is.null(control$mstop)} and \code{is.null(control$nu)}), the default grid is used with \code{mstop = c(100, 500, 1000)} and \code{nu = c(0.01, 0.05, 0.1, 0.15, 0.2)}.
+If no hyperparameter grid is passed (\code{is.null(control$mstop)} and \code{is.null(control$nu)}), the default grid is used with \code{mstop = c(100, 500, 1000, 5000)} and \code{nu = c(0.01, 0.05, 0.1, 0.15, 0.2, 0.25)}.
 }
 \examples{
 x <- matrix(rnorm(100 * 20), 100, 20)

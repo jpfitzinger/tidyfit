@@ -11,7 +11,7 @@
 #'
 #' An intercept is always included and features are standardized with coefficients transformed to the original scale.
 #'
-#' If no hyperparameter grid is passed (\code{is.null(control$mstop)} and \code{is.null(control$nu)}), the default grid is used with \code{mstop = c(100, 500, 1000)} and \code{nu = c(0.01, 0.05, 0.1, 0.15, 0.2)}.
+#' If no hyperparameter grid is passed (\code{is.null(control$mstop)} and \code{is.null(control$nu)}), the default grid is used with \code{mstop = c(100, 500, 1000, 5000)} and \code{nu = c(0.01, 0.05, 0.1, 0.15, 0.2, 0.25)}.
 #'
 #' @param x input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
 #' @param y response variable.
@@ -57,8 +57,8 @@
   control <- control[names(control) %in% names(formals(mboost::glmboost))]
   control <- control[!names(control) %in% c("control", "center", "family")]
 
-  if (is.null(mstop)) mstop <- c(100, 500, 1000)
-  if (is.null(nu)) nu <- c(0.01, 0.05, 0.1, 0.15, 0.2)
+  if (is.null(mstop)) mstop <- c(100, 500, 1000, 5000)
+  if (is.null(nu)) nu <- c(0.01, 0.05, 0.1, 0.15, 0.2, 0.25)
 
   standard_mean <- apply(x, 2, mean)
   standard_sd <- apply(x, 2, stats::sd)
