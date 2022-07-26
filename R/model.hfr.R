@@ -43,10 +43,10 @@
     ) {
 
   f <- control$family
+  names(control)[names(control)=="kappa"] <- "kappa_grid"
   control <- control[names(control) %in% names(formals(hfr::cv.hfr))]
 
-  if (is.null(control$kappa)) control$kappa <- seq(0, 1, by = 0.1)
-  names(control)[names(control)=="kappa"] <- "kappa_grid"
+  if (is.null(control$kappa_grid)) control$kappa_grid <- seq(0, 1, by = 0.1)
 
   m <- do.call(hfr::cv.hfr, append(list(x = x, y = y, nfolds = 1), control))
 
