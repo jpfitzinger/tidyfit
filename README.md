@@ -14,9 +14,9 @@ package includes several methods, such as Lasso, PLS and ElasticNet
 regressions. `tidyfit` builds on the `tidymodels` suite, but emphasizes
 automated modeling with a focus on the linear regression and
 classification coefficients, which are the primary output of `tidyfit`.
-The primary objective is to make model fitting, cross validation and
-model output very simple and standardized across all methods, with
-method-specific transformations handled in the background.
+The objective is to make model fitting, cross validation and model
+output very simple and standardized across all methods, with the
+necessary method-specific transformations handled in the background.
 
 ## Installation
 
@@ -48,8 +48,8 @@ data <- tidyfit::Factor_Industry_Returns
 Models are fitted using `tidyfit::regress` for regression or
 `tidyfit::classify` for binomial classification problems. Below a linear
 regression is fitted using the `tidyfit::m` model wrapper, which
-standardizes a large number of regression and classification models. The
-date columns is masked and the industry column is one-hot encoded:
+standardizes a large number of regression and classification techniques.
+The date columns is masked and the industry column is one-hot encoded:
 
 ``` r
 fit <- data %>% 
@@ -132,7 +132,8 @@ penalty `lambda`. This can be done by passing values to `.cv` and
 `?rsample::vfold_cv`, `?rsample::loo_cv`, `?rsample::initial_split`,
 `?rsample::initial_time_split` or `?rsample::rolling_origin` to see
 optional arguments that can be passed to `.cv_args`. A reasonable
-hyperparameter grid is determined using the `dials` package.
+hyperparameter grid is determined using the `dials` package, or can be
+passed manually.
 
 ``` r
 fit <- data %>% 
@@ -167,7 +168,8 @@ it is not necessary to specify a model name:
 fit <- data %>% 
   group_by(Industry) %>% 
   regress(Return ~ ., m("lasso", lambda = seq(0, 0.4, by = 0.05)), .mask = "Date", 
-          .cv = "rolling_origin", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
+          .cv = "rolling_origin", 
+          .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
 
 fit %>% 
   ggplot(aes(variable, Industry)) +
@@ -246,15 +248,15 @@ fit <- data %>%
 
 `tidyfit` makes a few things easier:
 
--   Methods returned statistically comparable outputs. For instance, all
+-   Methods return statistically comparable outputs. For instance, all
     covariates are standardized and the coefficients are
     back-transformed to the original scale. This is not done by all
     underlying packages (e.g. `pls`, which is used for the PCR and PLSR
     methods).
 -   Hyperparameter grids are set to reasonable starting values. Custom
-    grids can be passed to the model wrappers
-    (e.g. `mod_lasso(lambda = seq(0, 1, by = 0.1))`).
--   Hyperparameter can be tuned across all groups or separately within
+    grids can be passed to the model wrapper
+    (e.g. `m("lasso", lambda = seq(0, 1, by = 0.1))`).
+-   Hyperparameters can be tuned across all groups or separately within
     each group by setting the `.tune_each_group` flag.
 -   Results for the individual slices can be returned using the
     `.return_slices` flag. This is particularly useful for rolling
