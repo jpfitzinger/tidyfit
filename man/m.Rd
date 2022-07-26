@@ -10,7 +10,8 @@ m(
   y = NULL,
   ...,
   .return_method_name = FALSE,
-  .check_family = FALSE
+  .check_family = FALSE,
+  .remove_dependent_features = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ m(
 \item{.return_method_name}{When \code{TRUE}, the function simply returns the 'method' argument.}
 
 \item{.check_family}{When \code{TRUE}, the function returns a flag indicating whether a custom 'family' object has been passed to \code{...}.}
+
+\item{.remove_dependent_features}{When \code{TRUE}, linearly dependent features are removed using \code{qr(x)}. This avoids errors in several methods such as 'subsets' or´ 'lm'.}
 }
 \value{
 A 'tibble'.
@@ -69,6 +72,11 @@ The function can fit various regression or classification models and returns the
 \subsection{Best subset selection}{
 
 \code{"subset"} performs a best subset regression or classification using \code{bestglm::bestglm} (wrapper for \code{leaps}). See \code{\link{.model.subset}} for details.
+}
+
+\subsection{Bayesian regression}{
+
+\code{"bayes"} performs a Bayesian generalized regression or classification using \code{arm::bayesglm}. See \code{\link{.model.bayes}} for details.
 }
 
 \subsection{Miscellaneous}{
