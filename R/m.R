@@ -36,6 +36,10 @@
 #'
 #' \code{"subset"} performs a best subset regression or classification using \code{bestglm::bestglm} (wrapper for \code{leaps}). See \code{\link{.model.subset}} for details.
 #'
+#' ### Bayesian regression
+#'
+#' \code{"bayes"} performs a Bayesian generalized regression or classification using \code{arm::bayesglm}. See \code{\link{.model.bayes}} for details.
+#'
 #' ### Miscellaneous
 #'
 #' \code{"cor"} calculates Pearson correlation coefficients using \code{stats::cor}. See \code{\link{.model.cor}} for details.
@@ -48,6 +52,7 @@
 #' @param ...  Additional arguments passed to the underlying method function (e.g. \code{lm} or \code{glm}).
 #' @param .return_method_name When \code{TRUE}, the function simply returns the 'method' argument.
 #' @param .check_family When \code{TRUE}, the function returns a flag indicating whether a custom 'family' object has been passed to \code{...}.
+#' @param .remove_dependent_features When \code{TRUE}, linearly dependent features are removed using \code{qr(x)}. This avoids errors in several methods such as 'subsets' or´ 'lm'.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
 #'
@@ -69,13 +74,15 @@
 #'
 #' @importFrom purrr partial
 #' @importFrom dials grid_regular penalty
+#' @importFrom tidyr complete
 
 m <- function(model_method,
               x = NULL,
               y = NULL,
               ...,
               .return_method_name = FALSE,
-              .check_family = FALSE
+              .check_family = FALSE,
+              .remove_dependent_features = TRUE
               ) {
 
   .check_method(model_method, "exists")
@@ -89,8 +96,22 @@ m <- function(model_method,
     return(do.call(purrr::partial, args))
   }
   x <- data.frame(x, check.names = F)
+
+  # Remove linearly dependent features
+  if (.remove_dependent_features) {
+    qr_x <- qr(x)
+    x_ <- x[, qr_x$pivot[seq_len(qr_x$rank)]]
+    if (ncol(x) > ncol(x_))
+      warning("linearly dependent columns removed")
+  } else {
+    x_ <- x
+  }
+
   tmp_ <- structure("", class = model_method)
-  args <- list(x = x, y = y, control = additional_args, identifier = tmp_)
-  return(do.call(.model, args))
+  args <- list(x = x_, y = y, control = additional_args, identifier = tmp_)
+  mod <- do.call(.model, args)
+  mod <- tidyr::complete(mod, variable = colnames(x), grid_id, family, fill = list(beta = 0))
+
+  return(mod)
 
 }
