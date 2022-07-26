@@ -49,7 +49,7 @@ Models are fitted using `tidyfit::regress` for regression or
 `tidyfit::classify` for binomial classification problems. Below a linear
 regression is fitted using the `tidyfit::m` model wrapper, which
 standardizes a large number of regression and classification techniques.
-The date columns is masked and the industry column is one-hot encoded:
+The date column is masked and the industry column is one-hot encoded:
 
 ``` r
 fit <- data %>% 
@@ -58,22 +58,22 @@ fit
 #> # A tibble: 16 × 4
 #>    variable          beta model   model_info      
 #>    <chr>            <dbl> <chr>   <list>          
-#>  1 (Intercept)   -0.00408 lin_reg <tibble [1 × 5]>
-#>  2 IndustryEnrgy -0.00409 lin_reg <tibble [1 × 5]>
-#>  3 IndustryHiTec  0.0559  lin_reg <tibble [1 × 5]>
-#>  4 IndustryHlth   0.0506  lin_reg <tibble [1 × 5]>
-#>  5 IndustryManuf -0.0469  lin_reg <tibble [1 × 5]>
-#>  6 IndustryNoDur  0.0171  lin_reg <tibble [1 × 5]>
-#>  7 IndustryOther -0.0707  lin_reg <tibble [1 × 5]>
-#>  8 IndustryShops  0.0405  lin_reg <tibble [1 × 5]>
-#>  9 IndustryTelcm -0.184   lin_reg <tibble [1 × 5]>
-#> 10 IndustryUtils -0.181   lin_reg <tibble [1 × 5]>
-#> 11 CMA            0.117   lin_reg <tibble [1 × 5]>
-#> 12 HML            0.0601  lin_reg <tibble [1 × 5]>
-#> 13 `Mkt-RF`       0.977   lin_reg <tibble [1 × 5]>
-#> 14 RF             1.01    lin_reg <tibble [1 × 5]>
-#> 15 RMW            0.164   lin_reg <tibble [1 × 5]>
-#> 16 SMB            0.0178  lin_reg <tibble [1 × 5]>
+#>  1 `Mkt-RF`       0.977   lin_reg <tibble [1 × 5]>
+#>  2 CMA            0.117   lin_reg <tibble [1 × 5]>
+#>  3 HML            0.0601  lin_reg <tibble [1 × 5]>
+#>  4 IndustryEnrgy -0.00409 lin_reg <tibble [1 × 5]>
+#>  5 IndustryHiTec  0.0559  lin_reg <tibble [1 × 5]>
+#>  6 IndustryHlth   0.0506  lin_reg <tibble [1 × 5]>
+#>  7 IndustryManuf -0.0469  lin_reg <tibble [1 × 5]>
+#>  8 IndustryNoDur  0.0171  lin_reg <tibble [1 × 5]>
+#>  9 IndustryOther -0.0707  lin_reg <tibble [1 × 5]>
+#> 10 IndustryShops  0.0405  lin_reg <tibble [1 × 5]>
+#> 11 IndustryTelcm -0.184   lin_reg <tibble [1 × 5]>
+#> 12 IndustryUtils -0.181   lin_reg <tibble [1 × 5]>
+#> 13 RF             1.01    lin_reg <tibble [1 × 5]>
+#> 14 RMW            0.164   lin_reg <tibble [1 × 5]>
+#> 15 SMB            0.0178  lin_reg <tibble [1 × 5]>
+#> 16 (Intercept)   -0.00408 lin_reg <tibble [1 × 5]>
 ```
 
 Detailed model and hyperparameter information is nested and can be
@@ -85,22 +85,22 @@ fit %>%
 #> # A tibble: 16 × 8
 #>    variable          beta model   family      s.e. `t value` `p value` Adj. R-…¹
 #>    <chr>            <dbl> <chr>   <list>     <dbl>     <dbl>     <dbl>     <dbl>
-#>  1 (Intercept)   -0.00408 lin_reg <family> 0.133     -0.0306  9.76e- 1     0.625
-#>  2 IndustryEnrgy -0.00409 lin_reg <family> 0.172     -0.0237  9.81e- 1     0.625
-#>  3 IndustryHiTec  0.0559  lin_reg <family> 0.172      0.325   7.45e- 1     0.625
-#>  4 IndustryHlth   0.0506  lin_reg <family> 0.172      0.294   7.69e- 1     0.625
-#>  5 IndustryManuf -0.0469  lin_reg <family> 0.172     -0.272   7.85e- 1     0.625
-#>  6 IndustryNoDur  0.0171  lin_reg <family> 0.172      0.0994  9.21e- 1     0.625
-#>  7 IndustryOther -0.0707  lin_reg <family> 0.172     -0.411   6.81e- 1     0.625
-#>  8 IndustryShops  0.0405  lin_reg <family> 0.172      0.235   8.14e- 1     0.625
-#>  9 IndustryTelcm -0.184   lin_reg <family> 0.172     -1.07    2.85e- 1     0.625
-#> 10 IndustryUtils -0.181   lin_reg <family> 0.172     -1.05    2.93e- 1     0.625
-#> 11 CMA            0.117   lin_reg <family> 0.0281     4.18    2.94e- 5     0.625
-#> 12 HML            0.0601  lin_reg <family> 0.0182     3.31    9.30e- 4     0.625
-#> 13 `Mkt-RF`       0.977   lin_reg <family> 0.00985   99.3     0            0.625
-#> 14 RF             1.01    lin_reg <family> 0.145      6.99    2.91e-12     0.625
-#> 15 RMW            0.164   lin_reg <family> 0.0191     8.56    1.41e-17     0.625
-#> 16 SMB            0.0178  lin_reg <family> 0.0140     1.27    2.03e- 1     0.625
+#>  1 `Mkt-RF`       0.977   lin_reg <family> 0.00985   99.3     0            0.625
+#>  2 CMA            0.117   lin_reg <family> 0.0281     4.18    2.94e- 5     0.625
+#>  3 HML            0.0601  lin_reg <family> 0.0182     3.31    9.30e- 4     0.625
+#>  4 IndustryEnrgy -0.00409 lin_reg <family> 0.172     -0.0237  9.81e- 1     0.625
+#>  5 IndustryHiTec  0.0559  lin_reg <family> 0.172      0.325   7.45e- 1     0.625
+#>  6 IndustryHlth   0.0506  lin_reg <family> 0.172      0.294   7.69e- 1     0.625
+#>  7 IndustryManuf -0.0469  lin_reg <family> 0.172     -0.272   7.85e- 1     0.625
+#>  8 IndustryNoDur  0.0171  lin_reg <family> 0.172      0.0994  9.21e- 1     0.625
+#>  9 IndustryOther -0.0707  lin_reg <family> 0.172     -0.411   6.81e- 1     0.625
+#> 10 IndustryShops  0.0405  lin_reg <family> 0.172      0.235   8.14e- 1     0.625
+#> 11 IndustryTelcm -0.184   lin_reg <family> 0.172     -1.07    2.85e- 1     0.625
+#> 12 IndustryUtils -0.181   lin_reg <family> 0.172     -1.05    2.93e- 1     0.625
+#> 13 RF             1.01    lin_reg <family> 0.145      6.99    2.91e-12     0.625
+#> 14 RMW            0.164   lin_reg <family> 0.0191     8.56    1.41e-17     0.625
+#> 15 SMB            0.0178  lin_reg <family> 0.0140     1.27    2.03e- 1     0.625
+#> 16 (Intercept)   -0.00408 lin_reg <family> 0.133     -0.0306  9.76e- 1     0.625
 #> # … with abbreviated variable name ¹​`Adj. R-squared`
 ```
 
@@ -194,7 +194,7 @@ data_test <- data %>%
 ```
 
 Classification is possible with `tidyfit` using the `classify` function
-instead of `regress`. This passes a `family = "binomial"` argument to
+instead of `regress`. This passes a `family = binomial()` argument to
 the underlying model functions. Note that additional arguments can be
 specified in the model function that are passed on to the underlying
 estimator (in this case `glmnet::glmnet`):
@@ -230,7 +230,7 @@ table(pred$Truth, pred$Predicted)
 
 ### Parallel computation
 
-`tidyfit` parallelizes cross-validation computations using the `future`
+`tidyfit` parallelizes cross validation computations using the `future`
 package in conjunction with `furrr`. Parallel computation can therefore
 be activated by setting an appropriate plan:
 

@@ -46,7 +46,7 @@ data <- tidyfit::Factor_Industry_Returns
 
 ### Fitting a linear regression
 
-Models are fitted using `tidyfit::regress` for regression or `tidyfit::classify` for binomial classification problems. Below a linear regression is fitted using the `tidyfit::m` model wrapper, which standardizes a large number of regression and classification techniques. The date columns is masked and the industry column is one-hot encoded:
+Models are fitted using `tidyfit::regress` for regression or `tidyfit::classify` for binomial classification problems. Below a linear regression is fitted using the `tidyfit::m` model wrapper, which standardizes a large number of regression and classification techniques. The date column is masked and the industry column is one-hot encoded:
 
 ```{r}
 fit <- data %>% 
@@ -133,7 +133,7 @@ data_test <- data %>%
   filter(Date > 202112)
 ```
 
-Classification is possible with `tidyfit` using the `classify` function instead of `regress`. This passes a `family = "binomial"` argument to the underlying model functions. Note that additional arguments can be specified in the model function that are passed on to the underlying estimator (in this case `glmnet::glmnet`):
+Classification is possible with `tidyfit` using the `classify` function instead of `regress`. This passes a `family = binomial()` argument to the underlying model functions. Note that additional arguments can be specified in the model function that are passed on to the underlying estimator (in this case `glmnet::glmnet`):
 
 ```{r}
 fit <- data_train %>% 
@@ -157,7 +157,7 @@ table(pred$Truth, pred$Predicted)
 
 ### Parallel computation
 
-`tidyfit` parallelizes cross-validation computations using the `future` package in conjunction with `furrr`. Parallel computation can therefore be activated by setting an appropriate plan:
+`tidyfit` parallelizes cross validation computations using the `future` package in conjunction with `furrr`. Parallel computation can therefore be activated by setting an appropriate plan:
 
 ```{r}
 library(furrr)
