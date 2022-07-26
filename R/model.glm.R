@@ -1,6 +1,6 @@
 #' @name .model.glm
 #' @title Generalized linear regression for \code{tidyfit}
-#' @description Fits a logistic regression and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+#' @description Fits a linear or logistic regression and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 #'
 #' @details **Hyperparameters:**
 #'
