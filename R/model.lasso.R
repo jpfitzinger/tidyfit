@@ -1,0 +1,73 @@
+#' @name .model.lasso
+#' @title Lasso regression and classification for \code{tidyfit}
+#' @description Fits a linear regression or classification with L1 penalty and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+#'
+#' @details **Hyperparameters:**
+#'
+#' - \code{lambda} *(L1 penalty)*
+#'
+#' The Lasso regression is estimated using \code{glmnet::glmnet} with \code{alpha = 1}. For classification pass \code{family = "binomial"} to \code{control} or to the argument \code{...} in \code{\link{m}}.
+#'
+#' An intercept is always included and features are standardized with coefficients transformed to the original scale.
+#'
+#' If no hyperparameter grid is passed (\code{is.null(control$lambda)}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100. Note that the grid selection tools provided by \code{glmnet::glmnet} cannot be used (e.g. \code{dfmax}). This is to guarantee identical grids across groups in the tibble.
+#'
+#' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
+#' @param y Response variable.
+#' @param control  Additional arguments passed to \code{glmnet::glmnet}.
+#' @param ... Not used.
+#' @return A 'tibble'.
+#' @author Johann Pfitzinger
+#' @references
+#' Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010).
+#' Regularization Paths for Generalized Linear Models via Coordinate Descent.
+#' Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
+#'
+#' @examples
+#' x <- matrix(rnorm(100 * 20), 100, 20)
+#' y <- rnorm(100)
+#' fit <- m("lasso", x, y)
+#' fit
+#'
+#' @seealso \code{\link{.model.enet}}, \code{\link{.model.ridge}}, \code{\link{.model.adalasso}} and \code{\link{m}} methods
+#'
+#' @importFrom glmnet glmnet
+#' @importFrom dplyr mutate as_tibble
+#' @importFrom tidyr gather
+#' @importFrom stats coef
+#' @importFrom rlang .data
+#' @importFrom dials grid_regular penalty
+
+.model.lasso <- function(
+    x = NULL,
+    y = NULL,
+    control = NULL,
+    ...
+) {
+
+  control <- control[names(control) %in% names(formals(glmnet::glmnet))]
+  control <- control[names(control) != "alpha"]
+
+  f <- control$family
+  control$family <- f$family
+
+  if (is.null(control$lambda)) {
+    control$lambda <- dials::grid_regular(dials::penalty(), levels = 100)$penalty
+  }
+
+  m <- do.call(glmnet::glmnet, append(list(x = x, y = y, alpha = 1), control))
+
+  coefs <- stats::coef(m)
+  var_names <- rownames(coefs)
+
+  out <- coefs %>%
+    data.matrix %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(variable = var_names) %>%
+    tidyr::gather("grid_id", "beta", -.data$variable) %>%
+    dplyr::mutate(lambda = control$lambda[match(.data$grid_id, colnames(coefs))]) %>%
+    mutate(family = list(f))
+
+  return(out)
+
+}
