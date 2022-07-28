@@ -1,12 +1,10 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# tidyfit
+# tidyfit <img src="man/figures/logo_nobackground.png" align="right" alt="" width="120" />
 
 <!-- badges: start -->
 <!-- badges: end -->
-
-<img src="./man/figures/logo_nobackground.png" style="width:30.0%" />
 
 `tidyfit` is an `R`-package that facilitates and automates linear
 regression and classification modeling in a tidy environment. The
@@ -236,7 +234,6 @@ be activated by setting an appropriate plan:
 
 ``` r
 library(furrr)
-#> Loading required package: future
 plan(multisession(workers = 4))
 fit <- data %>% 
   group_by(Industry) %>% 

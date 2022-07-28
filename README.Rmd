@@ -15,12 +15,10 @@ knitr::opts_chunk$set(
 library(tidyverse)
 ```
 
-# tidyfit
+# tidyfit <img src="man/figures/logo_nobackground.png" align="right" alt="" width="120" />
 
 <!-- badges: start -->
 <!-- badges: end -->
-
-![](./man/figures/logo_nobackground.png){width=30%}
 
 `tidyfit` is an `R`-package that facilitates and automates linear regression and classification modeling in a tidy environment. The package includes several methods, such as Lasso, PLS and ElasticNet regressions. `tidyfit` builds on the `tidymodels` suite, but emphasizes automated modeling with a focus on the linear regression and classification coefficients, which are the primary output of `tidyfit`. The objective is to make model fitting, cross validation and model output very simple and standardized across all methods, with the necessary method-specific transformations handled in the background.
 
@@ -159,7 +157,7 @@ table(pred$Truth, pred$Predicted)
 
 `tidyfit` parallelizes cross validation computations using the `future` package in conjunction with `furrr`. Parallel computation can therefore be activated by setting an appropriate plan:
 
-```{r}
+```{r, eval=F}
 library(furrr)
 plan(multisession(workers = 4))
 fit <- data %>% 
