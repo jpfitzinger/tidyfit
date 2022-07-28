@@ -18,6 +18,7 @@
 #' @param .mask optional vector of columns names to ignore. Can be useful when using 'y ~ .' formula setup.
 #' @param .return_slices boolean. Should the output of individual cross validation slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.
 #' @param .tune_each_group boolean. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.
+#' @param .force_cv boolean. Should models be evaluated across all cv slices, even if no hyperparameters are tuned. Default is \code{.force_cv=TRUE}.
 #' @return A \code{tibble} containing estimated coefficients and model details for each group.
 #' @author Johann Pfitzinger
 #'
@@ -52,7 +53,8 @@ classify <- function(
     .weights = NULL,
     .mask = NULL,
     .return_slices = FALSE,
-    .tune_each_group = TRUE
+    .tune_each_group = TRUE,
+    .force_cv = FALSE
 ) {
 
   model_list <- list(...)
@@ -66,9 +68,13 @@ classify <- function(
     }
   }
   names(model_list) <- model_names
-  model_cv <- sapply(model_list,
-                     function(model) .check_method(model(.return_method_name = TRUE),
-                                                   "cv"))
+  if (.force_cv) {
+    model_cv <- rep(T, length(model_list))
+  } else {
+    model_cv <- sapply(model_list,
+                       function(model) .check_method(model(.return_method_name = TRUE),
+                                                     "cv"))
+  }
   sapply(model_list, function(model) .check_method(model(.return_method_name = TRUE),
                                                          "classify"))
 
@@ -80,7 +86,7 @@ classify <- function(
 
   df <- .data %>%
     do(result = .fit(., formula, model_list, .cv, .cv_args,
-                     .weights, gr_vars, .mask, binomial())) %>%
+                     .weights, gr_vars, .mask, binomial(), .force_cv)) %>%
     tidyr::unnest(.data$result)
 
   if (.cv == "none" | !any(model_cv)) {

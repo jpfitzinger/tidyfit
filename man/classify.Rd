@@ -21,6 +21,8 @@
 \item{.return_slices}{boolean. Should the output of individual cross validation slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.}
 
 \item{.tune_each_group}{boolean. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.}
+
+\item{.force_cv}{boolean. Should models be evaluated across all cv slices, even if no hyperparameters are tuned. Default is \code{.force_cv=TRUE}.}
 }
 \value{
 A \code{tibble} containing estimated coefficients and model details for each group.

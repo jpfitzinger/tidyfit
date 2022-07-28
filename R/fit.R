@@ -15,7 +15,8 @@
     .weights,
     gr_vars,
     .mask,
-    family
+    family,
+    .force_cv
     ) {
 
   .data <- .data %>%
@@ -58,7 +59,12 @@
   result <-
     purrr::map2_dfr(model_list, names(model_list), function(model, nam) {
 
-      do_cv <- .check_method(model(.return_method_name = TRUE), "cv")
+      if (.force_cv) {
+        do_cv <- TRUE
+      } else {
+        do_cv <- .check_method(model(.return_method_name = TRUE), "cv")
+      }
+
       if (.cv != "none" & do_cv) {
 
         result <- cv %>%
