@@ -75,6 +75,7 @@
 #' @importFrom purrr partial
 #' @importFrom dials grid_regular penalty
 #' @importFrom tidyr complete
+#' @importFrom rlang .data
 
 m <- function(model_method,
               x = NULL,
@@ -110,7 +111,7 @@ m <- function(model_method,
   tmp_ <- structure("", class = model_method)
   args <- list(x = x_, y = y, control = additional_args, identifier = tmp_)
   mod <- do.call(.model, args)
-  mod <- tidyr::complete(mod, variable = colnames(x), grid_id, family, fill = list(beta = 0))
+  mod <- tidyr::complete(mod, variable = colnames(x), .data$grid_id, .data$family, fill = list(beta = 0))
 
   return(mod)
 
