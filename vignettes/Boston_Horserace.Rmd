@@ -52,7 +52,7 @@ fit <- data_trn %>%
   regress(medv ~ ., OLS = m("lm"))
 ```
 
-Let's create a helper function to assess performance:
+Let's create a helper function to assess performance. The helper function wraps `tidyfit::cross_prod` and prepares in and out-of-sample performance stats:
 
 ```{r}
 assess <- function(fit, data_trn, data_tst) {
@@ -123,7 +123,7 @@ Regularization controls overfit by introducing parameter bias in exchange for a 
 ```{r, echo = F}
 library(kableExtra)
 tbl <- data.frame(
-  `Best subset` = c("Forward selection (`leaps`)", "Forward selection (`leaps`)", "Backward selection (`leaps`)", ""),
+  `Best subset` = c("Exhaustive search (`leaps`)", "Forward selection (`leaps`)", "Backward selection (`leaps`)", ""),
   `L2/L2 penalized` = c("Lasso (`glmnet`)", "Ridge (`glmnet`)", "ElasticNet (`glmnet`)", "Adaptive Lasso (`glmnet`)"),
   `Latent factors` = c("Principal components regression (`pls`)", "Partial least squares (`pls`)", "", ""),
   `Iterative` = c("Gradient Boosting (`mboost`)", "Hierarchical feature regression (`hfr`)", "", ""),
@@ -173,13 +173,13 @@ fit %>%
   rotate_x_text(90)
 ```
 
-The Bayesian regression achieves the highest out-of-sample performance, roughly on par with the adaptive Lasso and hierarchical feature regression. The subset selection algorithms achieve relatively good results, while the penalized and latent factor regressions perform worst. All methods improve on the OLS results.
+The adaptive Lasso regression achieves the highest out-of-sample performance, roughly on par with the Bayesian regression and hierarchical feature regression. The subset selection algorithms achieve relatively good results, while the penalized and latent factor regressions perform worst. All methods improve on the OLS results.
 
 ## A glimpse at the backend
 
 `tidyfit` makes it exceedingly simple to fit different regularized linear regressions. The package ensures that the input and output of the modeling engine, `tidyfit::m` are standardized and model results are comparable. For instance, whenever necessary, features are standardized with the coefficients transformed back to the original scale. Hyperparameter grids are set to reasonable starting values and can be passed manually to `tidyfit::m` as done in the case of the HFR above.
 
-The package further includes a `tidyfit::classfiy` method that assumes a binomial response. Most of the methods implemented can handle Gaussian and binomial responses. Furthermore, the `tidyfit::regress` and `tidyfit::classify` methods seamlessly integrate with grouped tibbles, making it extremely powerful to estimate a large number of regressions for different data groupings. Groups as well as response distributions are automatically respected by the `tidyfit::cross_prod` prediction method.
+The package further includes a `tidyfit::classify` method that assumes a binomial response. Most of the methods implemented can handle Gaussian and binomial responses. Furthermore, the `tidyfit::regress` and `tidyfit::classify` methods seamlessly integrate with grouped tibbles, making it extremely powerful to estimate a large number of regressions for different data groupings. Groups as well as response distributions are automatically respected by the `tidyfit::cross_prod` prediction method.
 
 ## What's the difference to `caret` or `parsnip`
 
