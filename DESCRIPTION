@@ -11,3 +11,7 @@ LazyData: true
 RoxygenNote: 7.1.2
 Imports: dplyr, tidyr, purrr, furrr, magrittr, stats, rsample, glmnet, pls, hfr, mboost, rlang, utils, lmtest, sandwich, dials, bestglm, arm
 Roxygen: list(markdown=TRUE)
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

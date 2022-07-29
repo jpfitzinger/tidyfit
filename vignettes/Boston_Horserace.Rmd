@@ -1,0 +1,186 @@
+---
+title: "Boston_Horserace"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Boston_Horserace}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+```{r}
+library(tidyverse) # Data wrangling
+library(furrr)     # Parallel computation
+library(ggpubr)    # Plotting wrapper for ggplot2
+library(tidyfit)   # Auto-ML modeling
+```
+
+The Boston house prices data set (`MASS::Boston`) presents a popular test case for regression algorithms. In this article, I assess the relative performance of 12 different linear regression techniques using `tidyfit::regress`.
+
+Let's begin by loading the data, and splitting it into equally sized training and test sets:
+
+```{r}
+data <- MASS::Boston
+
+# For reproducibility
+set.seed(123)
+ix_tst <- sample(1:nrow(data), round(nrow(data)*0.5))
+
+data_trn <- data[-ix_tst,]
+data_tst <- data[ix_tst,]
+
+as_tibble(data)
+```
+
+The aim is to predict the median value of owner-occupied homes (`'medv'` in the data set) using the remaining columns.^[Have a look at `?MASS::Boston` for definitions of the features.] We will assess performance using R-squared, which is proportional to MSE and allows intuitive comparisons between in-sample and out-of-sample fit.
+
+## A simple regression
+
+To establish a baseline, we fit an OLS regression model and examine the test and training set R-squared. The `tidyfit::cross_prod` function can be used to obtain predictions, and `yardstick` is used to obtain performance metrics. The regression is estimated using `tidyfit::regress`. `tidyfit::m` is a generic model wrapper that is capable of fitting a large number of different algorithms:
+
+```{r}
+fit <- data_trn %>% 
+  regress(medv ~ ., OLS = m("lm"))
+```
+
+Let's create a helper function to assess performance:
+
+```{r}
+assess <- function(fit, data_trn, data_tst) {
+  
+  oos <- fit %>% 
+    cross_prod(data_tst) %>% 
+    group_by(model, .add = TRUE) %>% 
+    yardstick::rsq_trad(medv, pred) %>% 
+    mutate(type = "Out-of-sample") %>% 
+    arrange(desc(.estimate)) %>% 
+    mutate(model = factor(model, levels = unique(.$model)))
+  
+  is <- fit %>% 
+    cross_prod(data_trn) %>% 
+    group_by(model, .add = TRUE) %>% 
+    yardstick::rsq_trad(medv, pred) %>% 
+    mutate(type = "In-sample")
+  
+  return(bind_rows(oos, is))
+  
+}
+
+plotter <- function(df) {
+  df %>% 
+    mutate(lab = round(.estimate, 2)) %>% 
+    mutate(model = str_wrap(model, 12)) %>% 
+    ggscatter("model", ".estimate", color = "type", size = 3, shape = 4, 
+              label = "lab", label.rectangle = TRUE, font.label = c(9), repel = T) %>% 
+    ggpar(ggtheme = theme_bw(), legend = "top", 
+          legend.title = "", xlab = F, ylab = "R-squared", palette = c("firebrick", "darkblue")) +
+    coord_cartesian(ylim = c(0.65, 0.95))
+}
+```
+
+Now we plot the resulting metrics:
+
+```{r, fig.width=3, fig.height=3, fig.align="center"}
+fit %>% 
+  assess(data_trn, data_tst) %>% 
+  plotter %>% 
+  ggpar(legend = "right")
+```
+
+The in-sample fit of the regression is naturally better than out-of-sample, but the difference is not large. The results can be improved substantially by adding interaction terms between features. This leads to a vast improvement in in-sample fit (again, this is a logical consequence of including a large number of regressors), but leads to no improvement in out-of-sample fit, suggesting substantial overfit:
+
+```{r, fig.width=3, fig.height=3, fig.align="center"}
+fit <- data_trn %>% 
+  regress(medv ~ . + .*., OLS = m("lm"))
+
+fit %>% 
+  assess(data_trn, data_tst) %>% 
+  plotter %>% 
+  ggpar(legend = "right")
+```
+
+## Regularized regression estimators
+
+Regularization controls overfit by introducing parameter bias in exchange for a reduction in estimator variance. A large number of approaches to regularization exist that can be summarized in at least 5 categories:
+
+1. Best subset selection
+2. L1/L2 penalized regression
+3. Latent factor regression
+4. Iterative algorithms
+5. Bayesian regression
+
+`tidyfit` includes estimates from each of these categories, as summarized below:
+
+```{r, echo = F}
+library(kableExtra)
+tbl <- data.frame(
+  `Best subset` = c("Forward selection (`leaps`)", "Forward selection (`leaps`)", "Backward selection (`leaps`)", ""),
+  `L2/L2 penalized` = c("Lasso (`glmnet`)", "Ridge (`glmnet`)", "ElasticNet (`glmnet`)", "Adaptive Lasso (`glmnet`)"),
+  `Latent factors` = c("Principal components regression (`pls`)", "Partial least squares (`pls`)", "", ""),
+  `Iterative` = c("Gradient Boosting (`mboost`)", "Hierarchical feature regression (`hfr`)", "", ""),
+  `Bayesian` = c("Bayesian regression (`arm`)", "", "", ""),
+  check.names = F
+)
+kbl(tbl, align = "ccccc") %>% 
+  kable_styling("striped")
+
+```
+
+In the next code chunk, most of the available regression techniques are fitted to the data set. Hyperparameters are optimized using a 10-fold cross validation powered by `rsample` and `furrr` in the background. Using `furrr` ensures that a `future` plan can be set to perform hyperparameter tuning on a parallelized backend:
+
+```{r, eval=F}
+plan(multisession(workers = 12))
+fit <- data_trn %>% 
+  regress(medv ~ . + .*., 
+          OLS = m("lm"),
+          BAYES = m("bayes"),
+          `FORWARD SELECTION` = m("subset", method = "forward", IC = "AIC"),
+          `BACKWARD SELECTION` = m("subset", method = "backward", IC = "AIC"),
+          LASSO = m("lasso"), 
+          RIDGE = m("ridge"), 
+          ELASTICNET = m("enet"), 
+          ADALASSO = m("adalasso"),
+          PCR = m("pcr"), 
+          PLSR = m("plsr"), 
+          HFR = m("hfr", kappa = seq(0, 1, by = 0.01)), 
+          `GRADIENT BOOSTING` = m("boost"),
+          .cv = "vfold", .cv_args = list(v = 10))
+```
+
+```{r, eval=F, include=F}
+saveRDS(fit, "Boston_Horserace_results.rds")
+```
+
+```{r, include=F}
+fit <- readRDS("Boston_Horserace_results.rds")
+```
+
+Let's use `yardstick` again to calculate in-sample and out-of-sample performance statistics. The models are arranged descending order of test set performance:
+
+```{r, fig.width=7.25, fig.height=4.25, fig.align="center"}
+fit %>% 
+  assess(data_trn, data_tst) %>% 
+  plotter +
+  rotate_x_text(90)
+```
+
+The Bayesian regression achieves the highest out-of-sample performance, roughly on par with the adaptive Lasso and hierarchical feature regression. The subset selection algorithms achieve relatively good results, while the penalized and latent factor regressions perform worst. All methods improve on the OLS results.
+
+## A glimpse at the backend
+
+`tidyfit` makes it exceedingly simple to fit different regularized linear regressions. The package ensures that the input and output of the modeling engine, `tidyfit::m` are standardized and model results are comparable. For instance, whenever necessary, features are standardized with the coefficients transformed back to the original scale. Hyperparameter grids are set to reasonable starting values and can be passed manually to `tidyfit::m` as done in the case of the HFR above.
+
+The package further includes a `tidyfit::classfiy` method that assumes a binomial response. Most of the methods implemented can handle Gaussian and binomial responses. Furthermore, the `tidyfit::regress` and `tidyfit::classify` methods seamlessly integrate with grouped tibbles, making it extremely powerful to estimate a large number of regressions for different data groupings. Groups as well as response distributions are automatically respected by the `tidyfit::cross_prod` prediction method.
+
+## What's the difference to `caret` or `parsnip`
+
+`tidyfit` is focused on the estimation of **regression coefficients** and the efficient handling of **high-volume model estimation** in grouped tibbles. The output is centered on the estimation of comparable regression and classification equations and coefficient vectors. Existing modeling wrappers such as `caret` and `parsnip` focus instead on standardized prediction workflows.
