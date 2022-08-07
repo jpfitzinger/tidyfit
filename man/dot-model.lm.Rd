@@ -19,14 +19,14 @@
 A 'tibble'.
 }
 \description{
-Fits a linear regression and returns the results as a tibble. \code{\link{regress}} and \code{\link{classify}}.
+Fits a linear regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
 }
 \details{
 \strong{Hyperparameters:}
 
 \emph{None. Cross validation not applicable.}
 
-The function provides a wrapper for \code{stats::glm}.
+The function provides a wrapper for \code{stats::lm}.
 
 An argument \code{vcov.} can be passed in control or to \code{...} in \code{\link{m}} to estimate the model with robust standard errors. \code{vcov.} can be one of "BS", "HAC", "HC" and "OPG" and is passed to the \code{sandwich} package.
 }
@@ -42,7 +42,7 @@ fit
 
 }
 \seealso{
-\code{\link{.model.glm}} and \code{\link{m}} methods
+\code{\link{.model.robust}}, \code{\link{.model.glm}} and \code{\link{m}} methods
 }
 \author{
 Johann Pfitzinger
