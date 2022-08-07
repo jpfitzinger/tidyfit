@@ -26,6 +26,304 @@ You can install the development version of tidyfit from
 devtools::install_github("jpfitzinger/tidyfit")
 ```
 
+## Why use `tidyfit`?
+
+Here are some reasons to use `tidyfit`:
+
+1.  It provides a standardized wrapper — `m(<method>, x, y, ...)` — for
+    many regression and classification techniques (see table below)
+2.  All arguments can be passed individually or as grids
+    (e.g. `m("quantile", tau = c(0.1, 0.5, 0.9))`), making scenario
+    analysis and setting hyperparameter grids very easy
+3.  Automated hyperparameter tuning with `regress` and `classify` using
+    `rsample` as a cross validation engine
+4.  Fit models on grouped tibbles (fit by group with option to tune
+    hyperparameter within or across groups)
+5.  Outputs (coefficients) are comparable across all methods
+
+## Methods implemented in `tidyfit`
+
+See `?m` for additional information:
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Method
+</th>
+<th style="text-align:center;">
+Name
+</th>
+<th style="text-align:center;">
+Package
+</th>
+<th style="text-align:center;">
+Regression
+</th>
+<th style="text-align:center;">
+Classification
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+OLS
+</td>
+<td style="text-align:center;">
+lm
+</td>
+<td style="text-align:center;">
+`stats::lm`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Generalized least squares
+</td>
+<td style="text-align:center;">
+glm
+</td>
+<td style="text-align:center;">
+`stats::glm`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Robust regression (e.g. Huber loss)
+</td>
+<td style="text-align:center;">
+robust
+</td>
+<td style="text-align:center;">
+`MASS::rlm`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Quantile regression
+</td>
+<td style="text-align:center;">
+quantile
+</td>
+<td style="text-align:center;">
+`quantreg`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LASSO
+</td>
+<td style="text-align:center;">
+lasso
+</td>
+<td style="text-align:center;">
+`glmnet`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ridge
+</td>
+<td style="text-align:center;">
+ridge
+</td>
+<td style="text-align:center;">
+`glmnet`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Adaptive LASSO
+</td>
+<td style="text-align:center;">
+adalasso
+</td>
+<td style="text-align:center;">
+`glmnet`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ElasticNet
+</td>
+<td style="text-align:center;">
+enet
+</td>
+<td style="text-align:center;">
+`glmnet`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gradient boosting regression
+</td>
+<td style="text-align:center;">
+boost
+</td>
+<td style="text-align:center;">
+`mboost`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Principal components regression
+</td>
+<td style="text-align:center;">
+pcr
+</td>
+<td style="text-align:center;">
+`pls`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Partial least squares
+</td>
+<td style="text-align:center;">
+plsr
+</td>
+<td style="text-align:center;">
+`pls`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Hierarchical feature regression
+</td>
+<td style="text-align:center;">
+hfr
+</td>
+<td style="text-align:center;">
+`hfr`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Best subset selection
+</td>
+<td style="text-align:center;">
+subset
+</td>
+<td style="text-align:center;">
+`bestglm`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Bayesian regression
+</td>
+<td style="text-align:center;">
+bayes
+</td>
+<td style="text-align:center;">
+`arm`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pearson correlation
+</td>
+<td style="text-align:center;">
+cor
+</td>
+<td style="text-align:center;">
+`stats::cor`
+</td>
+<td style="text-align:center;">
+n/a
+</td>
+<td style="text-align:center;">
+n/a
+</td>
+</tr>
+</tbody>
+</table>
+
 ## Example
 
 ### Fama-French factor and industry data
@@ -53,25 +351,25 @@ The date column is masked and the industry column is one-hot encoded:
 fit <- data %>% 
   regress(Return ~ ., lin_reg = m("lm"), .mask = "Date")
 fit
-#> # A tibble: 16 × 4
-#>    variable          beta model   model_info      
-#>    <chr>            <dbl> <chr>   <list>          
-#>  1 `Mkt-RF`       0.977   lin_reg <tibble [1 × 5]>
-#>  2 CMA            0.117   lin_reg <tibble [1 × 5]>
-#>  3 HML            0.0601  lin_reg <tibble [1 × 5]>
-#>  4 IndustryEnrgy -0.00409 lin_reg <tibble [1 × 5]>
-#>  5 IndustryHiTec  0.0559  lin_reg <tibble [1 × 5]>
-#>  6 IndustryHlth   0.0506  lin_reg <tibble [1 × 5]>
-#>  7 IndustryManuf -0.0469  lin_reg <tibble [1 × 5]>
-#>  8 IndustryNoDur  0.0171  lin_reg <tibble [1 × 5]>
-#>  9 IndustryOther -0.0707  lin_reg <tibble [1 × 5]>
-#> 10 IndustryShops  0.0405  lin_reg <tibble [1 × 5]>
-#> 11 IndustryTelcm -0.184   lin_reg <tibble [1 × 5]>
-#> 12 IndustryUtils -0.181   lin_reg <tibble [1 × 5]>
-#> 13 RF             1.01    lin_reg <tibble [1 × 5]>
-#> 14 RMW            0.164   lin_reg <tibble [1 × 5]>
-#> 15 SMB            0.0178  lin_reg <tibble [1 × 5]>
-#> 16 (Intercept)   -0.00408 lin_reg <tibble [1 × 5]>
+#> # A tibble: 16 × 5
+#>    variable          beta grid_id model   model_info      
+#>    <chr>            <dbl> <chr>   <chr>   <list>          
+#>  1 `Mkt-RF`       0.977   s0001   lin_reg <tibble [1 × 5]>
+#>  2 CMA            0.117   s0001   lin_reg <tibble [1 × 5]>
+#>  3 HML            0.0601  s0001   lin_reg <tibble [1 × 5]>
+#>  4 IndustryEnrgy -0.00409 s0001   lin_reg <tibble [1 × 5]>
+#>  5 IndustryHiTec  0.0559  s0001   lin_reg <tibble [1 × 5]>
+#>  6 IndustryHlth   0.0506  s0001   lin_reg <tibble [1 × 5]>
+#>  7 IndustryManuf -0.0469  s0001   lin_reg <tibble [1 × 5]>
+#>  8 IndustryNoDur  0.0171  s0001   lin_reg <tibble [1 × 5]>
+#>  9 IndustryOther -0.0707  s0001   lin_reg <tibble [1 × 5]>
+#> 10 IndustryShops  0.0405  s0001   lin_reg <tibble [1 × 5]>
+#> 11 IndustryTelcm -0.184   s0001   lin_reg <tibble [1 × 5]>
+#> 12 IndustryUtils -0.181   s0001   lin_reg <tibble [1 × 5]>
+#> 13 RF             1.01    s0001   lin_reg <tibble [1 × 5]>
+#> 14 RMW            0.164   s0001   lin_reg <tibble [1 × 5]>
+#> 15 SMB            0.0178  s0001   lin_reg <tibble [1 × 5]>
+#> 16 (Intercept)   -0.00408 s0001   lin_reg <tibble [1 × 5]>
 ```
 
 Detailed model and hyperparameter information is nested and can be
@@ -80,26 +378,26 @@ expanded:
 ``` r
 fit %>% 
   unnest(model_info)
-#> # A tibble: 16 × 8
-#>    variable          beta model   family      s.e. `t value` `p value` Adj. R-…¹
-#>    <chr>            <dbl> <chr>   <list>     <dbl>     <dbl>     <dbl>     <dbl>
-#>  1 `Mkt-RF`       0.977   lin_reg <family> 0.00985   99.3     0            0.625
-#>  2 CMA            0.117   lin_reg <family> 0.0281     4.18    2.94e- 5     0.625
-#>  3 HML            0.0601  lin_reg <family> 0.0182     3.31    9.30e- 4     0.625
-#>  4 IndustryEnrgy -0.00409 lin_reg <family> 0.172     -0.0237  9.81e- 1     0.625
-#>  5 IndustryHiTec  0.0559  lin_reg <family> 0.172      0.325   7.45e- 1     0.625
-#>  6 IndustryHlth   0.0506  lin_reg <family> 0.172      0.294   7.69e- 1     0.625
-#>  7 IndustryManuf -0.0469  lin_reg <family> 0.172     -0.272   7.85e- 1     0.625
-#>  8 IndustryNoDur  0.0171  lin_reg <family> 0.172      0.0994  9.21e- 1     0.625
-#>  9 IndustryOther -0.0707  lin_reg <family> 0.172     -0.411   6.81e- 1     0.625
-#> 10 IndustryShops  0.0405  lin_reg <family> 0.172      0.235   8.14e- 1     0.625
-#> 11 IndustryTelcm -0.184   lin_reg <family> 0.172     -1.07    2.85e- 1     0.625
-#> 12 IndustryUtils -0.181   lin_reg <family> 0.172     -1.05    2.93e- 1     0.625
-#> 13 RF             1.01    lin_reg <family> 0.145      6.99    2.91e-12     0.625
-#> 14 RMW            0.164   lin_reg <family> 0.0191     8.56    1.41e-17     0.625
-#> 15 SMB            0.0178  lin_reg <family> 0.0140     1.27    2.03e- 1     0.625
-#> 16 (Intercept)   -0.00408 lin_reg <family> 0.133     -0.0306  9.76e- 1     0.625
-#> # … with abbreviated variable name ¹​`Adj. R-squared`
+#> # A tibble: 16 × 9
+#>    variable         beta grid_id model family      s.e. t val…¹ p valu…² Adj. …³
+#>    <chr>           <dbl> <chr>   <chr> <list>     <dbl>   <dbl>    <dbl>   <dbl>
+#>  1 `Mkt-RF`      0.977   s0001   lin_… <family> 0.00985 99.3    0          0.625
+#>  2 CMA           0.117   s0001   lin_… <family> 0.0281   4.18   2.94e- 5   0.625
+#>  3 HML           0.0601  s0001   lin_… <family> 0.0182   3.31   9.30e- 4   0.625
+#>  4 IndustryEnr… -0.00409 s0001   lin_… <family> 0.172   -0.0237 9.81e- 1   0.625
+#>  5 IndustryHiT…  0.0559  s0001   lin_… <family> 0.172    0.325  7.45e- 1   0.625
+#>  6 IndustryHlth  0.0506  s0001   lin_… <family> 0.172    0.294  7.69e- 1   0.625
+#>  7 IndustryMan… -0.0469  s0001   lin_… <family> 0.172   -0.272  7.85e- 1   0.625
+#>  8 IndustryNoD…  0.0171  s0001   lin_… <family> 0.172    0.0994 9.21e- 1   0.625
+#>  9 IndustryOth… -0.0707  s0001   lin_… <family> 0.172   -0.411  6.81e- 1   0.625
+#> 10 IndustrySho…  0.0405  s0001   lin_… <family> 0.172    0.235  8.14e- 1   0.625
+#> 11 IndustryTel… -0.184   s0001   lin_… <family> 0.172   -1.07   2.85e- 1   0.625
+#> 12 IndustryUti… -0.181   s0001   lin_… <family> 0.172   -1.05   2.93e- 1   0.625
+#> 13 RF            1.01    s0001   lin_… <family> 0.145    6.99   2.91e-12   0.625
+#> 14 RMW           0.164   s0001   lin_… <family> 0.0191   8.56   1.41e-17   0.625
+#> 15 SMB           0.0178  s0001   lin_… <family> 0.0140   1.27   2.03e- 1   0.625
+#> 16 (Intercept)  -0.00408 s0001   lin_… <family> 0.133   -0.0306 9.76e- 1   0.625
+#> # … with abbreviated variable names ¹​`t value`, ²​`p value`, ³​`Adj. R-squared`
 ```
 
 Now, instead of fitting a single regression, we need to fit a regression
@@ -120,7 +418,62 @@ fit %>%
   scale_fill_gradient2(low = "firebrick", high = "forestgreen")
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" style="display: block; margin: auto;" />
+
+### Multiple arguments
+
+One advantage of `tidyfit` is that it allows arguments to be passed to
+the underlying methods as vectors. For instance, fitting a robust Huber
+regression (using `MASS::rlm` in the background) instead of a linear
+regression, it is possible to compare different estimation algorithms by
+passing a vector of arguments:
+
+``` r
+fit <- data %>% 
+  group_by(Industry) %>% 
+  regress(Return ~ ., robust_reg = m("robust", method = c("M", "MM")), .mask = "Date")
+```
+
+Let’s examine the difference in coefficients for a single
+sector-regression:
+
+``` r
+fit %>% 
+  filter(Industry == "Durbl") %>% 
+  unnest(model_info) %>% 
+  select(Industry, variable, beta, method) %>% 
+  spread(method, beta)
+#> # A tibble: 7 × 4
+#> # Groups:   Industry [1]
+#>   Industry variable         M     MM
+#>   <fct>    <chr>        <dbl>  <dbl>
+#> 1 Durbl    (Intercept) -0.232 -0.341
+#> 2 Durbl    `Mkt-RF`     1.20   1.18 
+#> 3 Durbl    CMA          0.229  0.184
+#> 4 Durbl    HML          0.265  0.251
+#> 5 Durbl    RF           0.526  0.816
+#> 6 Durbl    RMW          0.173  0.125
+#> 7 Durbl    SMB          0.184  0.188
+```
+
+Passing multiple arguments is also useful when fitting a quantile
+regression (using `quantreg::rq` in the background):
+
+``` r
+fit <- data %>% 
+  group_by(Industry) %>% 
+  regress(Return ~ ., quantile_reg = m("quantile", tau = c(0.1, 0.5, 0.9)), .mask = "Date")
+
+fit %>% 
+  filter(Industry == "Durbl") %>% 
+  unnest(model_info) %>% 
+  select(Industry, variable, beta, tau) %>% 
+  mutate(tau = as.factor(tau)) %>% 
+  ggplot(aes(variable, beta, color = tau)) +
+  geom_point()
+```
+
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" style="display: block; margin: auto;" />
 
 ### Fitting a Lasso regression
 
@@ -145,7 +498,7 @@ fit %>%
   scale_fill_gradient2(low = "firebrick", high = "forestgreen")
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" style="display: block; margin: auto;" />
 
 The results do not appear to be different from a linear regression. To
 compare methods, simply pass multiple models:
@@ -175,7 +528,7 @@ fit %>%
   scale_fill_gradient2(low = "firebrick", high = "forestgreen")
 ```
 
-<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" style="display: block; margin: auto;" />
 
 ### Predicting with an ElasticNet classifier
 
@@ -221,9 +574,9 @@ pred <- fit %>%
 # Print a confusion matrix
 table(pred$Truth, pred$Predicted)
 #>    
-#>      0  1
-#>   0 15  3
-#>   1  3  9
+#>       0   1
+#>   0 176   4
+#>   1 104  16
 ```
 
 ### Parallel computation

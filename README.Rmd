@@ -1,5 +1,6 @@
 ---
 output: github_document
+always_allow_html: true
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -9,7 +10,9 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  out.width = "100%",
+  message = FALSE, 
+  warning = FALSE
 )
 
 library(tidyverse)
@@ -29,6 +32,40 @@ You can install the development version of tidyfit from [GitHub](https://github.
 ```{r, eval=F}
 # install.packages("devtools")
 devtools::install_github("jpfitzinger/tidyfit")
+```
+
+## Why use `tidyfit`?
+
+Here are some reasons to use `tidyfit`:
+
+  1. It provides a standardized wrapper --- `m(<method>, x, y, ...)` --- for many regression and classification techniques (see table below)
+  2. All arguments can be passed individually or as grids (e.g. `m("quantile", tau = c(0.1, 0.5, 0.9))`), making scenario analysis and setting hyperparameter grids very easy
+  3. Automated hyperparameter tuning with `regress` and `classify` using `rsample` as a cross validation engine
+  4. Fit models on grouped tibbles (fit by group with option to tune hyperparameter within or across groups)
+  5. Outputs (coefficients) are comparable across all methods
+  
+## Methods implemented in `tidyfit`
+
+See `?m` for additional information:
+
+```{r, echo = F}
+library(kableExtra)
+tbl <- data.frame(
+  Method = c("OLS", "Generalized least squares", "Robust regression (e.g. Huber loss)", 
+             "Quantile regression", "LASSO", "Ridge", "Adaptive LASSO", "ElasticNet",
+             "Gradient boosting regression", "Principal components regression", "Partial least squares",
+             "Hierarchical feature regression", "Best subset selection", "Bayesian regression", "Pearson correlation"),
+  Name = c("lm", "glm", "robust", "quantile", "lasso", "ridge", "adalasso", "enet", "boost", "pcr", "plsr", 
+           "hfr", "subset", "bayes", "cor"),
+  Package = c("`stats::lm`", "`stats::glm`", "`MASS::rlm`", "`quantreg`", "`glmnet`", "`glmnet`", "`glmnet`", "`glmnet`",
+              "`mboost`", "`pls`", "`pls`", "`hfr`", "`bestglm`", "`arm`", "`stats::cor`"),
+  Regression = c("yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "n/a"),
+  Classification = c("no", "yes", "no", "no", "yes", "yes", "yes", "yes", "yes", "no", "no", "no", "yes", "yes", "n/a")
+)
+
+kbl(tbl, align = "lcccc") %>% 
+  kable_styling("striped")
+
 ```
 
 ## Example
@@ -76,6 +113,43 @@ fit %>%
   scale_fill_gradient2(low = "firebrick", high = "forestgreen")
 ```
 
+### Multiple arguments
+
+One advantage of `tidyfit` is that it allows arguments to be passed to the underlying methods as vectors. For instance, fitting a robust Huber regression (using `MASS::rlm` in the background) instead of a linear regression, it is possible to compare different estimation algorithms by passing a vector of arguments:
+
+```{r}
+fit <- data %>% 
+  group_by(Industry) %>% 
+  regress(Return ~ ., robust_reg = m("robust", method = c("M", "MM")), .mask = "Date")
+```
+
+Let's examine the difference in coefficients for a single sector-regression:
+
+```{r}
+fit %>% 
+  filter(Industry == "Durbl") %>% 
+  unnest(model_info) %>% 
+  select(Industry, variable, beta, method) %>% 
+  spread(method, beta)
+```
+
+Passing multiple arguments is also useful when fitting a quantile regression (using `quantreg::rq` in the background):
+
+```{r, fig.width=10, fig.height=5, fig.align="center"}
+fit <- data %>% 
+  group_by(Industry) %>% 
+  regress(Return ~ ., quantile_reg = m("quantile", tau = c(0.1, 0.5, 0.9)), .mask = "Date")
+
+fit %>% 
+  filter(Industry == "Durbl") %>% 
+  unnest(model_info) %>% 
+  select(Industry, variable, beta, tau) %>% 
+  mutate(tau = as.factor(tau)) %>% 
+  ggplot(aes(variable, beta, color = tau)) +
+  geom_point()
+```
+
+
 ### Fitting a Lasso regression
 
 Fitting a Lasso regression requires hyperparameter tuning for the penalty `lambda`. This can be done by passing values to `.cv` and `.cv_args`. Cross validation is performed using `rsample`. See `?rsample::vfold_cv`, `?rsample::loo_cv`, `?rsample::initial_split`, `?rsample::initial_time_split` or `?rsample::rolling_origin` to see optional arguments that can be passed to `.cv_args`. A reasonable hyperparameter grid is determined using the `dials` package, or can be passed manually.
@@ -94,7 +168,7 @@ fit %>%
 
 The results do not appear to be different from a linear regression. To compare methods, simply pass multiple models:
 
-```{r}
+```{r, eval=F}
 fit <- data %>% 
   group_by(Industry) %>% 
   regress(Return ~ ., lasso_reg = m("lasso"), lin_reg = m("lm"), .mask = "Date", 
