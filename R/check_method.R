@@ -19,7 +19,9 @@
 
 }
 
-.valid_methods <- c("lm", "glm", "lasso", "ridge", "enet", "adalasso", "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes")
+.valid_methods <- c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
+                    "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile")
 .valid_cv <- c("lasso", "ridge", "enet", "adalasso", "pcr", "plsr", "hfr", "boost")
-.valid_regress <- c("lm", "glm", "lasso", "ridge", "enet", "adalasso", "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes")
+.valid_regress <- c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
+                    "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile")
 .valid_classify <- c("glm", "lasso", "ridge", "enet", "adalasso", "boost", "subset", "bayes")
