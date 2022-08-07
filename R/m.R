@@ -10,6 +10,10 @@
 #'
 #' \code{"glm"} performs a generalized regression using \code{stats::glm}. See \code{\link{.model.glm}} for details.
 #'
+#' \code{"robust"} performs a robust regression using \code{MASS::rlm}. See \code{\link{.model.robust}} for details.
+#'
+#' \code{"quantile"} performs a quantile regression using \code{quantreg::rq}. See \code{\link{.model.quantile}} for details.
+#'
 #' ### Regression and classification with L1 and L2 penalties
 #'
 #' \code{"lasso"} performs a linear regression or classification with L1 penalty using \code{glmnet::glmnet}. See \code{\link{.model.lasso}} for details.
@@ -75,7 +79,8 @@
 #' @importFrom purrr partial
 #' @importFrom dials grid_regular penalty
 #' @importFrom tidyr complete
-#' @importFrom rlang .data
+#' @importFrom rlang .data dots_list
+#' @importFrom dplyr mutate
 
 m <- function(model_method,
               x = NULL,
@@ -86,16 +91,21 @@ m <- function(model_method,
               .remove_dependent_features = TRUE
               ) {
 
+  # Checks
   .check_method(model_method, "exists")
   additional_args <- list(...)
   if (.return_method_name) return(model_method)
-  if (.check_family) return("family" %in% names(additional_args))
+  if (.check_family) return("family" %in% names(args))
+
+  # Partialised function when no data is passed
   if (is.null(x) & is.null(y)) {
-    args <- c(as.list(environment()), additional_args)
+    # args <- c(as.list(environment()), additional_args)
+    args <- c(list(model_method = model_method), additional_args)
     args <- args[!names(args) %in% c("x", "y")]
     args <- append(args, list(.f = m))
     return(do.call(purrr::partial, args))
   }
+
   x <- data.frame(x, check.names = F)
 
   # Remove linearly dependent features
@@ -108,10 +118,51 @@ m <- function(model_method,
     x_ <- x
   }
 
+  # Set default hyperparameter grids
+  default_grids <- .default_hp_grid(model_method,
+                                    additional_args,
+                                    nvars = ncol(x_))
+  additional_args <- append(additional_args, default_grids)
+
+  # Used to define the class
   tmp_ <- structure("", class = model_method)
-  args <- list(x = x_, y = y, control = additional_args, identifier = tmp_)
-  mod <- do.call(.model, args)
-  mod <- tidyr::complete(mod, variable = colnames(x), .data$grid_id, .data$family, fill = list(beta = 0))
+
+  if (length(additional_args)==0) {
+    args <- list(x = x_, y = y, control = additional_args, identifier = tmp_)
+    mod <- do.call(.model, args)
+    if ("grid_id" %in% colnames(mod)) {
+      mod <- mod %>%
+        tidyr::complete(variable = colnames(x), .data$grid_id, .data$family, fill = list(beta = 0))
+    } else {
+      mod <- mod %>%
+        tidyr::complete(variable = colnames(x), .data$family, fill = list(beta = 0)) %>%
+        dplyr::mutate(grid_id = "s000")
+    }
+  } else {
+    args_grid <- .args_to_grid(model_method, additional_args)
+    mod <- args_grid %>%
+      purrr::map2_dfr(formatC(1:length(args_grid), 2, flag = "0"),
+                      function(additional_args, grd_id) {
+        args <- list(x = x_, y = y, control = additional_args, identifier = tmp_)
+        mod <- do.call(.model, args)
+        if ("grid_id" %in% colnames(mod)) {
+          mod <- mod %>%
+            tidyr::complete(variable = colnames(x), .data$grid_id, .data$family, fill = list(beta = 0)) %>%
+            dplyr::mutate(grid_id = paste0(grd_id, .data$grid_id))
+        } else {
+          mod <- mod %>%
+            tidyr::complete(variable = colnames(x), .data$family, fill = list(beta = 0)) %>%
+            dplyr::mutate(grid_id = grd_id)
+        }
+      })
+
+    # Sanitize grid_id labels
+    grid_names <- sort(unique(mod$grid_id))
+    grid_ids <- paste0("s", formatC(seq_along(grid_names), 3, flag = "0"))
+    names(grid_ids) <- grid_names
+    mod <- mod %>%
+      dplyr::mutate(grid_id = grid_ids[.data$grid_id])
+  }
 
   return(mod)
 

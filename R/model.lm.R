@@ -1,6 +1,6 @@
 #' @name .model.lm
 #' @title Linear regression for \code{tidyfit}
-#' @description Fits a linear regression and returns the results as a tibble. \code{\link{regress}} and \code{\link{classify}}.
+#' @description Fits a linear regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
 #'
 #' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
 #' @param y Response variable.
@@ -12,7 +12,7 @@
 #'
 #' *None. Cross validation not applicable.*
 #'
-#' The function provides a wrapper for \code{stats::glm}.
+#' The function provides a wrapper for \code{stats::lm}.
 #'
 #' An argument \code{vcov.} can be passed in control or to \code{...} in \code{\link{m}} to estimate the model with robust standard errors. \code{vcov.} can be one of "BS", "HAC", "HC" and "OPG" and is passed to the \code{sandwich} package.
 #'
@@ -28,13 +28,14 @@
 #' fit <- m("lm", x, y, vcov. = "HAC")
 #' fit
 #'
-#' @seealso \code{\link{.model.glm}} and \code{\link{m}} methods
+#' @seealso \code{\link{.model.robust}}, \code{\link{.model.glm}} and \code{\link{m}} methods
 #'
 #' @importFrom stats lm coef
-#' @importFrom dplyr tibble
+#' @importFrom dplyr tibble bind_cols
 #' @importFrom purrr partial
 #' @importFrom lmtest coeftest
 #' @importFrom sandwich vcovBS vcovHAC vcovHC vcovOPG
+#' @importFrom methods formalArgs
 
 .model.lm <- function(
     x = NULL,
@@ -45,7 +46,7 @@
 
   vcov. <- control$vcov.
   f <- control$family
-  control <- control[names(control) %in% names(formals(stats::lm))]
+  control <- control[names(control) %in% methods::formalArgs(stats::lm)]
 
   dat <- data.frame(y = y, x, check.names = FALSE)
   m <- do.call(stats::lm, append(list(formula = y~., data = dat), control))
@@ -65,7 +66,6 @@
 
   out <- dplyr::tibble(
     variable = c("(Intercept)", colnames(dat)[-1]),
-    grid_id = "default",
     beta = coefs,
     family = list(f),
     `s.e.` = coef_stats[, 2],
@@ -73,6 +73,9 @@
     `p value` = coef_stats[, 4],
     `Adj. R-squared` = summary(m)$adj.r.squared
     )
+  if (length(control) > 0) {
+    out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))
+  }
 
   return(out)
 

@@ -38,7 +38,7 @@
 #' @importFrom purrr map_dfc map_dfr map
 #' @importFrom stats coef
 #' @importFrom rlang .data
-#' @importFrom dials grid_regular penalty mixture
+#' @importFrom methods formalArgs
 
 .model.enet <- function(x = NULL,
                         y = NULL,
@@ -46,49 +46,28 @@
                         ...
                         ) {
 
-  control <- control[names(control) %in% names(formals(glmnet::glmnet))]
+  control <- control[names(control) %in% methods::formalArgs(glmnet::glmnet)]
 
   f <- control$family
   control$family <- f$family
 
-  if (is.null(control$lambda)) {
-    control$lambda <- dials::grid_regular(dials::penalty(), levels = 100)$penalty
-  }
+  m <- do.call(glmnet::glmnet, append(list(x = x, y = y), control))
 
-  if (is.null(control$alpha)) {
-    control$alpha <- dials::grid_regular(dials::mixture(), levels = 5)$mixture
-  }
-
-  alpha <- control$alpha
-  control <- control[names(control) != "alpha"]
-
-  mods <- seq_along(alpha) %>%
-    purrr::map(function(i) {
-      m <- do.call(glmnet::glmnet, append(list(x = x, y = y, alpha = alpha[i]), control))
-
-      coefs <- data.matrix(stats::coef(m), rownames.force = T)
-      colnames(coefs) <- paste(colnames(coefs), i, sep = "_")
-
-      grid <- tibble(
-        alpha = alpha[i],
-        lambda = control$lambda
-      )
-
-      return(list(coefs = coefs, grid = grid))
-    })
-
-  coefs <- purrr::map_dfc(mods, function(x) x$coefs)
-  grid <- purrr::map_dfr(mods, function(x) x$grid)
-  var_names <- rownames(mods[[1]]$coefs)
+  coefs <- coef(m)
+  var_names <- rownames(coefs)
+  colnames(coefs) <- formatC(1:ncol(coefs), 2, flag = "0")
 
   out <- coefs %>%
     data.matrix %>%
     dplyr::as_tibble() %>%
     dplyr::mutate(variable = var_names) %>%
     tidyr::gather("grid_id", "beta", -.data$variable) %>%
-    dplyr::mutate(alpha = grid$alpha[match(.data$grid_id, colnames(coefs))]) %>%
-    dplyr::mutate(lambda = grid$lambda[match(.data$grid_id, colnames(coefs))]) %>%
+    dplyr::mutate(lambda = control$lambda[match(.data$grid_id, colnames(coefs))]) %>%
     mutate(family = list(f))
+  control <- control[!names(control) %in% c("family", "lambda")]
+  if (length(control) > 0) {
+    out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))
+  }
 
   return(out)
 

@@ -36,7 +36,7 @@
 #' @importFrom tidyr gather
 #' @importFrom stats coef
 #' @importFrom rlang .data
-#' @importFrom dials grid_regular penalty
+#' @importFrom methods formalArgs
 
 .model.lasso <- function(
     x = NULL,
@@ -45,20 +45,17 @@
     ...
 ) {
 
-  control <- control[names(control) %in% names(formals(glmnet::glmnet))]
+  control <- control[names(control) %in% methods::formalArgs(glmnet::glmnet)]
   control <- control[names(control) != "alpha"]
 
   f <- control$family
   control$family <- f$family
 
-  if (is.null(control$lambda)) {
-    control$lambda <- dials::grid_regular(dials::penalty(), levels = 100)$penalty
-  }
-
   m <- do.call(glmnet::glmnet, append(list(x = x, y = y, alpha = 1), control))
 
   coefs <- stats::coef(m)
   var_names <- rownames(coefs)
+  colnames(coefs) <- formatC(1:ncol(coefs), 2, flag = "0")
 
   out <- coefs %>%
     data.matrix %>%
@@ -67,6 +64,10 @@
     tidyr::gather("grid_id", "beta", -.data$variable) %>%
     dplyr::mutate(lambda = control$lambda[match(.data$grid_id, colnames(coefs))]) %>%
     mutate(family = list(f))
+  control <- control[!names(control) %in% c("family", "lambda")]
+  if (length(control) > 0) {
+    out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))
+  }
 
   return(out)
 

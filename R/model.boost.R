@@ -36,6 +36,7 @@
 #' @importFrom purrr map_dbl partial quietly
 #' @importFrom dplyr mutate left_join n
 #' @importFrom tidyr gather expand_grid
+#' @importFrom methods formalArgs
 
 .model.boost <- function(
     x = NULL,
@@ -54,11 +55,8 @@
 
   mstop <- control$mstop
   nu <- control$nu
-  control <- control[names(control) %in% names(formals(mboost::glmboost))]
+  control <- control[names(control) %in% methods::formalArgs(mboost::glmboost)]
   control <- control[!names(control) %in% c("control", "center", "family")]
-
-  if (is.null(mstop)) mstop <- c(100, 500, 1000, 5000)
-  if (is.null(nu)) nu <- c(0.01, 0.05, 0.1, 0.15, 0.2, 0.25)
 
   standard_mean <- apply(x, 2, mean)
   standard_sd <- apply(x, 2, stats::sd)
@@ -68,31 +66,30 @@
 
   quiet_coefs <- purrr::quietly(stats::coef)
 
-  hyper_grid <- tidyr::expand_grid(mstop = mstop, nu = nu) %>%
-    dplyr::mutate(grid_id = paste0("s", 1:dplyr::n()))
+  ctr <- mboost::boost_control(mstop = mstop, nu = nu)
+  m <- do.call(mboost::glmboost, append(list(x = data.matrix(xs), y = y,
+                                             control = ctr, center = F,
+                                             family = family), control))
 
-  coefs <- purrr::map2_dfr(hyper_grid$mstop, hyper_grid$nu,
-                           function(mstop, nu) {
-      ctr <- mboost::boost_control(mstop = mstop, nu = nu)
-      m <- do.call(mboost::glmboost, append(list(x = data.matrix(xs), y = y,
-                                                 control = ctr, center = F,
-                                                 family = family), control))
+  beta <- purrr::map_dbl(colnames(xs), function(x) quiet_coefs(m, which = x, off2int = F)$result[x])
+  beta[1] <- beta[1] + m$offset
+  names(beta) <- colnames(xs)
+  if (f$family == "binomial") {
+    beta <- beta * 2
+  }
+  beta[-1] <- beta[-1] / standard_sd
+  beta[1] <- beta[1] - crossprod(beta[-1], standard_mean)
 
-      beta <- purrr::map_dbl(colnames(xs), function(x) quiet_coefs(m, which = x, off2int = F)$result[x])
-      beta[1] <- beta[1] + m$offset
-      names(beta) <- colnames(xs)
-      if (f$family == "binomial") {
-        beta <- beta * 2
-      }
-      beta[-1] <- beta[-1] / standard_sd
-      beta[1] <- beta[1] - crossprod(beta[-1], standard_mean)
-      out <- tibble(variable = names(beta), beta = beta, mstop = mstop, nu = nu)
-      return(out)
-    })
-
-  out <- coefs %>%
-    dplyr::left_join(hyper_grid, by = c("mstop", "nu")) %>%
-    mutate(family = list(f))
+  out <- dplyr::tibble(
+    variable = colnames(xs),
+    beta = beta,
+    family = list(f),
+    mstop = mstop,
+    nu = nu
+  )
+  if (length(control) > 0) {
+    out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))
+  }
 
   return(out)
 

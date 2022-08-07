@@ -33,8 +33,8 @@
 #'
 #' @importFrom pls pcr
 #' @importFrom stats coef sd
-#' @importFrom dplyr as_tibble mutate
-#' @importFrom tidyr gather
+#' @importFrom dplyr as_tibble mutate tibble bind_cols
+#' @importFrom methods formalArgs
 
 .model.pcr <- function(
     x = NULL,
@@ -47,37 +47,26 @@
     warning("pcr cannot handle weights, weights are ignored")
   }
   f <- control$family
-  control <- control[names(control) %in% names(formals(pls::pcr))]
+  control <- control[names(control) %in% methods::formalArgs(pls::mvr)]
 
   standard_mean <- apply(x, 2, mean)
   standard_sd <- apply(x, 2, stats::sd)
   xs <- as.matrix(scale(x, center = standard_mean, scale = standard_sd))
 
-  if (is.null(control$ncomp)) {
-    control$ncomp <- 1:ncol(xs)
+  m <- do.call(pls::pcr, append(list(formula = y~xs, scale=F, center=T), control))
+  beta <- drop(stats::coef(m, intercept = T))
+  beta[-1] <- beta[-1] / standard_sd
+  beta[1] <- beta[1] - crossprod(beta[-1], standard_mean)
+  var_names <- names(beta)
+
+  out <- dplyr::tibble(
+    variable = var_names,
+    beta = beta,
+    family = list(f)
+  )
+  if (length(control) > 0) {
+    out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))
   }
-
-  ncomps <- control$ncomp
-  control <- control[names(control) != "ncomp"]
-
-  coefs <- sapply(ncomps, function(ncomp) {
-    m <- do.call(pls::pcr, append(list(formula = y~xs, scale=F, center=T, ncomp=ncomp), control))
-    beta <- drop(stats::coef(m, intercept = T))
-    beta[-1] <- beta[-1] / standard_sd
-    beta[1] <- beta[1] - crossprod(beta[-1], standard_mean)
-    return(beta)
-  })
-  colnames(coefs) <- as.character(ncomps)
-
-  var_names <- rownames(coefs)
-
-  out <- coefs %>%
-    data.matrix %>%
-    dplyr::as_tibble() %>%
-    dplyr::mutate(variable = var_names) %>%
-    tidyr::gather("grid_id", "beta", -.data$variable) %>%
-    dplyr::mutate(ncomp = ncomps[match(.data$grid_id, colnames(coefs))]) %>%
-    mutate(family = list(f))
 
   return(out)
 

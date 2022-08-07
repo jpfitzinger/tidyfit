@@ -29,11 +29,12 @@
 #'
 #' @importFrom stats cor
 #' @importFrom dplyr tibble
+#' @importFrom methods formalArgs
 
 .model.cor <- function(x = NULL, y = NULL, control = NULL, ...) {
 
   f <- control$family
-  control <- control[names(control) %in% names(formals(stats::cor))]
+  control <- control[names(control) %in% methods::formalArgs(stats::cor)]
 
   x <- data.frame(x, check.names = FALSE)
 

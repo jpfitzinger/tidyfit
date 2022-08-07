@@ -33,6 +33,7 @@
 #'
 #' @importFrom bestglm bestglm
 #' @importFrom purrr quietly partial
+#' @importFrom methods formalArgs
 
 .model.subset <- function(
     x = NULL,
@@ -41,7 +42,7 @@
     ...
 ) {
 
-  control <- control[names(control) %in% names(formals(bestglm::bestglm))]
+  control <- control[names(control) %in% methods::formalArgs(bestglm::bestglm)]
   if (is.null(control$family)) {
     f <- gaussian()
   } else {
@@ -77,7 +78,6 @@
 
   out <- tibble(
     variable = var_names,
-    grid_id = "default",
     beta = coef_stats[, 1],
     family = list(f),
     `s.e.` = coef_stats[, 2],
@@ -85,6 +85,9 @@
     `p value` = coef_stats[, 4],
     `Adj. R-squared` = summary(m$BestModel)$adj.r.squared
   )
+  if (length(control) > 0) {
+    out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))
+  }
 
   return(out)
 

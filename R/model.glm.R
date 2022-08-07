@@ -25,11 +25,12 @@
 #' @seealso \code{\link{.model.lm}} and \code{\link{m}} methods
 #'
 #' @importFrom stats glm coef
-#' @importFrom dplyr tibble
+#' @importFrom dplyr tibble bind_cols
+#' @importFrom methods formalArgs
 
 .model.glm <- function(x = NULL, y = NULL, control = NULL, ...) {
 
-  control <- control[names(control) %in% names(formals(stats::glm))]
+  control <- control[names(control) %in% methods::formalArgs(stats::glm)]
 
   dat <- data.frame(y = y, x, check.names = FALSE)
   m <- do.call(stats::glm, append(list(formula = y~., data = dat), control))
@@ -45,6 +46,10 @@
     `p value` = summary(m)$coefficients[, 4],
     R.squared = summary(m)$adj.r.squared
   )
+  control <- control[!names(control) %in% c("family")]
+  if (length(control) > 0) {
+    out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))
+  }
 
   return(out)
 

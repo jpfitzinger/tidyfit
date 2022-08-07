@@ -34,6 +34,7 @@
 #' @importFrom tidyr gather
 #' @importFrom stats coef
 #' @importFrom rlang .data
+#' @importFrom methods formalArgs
 
 .model.hfr <- function(
     x = NULL,
@@ -44,15 +45,13 @@
 
   f <- control$family
   names(control)[names(control)=="kappa"] <- "kappa_grid"
-  control <- control[names(control) %in% names(formals(hfr::cv.hfr))]
-
-  if (is.null(control$kappa_grid)) control$kappa_grid <- seq(0, 1, by = 0.1)
+  control <- control[names(control) %in% methods::formalArgs(hfr::cv.hfr)]
 
   m <- do.call(hfr::cv.hfr, append(list(x = x, y = y, nfolds = 1), control))
 
   coefs <- stats::coef(m)
 
-  grid_ids <- paste0("s", seq_along(control$kappa_grid))
+  grid_ids <- formatC(seq_along(control$kappa_grid), 2, flag = "0")
   names(grid_ids) <- control$kappa_grid
 
   out <- coefs %>%
@@ -61,6 +60,10 @@
     tidyr::gather("kappa", "beta", -.data$variable) %>%
     dplyr::mutate(grid_id = grid_ids[.data$kappa]) %>%
     mutate(family = list(f))
+  control <- control[!names(control) %in% c("family", "kappa_grid")]
+  if (length(control) > 0) {
+    out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))
+  }
 
   return(out)
 

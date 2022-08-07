@@ -25,12 +25,14 @@
 #' @seealso \code{\link{.model.glm}} and \code{\link{m}} methods
 #'
 #' @importFrom stats coef
-#' @importFrom dplyr tibble
+#' @importFrom dplyr tibble as_tibble bind_cols
 #' @importFrom arm bayesglm
+#' @importFrom methods formalArgs
 
 .model.bayes <- function(x = NULL, y = NULL, control = NULL, ...) {
 
-  control <- control[names(control) %in% names(formals(arm::bayesglm))]
+  f <- control$family
+  control <- control[names(control) %in% methods::formalArgs(arm::bayesglm)]
 
   dat <- data.frame(y = y, x, check.names = FALSE)
   m <- do.call(arm::bayesglm, append(list(formula = y~., data = dat), control))
@@ -40,12 +42,16 @@
     variable = c("(Intercept)", colnames(dat)[-1]),
     grid_id = "default",
     beta = coefs,
-    family = list(control$family),
+    family = list(f),
     `s.e.` = summary(m)$coefficients[, 2],
     `t value` = summary(m)$coefficients[, 3],
     `p value` = summary(m)$coefficients[, 4],
     R.squared = summary(m)$adj.r.squared
   )
+  control <- control[!names(control) %in% c("family")]
+  if (length(control) > 0) {
+    out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))
+  }
 
   return(out)
 
