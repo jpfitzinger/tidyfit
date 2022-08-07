@@ -151,7 +151,7 @@ fit <- data_trn %>%
           ADALASSO = m("adalasso"),
           PCR = m("pcr"), 
           PLSR = m("plsr"), 
-          HFR = m("hfr", kappa = seq(0, 1, by = 0.01)), 
+          HFR = m("hfr"), 
           `GRADIENT BOOSTING` = m("boost"),
           .cv = "vfold", .cv_args = list(v = 10))
 ```
@@ -177,7 +177,7 @@ The adaptive Lasso regression achieves the highest out-of-sample performance, ro
 
 ## A glimpse at the backend
 
-`tidyfit` makes it exceedingly simple to fit different regularized linear regressions. The package ensures that the input and output of the modeling engine, `tidyfit::m` are standardized and model results are comparable. For instance, whenever necessary, features are standardized with the coefficients transformed back to the original scale. Hyperparameter grids are set to reasonable starting values and can be passed manually to `tidyfit::m` as done in the case of the HFR above.
+`tidyfit` makes it exceedingly simple to fit different regularized linear regressions. The package ensures that the input and output of the modeling engine, `tidyfit::m` are standardized and model results are comparable. For instance, whenever necessary, features are standardized with the coefficients transformed back to the original scale. Hyperparameter grids are set to reasonable starting values and can be passed manually to `tidyfit::m`.
 
 The package further includes a `tidyfit::classify` method that assumes a binomial response. Most of the methods implemented can handle Gaussian and binomial responses. Furthermore, the `tidyfit::regress` and `tidyfit::classify` methods seamlessly integrate with grouped tibbles, making it extremely powerful to estimate a large number of regressions for different data groupings. Groups as well as response distributions are automatically respected by the `tidyfit::cross_prod` prediction method.
 
