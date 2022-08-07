@@ -95,7 +95,7 @@ m <- function(model_method,
   .check_method(model_method, "exists")
   additional_args <- list(...)
   if (.return_method_name) return(model_method)
-  if (.check_family) return("family" %in% names(args))
+  if (.check_family) return("family" %in% names(additional_args))
 
   # Partialised function when no data is passed
   if (is.null(x) & is.null(y)) {
