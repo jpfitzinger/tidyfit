@@ -58,8 +58,11 @@ classify <- function(
 ) {
 
   model_list <- list(...)
+
+  # Checks
   if (length(model_list)==0)
     stop("provide at least one method.")
+
   model_names <- names(model_list)
   if (is.null(model_names)) model_names <- rep("", length(model_list))
   for (i in seq_along(model_names)) {
@@ -68,6 +71,7 @@ classify <- function(
     }
   }
   names(model_list) <- model_names
+
   if (.force_cv) {
     model_cv <- rep(T, length(model_list))
   } else {
@@ -75,6 +79,7 @@ classify <- function(
                        function(model) .check_method(model(.return_method_name = TRUE),
                                                      "cv"))
   }
+
   sapply(model_list, function(model) .check_method(model(.return_method_name = TRUE),
                                                          "classify"))
 
@@ -84,51 +89,54 @@ classify <- function(
 
   gr_vars <- dplyr::group_vars(.data)
 
+  # Fit models
   df <- .data %>%
     do(result = .fit(., formula, model_list, .cv, .cv_args,
                      .weights, gr_vars, .mask, binomial(), .force_cv)) %>%
     tidyr::unnest(.data$result)
 
-  if (.cv == "none" | !any(model_cv)) {
+  if (!.return_slices & .cv == "none") {
     df <- df %>%
-      dplyr::select(-.data$grid_id)
+      dplyr::select(-.data$slice_id)
+  }
 
-    if (!.return_slices) {
-      df <- df %>%
-        dplyr::select(-.data$slice_id)
-    }
-  } else {
+  if (.cv != "none") {
     # Select optimal hyperparameter setting
     df_no_cv <- df %>%
       dplyr::filter(.data$model %in% model_names[!model_cv]) %>%
-      dplyr::select(-.data$grid_id, -.data$slice_id)
+      dplyr::select(-.data$slice_id)
 
     df <- df %>%
       dplyr::filter(.data$model %in% model_names[model_cv])
-    if (.tune_each_group) {
-      df <- df %>%
-        dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))
-    }
 
-    df_slices <- df %>%
-      dplyr::filter(.data$slice_id != "FULL") %>%
-      dplyr::group_by(.data$model, .data$grid_id, .add = T) %>%
-      dplyr::mutate(crit = mean(.data$crit)) %>%
-      dplyr::ungroup(.data$grid_id) %>%
-      dplyr::filter(.data$crit == min(.data$crit)) %>%
-      dplyr::filter(.data$grid_id == unique(.data$grid_id)[1]) %>%
-      dplyr::select(-.data$crit)
-
-    if (.return_slices) {
-      df <- df_slices %>%
-        dplyr::select(-.data$grid_id)
+    if (nrow(df) == 0) {
+      df <- df_no_cv
     } else {
-      df <- df_slices %>%
-        dplyr::ungroup() %>%
-        dplyr::select(!!gr_vars, .data$variable, .data$grid_id, .data$model) %>%
-        dplyr::left_join(df %>% dplyr::ungroup() %>% dplyr::filter(.data$slice_id == "FULL"), by = c(gr_vars, "variable", "grid_id", "model")) %>%
-        dplyr::select(-.data$grid_id, -.data$crit, -.data$slice_id) %>%
-        bind_rows(df_no_cv)
+      if (.tune_each_group) {
+        df <- df %>%
+          dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))
+      }
+
+      df_slices <- df %>%
+        dplyr::filter(.data$slice_id != "FULL") %>%
+        dplyr::group_by(.data$model, .data$grid_id, .add = T) %>%
+        dplyr::mutate(crit = mean(.data$crit)) %>%
+        dplyr::ungroup(.data$grid_id) %>%
+        dplyr::filter(.data$crit == min(.data$crit)) %>%
+        dplyr::filter(.data$grid_id == unique(.data$grid_id)[1]) %>%
+        dplyr::select(-.data$crit)
+
+      if (.return_slices) {
+        df <- df_slices %>%
+          bind_rows(df_no_cv)
+      } else {
+        df <- df_slices %>%
+          dplyr::ungroup() %>%
+          dplyr::select(!!gr_vars, .data$variable, .data$grid_id, .data$model) %>%
+          dplyr::left_join(df %>% dplyr::ungroup() %>% dplyr::filter(.data$slice_id == "FULL"), by = c(gr_vars, "variable", "grid_id", "model")) %>%
+          dplyr::select(-.data$crit, -.data$slice_id) %>%
+          bind_rows(df_no_cv)
+      }
     }
   }
 
@@ -138,7 +146,7 @@ classify <- function(
     dplyr::do(temp = dplyr::select_if(., ~!all(is.na(.))))
 
   df <- df$temp %>%
-    purrr::map_dfr(~tidyr::nest(., model_info = -tidyr::any_of(c(gr_vars, "variable", "beta", "model", "slice_id"))))
+    purrr::map_dfr(~tidyr::nest(., model_info = -tidyr::any_of(c(gr_vars, "variable", "beta", "model", "slice_id", "grid_id"))))
 
   df <- df %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))

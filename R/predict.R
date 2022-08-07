@@ -7,11 +7,13 @@
 
 .predict <- function(.data, fit, gr_vars) {
 
-  model_list <- unique(fit$model)
+  eval_list <- fit %>%
+    dplyr::select(.data$model, .data$grid_id) %>%
+    dplyr::distinct()
 
   # Evaluate methods
   result <-
-    purrr::map_dfr(model_list, function(mod) {
+    purrr::map2_dfr(eval_list$model, eval_list$grid_id, function(mod, grd) {
 
       mask <- attr(fit, "structure")$mask
       weights <- attr(fit, "structure")$weights
@@ -20,7 +22,7 @@
         dplyr::select(-dplyr::any_of(mask), -dplyr::all_of(gr_vars), -dplyr::any_of(weights))
 
       fit_model <- fit %>%
-        dplyr::filter(.data$model == mod)
+        dplyr::filter(.data$model == mod, .data$grid_id == grd)
 
       f <- fit_model %>%
         tidyr::unnest(.data$model_info) %>%
@@ -50,7 +52,7 @@
       result <- .data %>%
         dplyr::mutate(pred = as.numeric(fit)) %>%
         dplyr::select(-dplyr::any_of(colnames(m[,-1])), -dplyr::all_of(gr_vars), -dplyr::any_of(weights)) %>%
-        dplyr::mutate(model = mod)
+        dplyr::mutate(model = mod, grid_id = grd)
 
       return(result)
 
