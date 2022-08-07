@@ -26,24 +26,71 @@ You can install the development version of tidyfit from
 devtools::install_github("jpfitzinger/tidyfit")
 ```
 
-## Why use `tidyfit`?
+## Overview
 
-Here are some reasons to use `tidyfit`:
+`tidyfit` includes 4 deceptively simple functions:
 
-1.  It provides a standardized wrapper — `m(<method>, x, y, ...)` — for
-    many regression and classification techniques (see table below)
-2.  All arguments can be passed individually or as grids
-    (e.g. `m("quantile", tau = c(0.1, 0.5, 0.9))`), making scenario
-    analysis and setting hyperparameter grids very easy
-3.  Automated hyperparameter tuning with `regress` and `classify` using
-    `rsample` as a cross validation engine
-4.  Fit models on grouped tibbles (fit by group with option to tune
-    hyperparameter within or across groups)
-5.  Outputs (coefficients) are comparable across all methods
+-   `regress()`
+-   `classify()`
+-   `m()`
+-   `cross_prod()`
+
+`regress` and `classify` perform regression and classification on tidy
+data. The functions ingest a tibble, prepare input data for the models
+by splitting groups, partitioning cross validation slices and handling
+any necessary adjustments and transformations. The data is then passed
+to the model wrapper `m()` which fits the models:
+
+``` r
+regress(
+  .data, 
+  formula = y ~ x1 + x2, 
+  mod1 = m(<args for underlying method>), mod2 = m(), ...,    # Pass multiple model wrappers
+  .cv = "vfold", .cv_args = list(), .weights = "weight_col",  # Additional settings
+  <some additional arguments>)
+)
+```
+
+The syntax is identical for `classify`.
+
+`m` is a powerful wrapper for many different regression and
+classification techniques that can be used with `regress` and
+`classify`, or stand-alone:
+
+``` r
+m(
+  <method>,           # e.g. "lm" or "lasso"
+  x, y,               # not passed when used within regress or classify
+  ...                 # Args passed to underlying method, e.g. stats::lm or glmnet::glmnet
+)
+```
+
+An important feature of `m()` is that all arguments can be passed as
+vectors, allowing generalized hyperparameter tuning or scenario analysis
+for any method:
+
+-   Passing a hyperparameter grid:
+    `m("lasso", lambda = seq(0, 1, by = 0.1))`
+-   Different algorithms for robust regression:
+    `m("robust", method = c("M", "MM"))`
+-   Logit and Probit models:
+    `m("glm", family = list(binomial(link="logit"), binomial(link="probit")))`
+
+`m()` performs **feature standardization** whenever necessary, it
+**always includes an intercept** and outputs regression coefficients and
+additional model information in a tidy format with **statistically
+comparable results** across all methods.
+
+Finally, predictions are produced using `cross_prod(<fit>, <data>)`. The
+function takes data groups, different models, different model settings,
+as well as the response family into account and produces predicted
+values.
+
+`tidyfit` integrates with `tidymodels`. It uses `dials` to set sensible
+default hyperparameter grids, it uses `rsample` for cross validation and
+the prediction results can easily be evaluated using `yardstick`.
 
 ## Methods implemented in `tidyfit`
-
-See `?m` for additional information:
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
@@ -324,6 +371,8 @@ n/a
 </tbody>
 </table>
 
+See `?m` for additional information.
+
 ## Example
 
 ### Fama-French factor and industry data
@@ -345,7 +394,8 @@ Models are fitted using `tidyfit::regress` for regression or
 `tidyfit::classify` for binomial classification problems. Below a linear
 regression is fitted using the `tidyfit::m` model wrapper, which
 standardizes a large number of regression and classification techniques.
-The date column is masked and the industry column is one-hot encoded:
+The date column is masked and the industry column is automatically
+one-hot encoded:
 
 ``` r
 fit <- data %>% 
@@ -418,7 +468,7 @@ fit %>%
   scale_fill_gradient2(low = "firebrick", high = "forestgreen")
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" style="display: block; margin: auto;" />
 
 ### Multiple arguments
 
@@ -473,7 +523,7 @@ fit %>%
   geom_point()
 ```
 
-<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" style="display: block; margin: auto;" />
 
 ### Fitting a Lasso regression
 
@@ -498,7 +548,7 @@ fit %>%
   scale_fill_gradient2(low = "firebrick", high = "forestgreen")
 ```
 
-<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" style="display: block; margin: auto;" />
 
 The results do not appear to be different from a linear regression. To
 compare methods, simply pass multiple models:
@@ -528,7 +578,7 @@ fit %>%
   scale_fill_gradient2(low = "firebrick", high = "forestgreen")
 ```
 
-<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" style="display: block; margin: auto;" />
 
 ### Predicting with an ElasticNet classifier
 
@@ -568,15 +618,15 @@ family specified during fitting:
 ``` r
 pred <- fit %>% 
   cross_prod(data_test) %>% 
-  mutate(Predicted = ifelse(pred > 0.5, 1, 0)) %>% 
+  mutate(Predicted = ifelse(prediction > 0.5, 1, 0)) %>% 
   rename(Truth = Return)
 
 # Print a confusion matrix
 table(pred$Truth, pred$Predicted)
 #>    
 #>       0   1
-#>   0 176   4
-#>   1 104  16
+#>   0 105   3
+#>   1  63   9
 ```
 
 ### Parallel computation
