@@ -8,6 +8,7 @@
 .predict <- function(.data, fit, gr_vars) {
 
   eval_list <- fit %>%
+    dplyr::ungroup() %>%
     dplyr::select(.data$model, .data$grid_id) %>%
     dplyr::distinct()
 
@@ -50,7 +51,7 @@
       if (!is.null(f)) fit <- f$linkinv(fit)
 
       result <- .data %>%
-        dplyr::mutate(pred = as.numeric(fit)) %>%
+        dplyr::mutate(prediction = as.numeric(fit)) %>%
         dplyr::select(-dplyr::any_of(colnames(m[,-1])), -dplyr::all_of(gr_vars), -dplyr::any_of(weights)) %>%
         dplyr::mutate(model = mod, grid_id = grd)
 
