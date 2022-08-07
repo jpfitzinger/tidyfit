@@ -8,8 +8,29 @@ Description: An extension to the R tidyverse for automated ML. The package allow
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
-Imports: dplyr, tidyr, purrr, furrr, magrittr, stats, rsample, glmnet, pls, hfr, mboost, rlang, utils, lmtest, sandwich, dials, bestglm, arm
+RoxygenNote: 7.2.1
+Imports: 
+  dplyr, 
+  tidyr, 
+  purrr, 
+  furrr, 
+  magrittr, 
+  stats, 
+  rsample, 
+  glmnet, 
+  pls, 
+  hfr, 
+  mboost, 
+  rlang, 
+  utils, 
+  lmtest, 
+  sandwich, 
+  dials, 
+  bestglm, 
+  arm, 
+  MASS, 
+  methods,
+  quantreg
 Roxygen: list(markdown=TRUE)
 Suggests: 
     knitr,
