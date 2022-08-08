@@ -60,7 +60,7 @@ assess <- function(fit, data_trn, data_tst) {
   oos <- fit %>% 
     cross_prod(data_tst) %>% 
     group_by(model, .add = TRUE) %>% 
-    yardstick::rsq_trad(medv, pred) %>% 
+    yardstick::rsq_trad(medv, prediction) %>% 
     mutate(type = "Out-of-sample") %>% 
     arrange(desc(.estimate)) %>% 
     mutate(model = factor(model, levels = unique(.$model)))
@@ -68,7 +68,7 @@ assess <- function(fit, data_trn, data_tst) {
   is <- fit %>% 
     cross_prod(data_trn) %>% 
     group_by(model, .add = TRUE) %>% 
-    yardstick::rsq_trad(medv, pred) %>% 
+    yardstick::rsq_trad(medv, prediction) %>% 
     mutate(type = "In-sample")
   
   return(bind_rows(oos, is))
