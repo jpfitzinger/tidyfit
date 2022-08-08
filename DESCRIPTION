@@ -10,29 +10,33 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
 Imports: 
+  arm,
+  bestglm,
+  dials,
   dplyr, 
-  tidyr, 
-  purrr, 
-  furrr, 
-  magrittr, 
-  stats, 
-  rsample, 
-  glmnet, 
-  pls, 
-  hfr, 
-  mboost, 
-  rlang, 
-  utils, 
-  lmtest, 
-  sandwich, 
-  dials, 
-  bestglm, 
-  arm, 
-  MASS, 
+  furrr,
+  glmnet,
+  hfr,
+  lmtest,
+  magrittr,
+  MASS,
+  mboost,
   methods,
-  quantreg
+  pls,
+  purrr,
+  quantreg,
+  rlang,
+  rsample,
+  sandwich,
+  stats,
+  tidyr,
+  utils
+Suggests:
+  ggpubr,
+  kableExtra,
+  knitr,
+  tidyverse,
+  rmarkdown,
+  yardstick
 Roxygen: list(markdown=TRUE)
-Suggests: 
-    knitr,
-    rmarkdown
 VignetteBuilder: knitr
