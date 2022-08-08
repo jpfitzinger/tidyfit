@@ -41,7 +41,7 @@ cross_prod <- function(fit, data) {
     tidyr::unnest(.data$result)
 
   df <- df %>%
-    dplyr::group_by(dplyr::across(tidyr::all_of(gr_vars)), grid_id)
+    dplyr::group_by(dplyr::across(tidyr::all_of(gr_vars)), .data$grid_id)
 
   return(df)
 
