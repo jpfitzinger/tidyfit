@@ -244,7 +244,6 @@ Classification is possible with `tidyfit` using the `classify` function instead 
 
 ```{r}
 fit <- data_train %>% 
-  mutate(Return = ifelse(Return > 0, 1, 0)) %>% 
   group_by(Industry) %>% 
   classify(Return ~ ., enet_clf = m("enet", maxit = 1e+06), .mask = "Date", 
           .cv = "rolling_origin", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
