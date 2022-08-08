@@ -42,7 +42,6 @@
 
   out <- dplyr::tibble(
     variable = c("(Intercept)", names(coefs)),
-    grid_id = "default",
     beta = c(0, coefs),
     family = list(f)
   )

@@ -38,7 +38,6 @@
 
   out <- dplyr::tibble(
     variable = c("(Intercept)", colnames(dat)[-1]),
-    grid_id = "default",
     beta = coefs,
     family = list(control$family),
     `s.e.` = summary(m)$coefficients[, 2],

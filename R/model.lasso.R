@@ -32,7 +32,7 @@
 #' @seealso \code{\link{.model.enet}}, \code{\link{.model.ridge}}, \code{\link{.model.adalasso}} and \code{\link{m}} methods
 #'
 #' @importFrom glmnet glmnet
-#' @importFrom dplyr mutate as_tibble
+#' @importFrom dplyr mutate as_tibble select
 #' @importFrom tidyr gather
 #' @importFrom stats coef
 #' @importFrom rlang .data
@@ -63,7 +63,9 @@
     dplyr::mutate(variable = var_names) %>%
     tidyr::gather("grid_id", "beta", -.data$variable) %>%
     dplyr::mutate(lambda = control$lambda[match(.data$grid_id, colnames(coefs))]) %>%
-    mutate(family = list(f))
+    mutate(family = list(f)) %>%
+    dplyr::select(.data$variable, .data$beta, .data$grid_id, .data$family, .data$lambda)
+
   control <- control[!names(control) %in% c("family", "lambda")]
   if (length(control) > 0) {
     out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))

@@ -80,7 +80,7 @@
 #' @importFrom dials grid_regular penalty
 #' @importFrom tidyr complete
 #' @importFrom rlang .data dots_list
-#' @importFrom dplyr mutate
+#' @importFrom dplyr mutate arrange relocate
 
 m <- function(model_method,
               x = NULL,
@@ -161,7 +161,9 @@ m <- function(model_method,
     grid_ids <- paste0("s", formatC(seq_along(grid_names), 3, flag = "0"))
     names(grid_ids) <- grid_names
     mod <- mod %>%
-      dplyr::mutate(grid_id = grid_ids[.data$grid_id])
+      dplyr::mutate(grid_id = grid_ids[.data$grid_id]) %>%
+      dplyr::arrange(.data$grid_id, .data$variable) %>%
+      dplyr::relocate(.data$variable, .data$beta, .data$grid_id, .data$family)
   }
 
   return(mod)

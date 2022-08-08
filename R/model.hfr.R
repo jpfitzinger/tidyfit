@@ -30,7 +30,7 @@
 #' @seealso \code{\link{m}} method
 #'
 #' @importFrom hfr cv.hfr
-#' @importFrom dplyr mutate as_tibble
+#' @importFrom dplyr mutate as_tibble select
 #' @importFrom tidyr gather
 #' @importFrom stats coef
 #' @importFrom rlang .data
@@ -59,7 +59,9 @@
     dplyr::mutate(variable = rownames(coefs)) %>%
     tidyr::gather("kappa", "beta", -.data$variable) %>%
     dplyr::mutate(grid_id = grid_ids[.data$kappa]) %>%
-    mutate(family = list(f))
+    mutate(family = list(f)) %>%
+    dplyr::select(.data$variable, .data$beta, .data$grid_id, .data$family, .data$kappa)
+
   control <- control[!names(control) %in% c("family", "kappa_grid")]
   if (length(control) > 0) {
     out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))
