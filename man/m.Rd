@@ -9,9 +9,9 @@ m(
   x = NULL,
   y = NULL,
   ...,
+  .remove_dependent_features = TRUE,
   .return_method_name = FALSE,
-  .check_family = FALSE,
-  .remove_dependent_features = TRUE
+  .check_family = FALSE
 )
 }
 \arguments{
@@ -23,11 +23,11 @@ m(
 
 \item{...}{Additional arguments passed to the underlying method function (e.g. \code{lm} or \code{glm}).}
 
+\item{.remove_dependent_features}{When \code{TRUE}, linearly dependent features are removed using \code{qr(x)}. This avoids errors in several methods such as 'subsets' or´ 'lm'.}
+
 \item{.return_method_name}{When \code{TRUE}, the function simply returns the 'method' argument.}
 
 \item{.check_family}{When \code{TRUE}, the function returns a flag indicating whether a custom 'family' object has been passed to \code{...}.}
-
-\item{.remove_dependent_features}{When \code{TRUE}, linearly dependent features are removed using \code{qr(x)}. This avoids errors in several methods such as 'subsets' or´ 'lm'.}
 }
 \value{
 A 'tibble'.

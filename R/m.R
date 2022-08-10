@@ -54,9 +54,9 @@
 #' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
 #' @param y Response variable.
 #' @param ...  Additional arguments passed to the underlying method function (e.g. \code{lm} or \code{glm}).
+#' @param .remove_dependent_features When \code{TRUE}, linearly dependent features are removed using \code{qr(x)}. This avoids errors in several methods such as 'subsets' or´ 'lm'.
 #' @param .return_method_name When \code{TRUE}, the function simply returns the 'method' argument.
 #' @param .check_family When \code{TRUE}, the function returns a flag indicating whether a custom 'family' object has been passed to \code{...}.
-#' @param .remove_dependent_features When \code{TRUE}, linearly dependent features are removed using \code{qr(x)}. This avoids errors in several methods such as 'subsets' or´ 'lm'.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
 #'
@@ -86,9 +86,9 @@ m <- function(model_method,
               x = NULL,
               y = NULL,
               ...,
+              .remove_dependent_features = TRUE,
               .return_method_name = FALSE,
-              .check_family = FALSE,
-              .remove_dependent_features = TRUE
+              .check_family = FALSE
               ) {
 
   # Checks
@@ -161,10 +161,13 @@ m <- function(model_method,
     grid_ids <- paste0("s", formatC(seq_along(grid_names), 3, flag = "0"))
     names(grid_ids) <- grid_names
     mod <- mod %>%
-      dplyr::mutate(grid_id = grid_ids[.data$grid_id]) %>%
-      dplyr::arrange(.data$grid_id, .data$variable) %>%
-      dplyr::relocate(.data$variable, .data$beta, .data$grid_id, .data$family)
+      dplyr::mutate(grid_id = grid_ids[.data$grid_id])
   }
+
+  # Arrange output
+  mod <- mod %>%
+    dplyr::arrange(.data$grid_id, .data$variable) %>%
+    dplyr::relocate(.data$variable, .data$beta, .data$grid_id, .data$family)
 
   return(mod)
 
