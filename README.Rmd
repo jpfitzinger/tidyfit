@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 )
 
 library(tidyverse)
+library(tidyfit)
 ```
 
 # tidyfit <img src="man/figures/logo_nobackground.png" align="right" alt="" width="120" />
@@ -32,6 +33,7 @@ You can install the development version of tidyfit from [GitHub](https://github.
 ```{r, eval=F}
 # install.packages("devtools")
 devtools::install_github("jpfitzinger/tidyfit")
+library(tidyfit)
 ```
 
 ## Overview
@@ -110,7 +112,6 @@ See `?m` for additional information.
 `tidyfit` includes a data set of financial factor returns freely available [here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html). The data set includes monthly industry returns for 10 industries, as well as monthly factor returns for 5 factors:
 
 ```{r example}
-library(tidyfit)
 data <- tidyfit::Factor_Industry_Returns
 ```
 

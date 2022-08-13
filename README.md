@@ -24,6 +24,7 @@ You can install the development version of tidyfit from
 ``` r
 # install.packages("devtools")
 devtools::install_github("jpfitzinger/tidyfit")
+library(tidyfit)
 ```
 
 ## Overview
@@ -384,7 +385,6 @@ The data set includes monthly industry returns for 10 industries, as
 well as monthly factor returns for 5 factors:
 
 ``` r
-library(tidyfit)
 data <- tidyfit::Factor_Industry_Returns
 ```
 
