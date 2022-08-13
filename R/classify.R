@@ -38,7 +38,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom tidyr unnest nest any_of
 #' @importFrom purrr map_dfr
-#' @importFrom dplyr group_vars group_by across all_of filter mutate ungroup select distinct left_join do select_if
+#' @importFrom dplyr group_vars group_by across all_of filter mutate ungroup select distinct left_join do select_if bind_rows
 #' @importFrom rlang .data
 #' @importFrom utils globalVariables
 
@@ -128,14 +128,14 @@ classify <- function(
 
       if (.return_slices) {
         df <- df_slices %>%
-          bind_rows(df_no_cv)
+          dplyr::bind_rows(df_no_cv)
       } else {
         df <- df_slices %>%
           dplyr::ungroup() %>%
           dplyr::select(!!gr_vars, .data$variable, .data$grid_id, .data$model) %>%
           dplyr::left_join(df %>% dplyr::ungroup() %>% dplyr::filter(.data$slice_id == "FULL"), by = c(gr_vars, "variable", "grid_id", "model")) %>%
           dplyr::select(-.data$crit, -.data$slice_id) %>%
-          bind_rows(df_no_cv)
+          dplyr::bind_rows(df_no_cv)
       }
     }
   }
