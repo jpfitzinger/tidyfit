@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# tidyfit <img src="man/figures/logo_nobackground.png" align="right" alt="" width="120" />
+# tidyfit <img src="man/figures/logo.png" align="right" alt="" width="120" />
 
 <!-- badges: start -->
 <!-- badges: end -->
