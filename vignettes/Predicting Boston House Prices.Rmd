@@ -1,8 +1,8 @@
 ---
-title: "Boston_Horserace"
+title: "Predicting Boston house prices"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Boston_Horserace}
+  %\VignetteIndexEntry{Predicting Boston house prices}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
