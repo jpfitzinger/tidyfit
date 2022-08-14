@@ -86,7 +86,7 @@ m <- function(model_method,
               x = NULL,
               y = NULL,
               ...,
-              .remove_dependent_features = TRUE,
+              .remove_dependent_features = FALSE,
               .return_method_name = FALSE,
               .check_family = FALSE
               ) {
@@ -100,7 +100,8 @@ m <- function(model_method,
   # Partialised function when no data is passed
   if (is.null(x) & is.null(y)) {
     # args <- c(as.list(environment()), additional_args)
-    args <- c(list(model_method = model_method), additional_args)
+    args <- c(list(model_method = model_method, .remove_dependent_features = .remove_dependent_features),
+              additional_args)
     args <- args[!names(args) %in% c("x", "y")]
     args <- append(args, list(.f = m))
     return(do.call(purrr::partial, args))
