@@ -28,7 +28,9 @@ Fits an ElasticNet regression or classification and returns the results as a tib
 \item \code{alpha} \emph{(L1-L2 mixing parameter)}
 }
 
-The ElasticNet regression is estimated using \code{glmnet::glmnet}. For classification pass \code{family = "binomial"} to \code{control} or to the argument \code{...} in \code{\link{m}}.
+The ElasticNet regression is estimated using \code{glmnet::glmnet}. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+
+If the response variable contains more than 2 classes, a multinomial response is used automatically.
 
 An intercept is always included and features are standardized with coefficients transformed to the original scale.
 

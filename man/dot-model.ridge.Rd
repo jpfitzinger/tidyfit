@@ -27,7 +27,9 @@ Fits a linear regression or classification with L2 penalty and returns the resul
 \item \code{lambda} \emph{(L2 penalty)}
 }
 
-The ridge regression is estimated using \code{glmnet::glmnet} with \code{alpha = 0}. For classification pass \code{family = "binomial"}  to \code{control} or to the argument \code{...} in \code{\link{m}}.
+The ridge regression is estimated using \code{glmnet::glmnet} with \code{alpha = 0}. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+
+If the response variable contains more than 2 classes, a multinomial response is used automatically.
 
 An intercept is always included and features are standardized with coefficients transformed to the original scale.
 
