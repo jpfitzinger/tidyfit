@@ -52,6 +52,7 @@ classify <- function(
     .cv_args = list(v = 10),
     .weights = NULL,
     .mask = NULL,
+    .remove_dependent_features = FALSE,
     .return_slices = FALSE,
     .tune_each_group = TRUE,
     .force_cv = FALSE
@@ -81,7 +82,19 @@ classify <- function(
   }
 
   sapply(model_list, function(model) .check_method(model(.return_method_name = TRUE),
-                                                         "classify"))
+                                                   "classify"))
+
+  # Multinomial classification
+  response_var <- all.vars(formula)[1]
+  response_lvls <- unique(.data[[response_var]])
+  if (length(response_lvls) < 2)
+    stop("response must contain at least 2 classes")
+  if (length(response_lvls) > 2) {
+    sapply(model_list, function(model) .check_method(model(.return_method_name = TRUE),
+                                                     "multinomial"))
+  }
+  .data[[response_var]] <- as.factor(.data[[response_var]])
+
 
   .cv <- match.arg(.cv)
   if (is.null(.cv_args)) .cv_args <- list()
@@ -92,7 +105,8 @@ classify <- function(
   # Fit models
   df <- .data %>%
     do(result = .fit(., formula, model_list, .cv, .cv_args,
-                     .weights, gr_vars, .mask, binomial(), .force_cv)) %>%
+                     .weights, gr_vars, .mask, binomial(), .force_cv,
+                     .remove_dependent_features)) %>%
     tidyr::unnest(.data$result)
 
   if (!.return_slices & .cv == "none") {
@@ -146,7 +160,7 @@ classify <- function(
     dplyr::do(temp = dplyr::select_if(., ~!all(is.na(.))))
 
   df <- df$temp %>%
-    purrr::map_dfr(~tidyr::nest(., model_info = -tidyr::any_of(c(gr_vars, "variable", "beta", "model", "slice_id", "grid_id"))))
+    purrr::map_dfr(~tidyr::nest(., model_info = -tidyr::any_of(c(gr_vars, "variable", "beta", "model", "slice_id", "grid_id", "class", "family"))))
 
   df <- df %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))

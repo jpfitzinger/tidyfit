@@ -1,9 +1,8 @@
-#' @importFrom purrr map2_dfr
+#' @importFrom purrr map_dfr
 #' @importFrom stats model.frame model.matrix model.response binomial gaussian poisson
 #' @importFrom rsample vfold_cv loo_cv rolling_origin
 #' @importFrom furrr future_pmap_dfr furrr_options
 #' @importFrom dplyr select tibble mutate left_join bind_rows
-#' @importFrom tidyr spread
 #' @importFrom rlang .data
 
 .fit <- function(
@@ -16,7 +15,8 @@
     gr_vars,
     .mask,
     family,
-    .force_cv
+    .force_cv,
+    .remove_dependent_features
     ) {
 
   .data <- .data %>%
@@ -56,8 +56,8 @@
     cv <- do.call(rsample::rolling_origin, append(list(data = m), .cv_args))
 
   # Evaluate methods
-  result <-
-    purrr::map2_dfr(model_list, names(model_list), function(model, nam) {
+  result <- model_list %>%
+    purrr::map_dfr(function(model) {
 
       if (.force_cv) {
         do_cv <- TRUE
@@ -68,7 +68,8 @@
       if (.cv != "none" & do_cv) {
 
         result <- cv %>%
-          furrr::future_pmap_dfr(function(splits, id) {
+          #furrr::future_pmap_dfr(function(splits, id) {
+          purrr::pmap_dfr(function(splits, id) {
 
             df_train <- rsample::training(splits)
             df_test <- rsample::testing(splits)
@@ -78,36 +79,15 @@
             df_test_x <- stats::model.matrix(formula, df_test)
             df_test_y <- stats::model.response(df_test)
 
-            model_args <- list(x = df_train_x, y = df_train_y)
+            model_args <- list(x = df_train_x, y = df_train_y,
+                               .remove_dependent_features = .remove_dependent_features)
             if (!model(.check_family = TRUE)) {
               model_args <- append(model_args, list(family = family))
             }
             if (!is.null(wts)) model_args <- append(model_args, list(weights = wts[splits$in_id]))
 
             result <- do.call(model, model_args)
-
-            beta <- result %>%
-              dplyr::select(.data$grid_id, .data$beta, .data$variable) %>%
-              tidyr::spread(.data$grid_id, .data$beta)
-
-            df_test_x <- df_test_x[, beta$variable]
-            beta <- beta[, -1]
-            fit <- df_test_x %*% data.matrix(beta)
-
-            f <- result %>%
-              dplyr::pull(family) %>%
-              unique %>%
-              .[[1]]
-            fit <- f$linkinv(fit)
-
-            if (f$family == "binomial") {
-              # Calculate cross-entropy loss
-              crit <- apply(fit, 2, function(x) -mean(df_test_y * log(x) + (1 - df_test_y) * log(1 - x)))
-            } else if (f$family == "gaussian") {
-              crit <- colMeans((df_test_y - fit)^2)
-            }
-
-            crit <- dplyr::tibble(grid_id = names(crit), crit = crit)
+            crit <- .eval_metrics(result, df_test_x, df_test_y)
 
             result <- result %>%
               dplyr::mutate(slice_id = id) %>%
@@ -115,14 +95,15 @@
 
             return(result)
 
-          },
-          .options = furrr::furrr_options(seed = TRUE))
+          })#,
+          #.options = furrr::furrr_options(seed = TRUE))
 
       } else {
         result <- NULL
       }
 
-      model_args <- list(x = x, y = y)
+      model_args <- list(x = x, y = y,
+                         .remove_dependent_features = .remove_dependent_features)
       if (!model(.check_family = TRUE)) {
         model_args <- append(model_args, list(family = family))
       }
@@ -131,14 +112,17 @@
       result_all <- do.call(model, model_args) %>%
         mutate(slice_id = "FULL")
 
-      result <- dplyr::bind_rows(result, result_all)
+      # Ensure identical grids as in CV (can differ if some slices have errors)
+      if (!is.null(result)) {
+        result <- result %>%
+          dplyr::filter(.data$grid_id %in% result_all$grid_id)
+      }
 
-      result <- result %>%
-        dplyr::mutate(model = nam)
+      result <- dplyr::bind_rows(result_all, result)
 
       return(result)
 
-    })
+    }, .id = "model")
 
   return(result)
 
