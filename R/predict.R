@@ -1,5 +1,5 @@
 
-#' @importFrom dplyr select filter right_join ungroup distinct any_of all_of pull
+#' @importFrom dplyr select filter right_join ungroup distinct any_of all_of pull row_number
 #' @importFrom tidyr drop_na unnest
 #' @importFrom purrr map_dfr
 #' @importFrom stats binomial gaussian poisson model.frame model.matrix model.response
@@ -7,58 +7,39 @@
 
 .predict <- function(.data, fit, gr_vars) {
 
-  eval_list <- fit %>%
-    dplyr::ungroup() %>%
-    dplyr::select(.data$model, .data$grid_id) %>%
-    dplyr::distinct()
+  mask <- attr(fit, "structure")$mask
+  weights <- attr(fit, "structure")$weights
+  formula <- attr(fit, "formula")
 
-  # Evaluate methods
-  result <-
-    purrr::map2_dfr(eval_list$model, eval_list$grid_id, function(mod, grd) {
+  has_class <- "class" %in% colnames(fit)
 
-      mask <- attr(fit, "structure")$mask
-      weights <- attr(fit, "structure")$weights
+  .data_core <- .data %>%
+    dplyr::select(-dplyr::any_of(mask), -dplyr::all_of(gr_vars), -dplyr::any_of(weights))
 
-      .data_core <- .data %>%
-        dplyr::select(-dplyr::any_of(mask), -dplyr::all_of(gr_vars), -dplyr::any_of(weights))
+  m <- stats::model.frame(formula, data = .data_core)
+  x <- stats::model.matrix(formula, data = .data_core)
+  y <- stats::model.response(m)
 
-      fit_model <- fit %>%
-        dplyr::filter(.data$model == mod, .data$grid_id == grd)
-
-      f <- fit_model %>%
-        tidyr::unnest(.data$model_info) %>%
-        dplyr::pull(.data$family) %>%
-        .[1] %>%
-        .[[1]]
-
-      fit_core <- fit_model %>%
-        dplyr::right_join(.data %>% select(!!gr_vars), by = c(gr_vars)) %>%
-        dplyr::ungroup()
-
-      formula <- attr(fit, "formula")
-      m <- stats::model.frame(formula, data = .data_core)
-      x <- stats::model.matrix(formula, data = .data_core)
-      y <- stats::model.response(m)
-
-      beta <- fit_core %>%
-        dplyr::select(.data$variable, .data$beta) %>%
-        dplyr::distinct() %>%
-        tidyr::drop_na()
-
-      x <- x[, beta$variable]
-      beta <- beta %>% dplyr::select(-.data$variable)
-      fit <- data.matrix(x) %*% data.matrix(beta)
-      if (!is.null(f)) fit <- f$linkinv(fit)
-
-      result <- .data %>%
-        dplyr::mutate(prediction = as.numeric(fit)) %>%
-        dplyr::select(-dplyr::any_of(colnames(m[,-1])), -dplyr::all_of(gr_vars), -dplyr::any_of(weights)) %>%
-        dplyr::mutate(model = mod, grid_id = grd)
-
-      return(result)
-
+  out <- fit %>%
+    dplyr::group_split(model) %>%
+    purrr::map_dfr(function(fit_mod) {
+      fitted <- .fit_from_frame(fit_mod, x)
+      fitted <- purrr::map_dfr(fitted, function(fitted_) {
+        fitted_ <- fitted_ %>%
+          dplyr::as_tibble() %>%
+          dplyr::mutate(row_number = dplyr::row_number()) %>%
+          tidyr::gather("grid_id", "prediction", -.data$row_number) %>%
+          dplyr::left_join(dplyr::mutate(.data, row_number = dplyr::row_number()), by = "row_number") %>%
+          dplyr::select(-dplyr::any_of(colnames(m[,-1])), -dplyr::all_of(gr_vars), -dplyr::any_of(weights)) %>%
+          dplyr::mutate(model = first(fit_mod$model))
+        return(fitted_)
+      }, .id = "class")
     })
 
-  return(result)
+  out <- out %>%
+    dplyr::relocate(.data$model, .data$grid_id, .data$class, .data$row_number, .data$prediction)
+  if (!has_class) out <- dplyr::select(out, -.data$class)
+
+  return(out)
 
 }
