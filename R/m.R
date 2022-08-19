@@ -78,9 +78,9 @@
 #'
 #' @importFrom purrr partial
 #' @importFrom dials grid_regular penalty
-#' @importFrom tidyr complete
+#' @importFrom tidyr complete expand_grid
 #' @importFrom rlang .data dots_list
-#' @importFrom dplyr mutate arrange relocate
+#' @importFrom dplyr mutate arrange relocate bind_rows
 
 m <- function(model_method,
               x = NULL,
@@ -100,7 +100,7 @@ m <- function(model_method,
   # Partialised function when no data is passed
   if (is.null(x) & is.null(y)) {
     # args <- c(as.list(environment()), additional_args)
-    args <- c(list(model_method = model_method, .remove_dependent_features = .remove_dependent_features),
+    args <- c(list(model_method = model_method),
               additional_args)
     args <- args[!names(args) %in% c("x", "y")]
     args <- append(args, list(.f = m))
@@ -113,10 +113,15 @@ m <- function(model_method,
   if (.remove_dependent_features) {
     qr_x <- qr(x)
     x_ <- x[, qr_x$pivot[seq_len(qr_x$rank)]]
-    if (ncol(x) > ncol(x_))
+    if (ncol(x) > ncol(x_)) {
       warning("linearly dependent columns removed")
+      chk_rem_feat <- TRUE
+    } else {
+      chk_rem_feat <- FALSE
+    }
   } else {
     x_ <- x
+    chk_rem_feat <- FALSE
   }
 
   # Set default hyperparameter grids
@@ -131,14 +136,12 @@ m <- function(model_method,
   if (length(additional_args)==0) {
     args <- list(x = x_, y = y, control = additional_args, identifier = tmp_)
     mod <- do.call(.model, args)
-    if ("grid_id" %in% colnames(mod)) {
+    if (!"grid_id" %in% colnames(mod)) {
       mod <- mod %>%
-        tidyr::complete(variable = colnames(x), .data$grid_id, .data$family, fill = list(beta = 0))
-    } else {
-      mod <- mod %>%
-        tidyr::complete(variable = colnames(x), .data$family, fill = list(beta = 0)) %>%
         dplyr::mutate(grid_id = "s000")
     }
+    mod <- mod %>%
+      dplyr::mutate(grid_id = ifelse("grid_id" %in% colnames(mod), .data$grid_id, "s000"))
   } else {
     args_grid <- .args_to_grid(model_method, additional_args)
     mod <- args_grid %>%
@@ -148,13 +151,12 @@ m <- function(model_method,
         mod <- do.call(.model, args)
         if ("grid_id" %in% colnames(mod)) {
           mod <- mod %>%
-            tidyr::complete(variable = colnames(x), .data$grid_id, .data$family, fill = list(beta = 0)) %>%
             dplyr::mutate(grid_id = paste0(grd_id, .data$grid_id))
         } else {
           mod <- mod %>%
-            tidyr::complete(variable = colnames(x), .data$family, fill = list(beta = 0)) %>%
             dplyr::mutate(grid_id = grd_id)
         }
+        return(mod)
       })
 
     # Sanitize grid_id labels
@@ -163,6 +165,22 @@ m <- function(model_method,
     names(grid_ids) <- grid_names
     mod <- mod %>%
       dplyr::mutate(grid_id = grid_ids[.data$grid_id])
+  }
+
+  # Add removed variables
+  if (chk_rem_feat) {
+    if ("class" %in% colnames(mod)) {
+      missing_vars <- tidyr::expand_grid(variable = setdiff(colnames(x), colnames(x_)),
+                                    grid_id = unique(mod$grid_id),
+                                    family = unique(mod$family),
+                                    class = unique(mod$class))
+    } else {
+      missing_vars <- tidyr::expand_grid(variable = setdiff(colnames(x), colnames(x_)),
+                                    grid_id = unique(mod$grid_id),
+                                    family = unique(mod$family))
+    }
+    missing_vars <- dplyr::mutate(missing_vars, beta = 0)
+    mod <- dplyr::bind_rows(mod, missing_vars)
   }
 
   # Arrange output

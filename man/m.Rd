@@ -9,7 +9,7 @@ m(
   x = NULL,
   y = NULL,
   ...,
-  .remove_dependent_features = TRUE,
+  .remove_dependent_features = FALSE,
   .return_method_name = FALSE,
   .check_family = FALSE
 )
