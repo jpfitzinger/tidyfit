@@ -153,7 +153,8 @@ fit <- data_trn %>%
           PLSR = m("plsr"), 
           HFR = m("hfr"), 
           `GRADIENT BOOSTING` = m("boost"),
-          .cv = "vfold", .cv_args = list(v = 10))
+          .cv = "vfold", .cv_args = list(v = 10),
+          .remove_dependent_features = TRUE)
 ```
 
 ```{r, eval=F, include=F}
