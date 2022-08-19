@@ -53,6 +53,7 @@ regress <- function(
   .cv_args = list(v = 10),
   .weights = NULL,
   .mask = NULL,
+  .remove_dependent_features = FALSE,
   .return_slices = FALSE,
   .tune_each_group = TRUE,
   .force_cv = FALSE
@@ -93,7 +94,8 @@ regress <- function(
   # Fit models
   df <- .data %>%
     do(result = .fit(., formula, model_list, .cv, .cv_args,
-                     .weights, gr_vars, .mask, gaussian(), .force_cv)) %>%
+                     .weights, gr_vars, .mask, gaussian(), .force_cv,
+                     .remove_dependent_features)) %>%
     tidyr::unnest(.data$result)
 
   if (!.return_slices & .cv == "none") {
@@ -147,7 +149,7 @@ regress <- function(
     dplyr::do(temp = dplyr::select_if(., ~!all(is.na(.))))
 
   df <- df$temp %>%
-    purrr::map_dfr(~tidyr::nest(., model_info = -tidyr::any_of(c(gr_vars, "variable", "beta", "model", "slice_id", "grid_id"))))
+    purrr::map_dfr(~tidyr::nest(., model_info = -tidyr::any_of(c(gr_vars, "variable", "beta", "model", "slice_id", "grid_id", "family"))))
 
   df <- df %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))
