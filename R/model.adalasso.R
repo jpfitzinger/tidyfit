@@ -6,7 +6,7 @@
 #'
 #' - \code{lambda} *(L1 penalty)*
 #'
-#' The adaptive Lasso is a weighted implementation of the Lasso algorithm, with covariate-specific weights obtained using an initial regression fit (in this case, a ridge regression with \code{lambda = 0.01}). The adaptive Lasso is computed using the \code{glmnet::glmnet} function. For classification pass \code{family = "binomial"}  to \code{control} or to the argument \code{...} in \code{\link{m}}.
+#' The adaptive Lasso is a weighted implementation of the Lasso algorithm, with covariate-specific weights obtained using an initial regression fit (in this case, a ridge regression with \code{lambda = 0.01}). The adaptive Lasso is computed using the \code{glmnet::glmnet} function. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
 #'
 #' An intercept is always included and features are standardized with coefficients transformed to the original scale.
 #'
@@ -73,7 +73,7 @@
     dplyr::as_tibble() %>%
     dplyr::mutate(variable = var_names) %>%
     tidyr::gather("grid_id", "beta", -.data$variable) %>%
-    dplyr::mutate(lambda = control$lambda[match(.data$grid_id, colnames(coefs))]) %>%
+    dplyr::mutate(lambda = m$lambda[match(.data$grid_id, colnames(coefs))]) %>%
     dplyr::mutate(family = list(f)) %>%
     dplyr::select(.data$variable, .data$beta, .data$grid_id, .data$family, .data$lambda)
 
