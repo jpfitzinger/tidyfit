@@ -1,4 +1,4 @@
-.check_method <- function(method, what = c("exists", "cv", "regress", "classify")) {
+.check_method <- function(method, what = c("exists", "cv", "regress", "classify", "multinomial")) {
 
   what <- match.arg(what)
   if (what == "exists") {
@@ -16,6 +16,10 @@
     if (!method %in% .valid_classify)
       stop(sprintf("'%s' cannot be used for classification", method))
   }
+  if (what == "multinomial") {
+    if (!method %in% .valid_multinomial)
+      stop(sprintf("'%s' cannot be used for multinomial classification", method))
+  }
 
 }
 
@@ -25,3 +29,4 @@
 .valid_regress <- c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                     "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile")
 .valid_classify <- c("glm", "lasso", "ridge", "enet", "adalasso", "boost", "subset", "bayes")
+.valid_multinomial <- c("ridge", "lasso", "enet")
