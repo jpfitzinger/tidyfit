@@ -21,7 +21,7 @@
   y <- stats::model.response(m)
 
   out <- fit %>%
-    dplyr::group_split(model) %>%
+    dplyr::group_split(.data$model) %>%
     purrr::map_dfr(function(fit_mod) {
       fitted <- .fit_from_frame(fit_mod, x)
       fitted <- purrr::map_dfr(fitted, function(fitted_) {
@@ -31,7 +31,7 @@
           tidyr::gather("grid_id", "prediction", -.data$row_number) %>%
           dplyr::left_join(dplyr::mutate(.data, row_number = dplyr::row_number()), by = "row_number") %>%
           dplyr::select(-dplyr::any_of(colnames(m[,-1])), -dplyr::all_of(gr_vars), -dplyr::any_of(weights)) %>%
-          dplyr::mutate(model = first(fit_mod$model))
+          dplyr::mutate(model = fit_mod$model[1])
         return(fitted_)
       }, .id = "class")
     })

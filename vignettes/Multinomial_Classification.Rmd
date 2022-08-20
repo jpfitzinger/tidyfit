@@ -2,8 +2,8 @@
 title: "Multinomial Classification"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Multinomial classification}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{Multinomial Classification}
+  %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
 

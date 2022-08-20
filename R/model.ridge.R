@@ -50,6 +50,9 @@
   control <- control[names(control) != "alpha"]
 
   # Prepare 'family' arg
+  if (is.null(control$family)) {
+    control$family <- gaussian()
+  }
   if (inherits(control$family, "character")) {
     f_name <- control$family
   } else {

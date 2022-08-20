@@ -8,7 +8,7 @@
   fit <- .fit_from_frame(result, x)
 
   f <- result %>%
-    dplyr::pull(family) %>%
+    dplyr::pull(.data$family) %>%
     unique %>%
     .[[1]]
 

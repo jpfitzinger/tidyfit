@@ -51,6 +51,9 @@
   control <- control[names(control) %in% methods::formalArgs(glmnet::glmnet)]
 
   # Prepare 'family' arg
+  if (is.null(control$family)) {
+    control$family <- gaussian()
+  }
   if (inherits(control$family, "character")) {
     f_name <- control$family
   } else {
