@@ -16,7 +16,8 @@
     lvls <- levels(y)
   }
 
-  if (!inherits(fit, "list")) {
+  if (length(fit)==1) {
+    fit <- fit[[1]]
     if (f$family == "binomial") {
       # Calculate cross-entropy loss
       ix <- ifelse(y == lvls[2], 1, 0)
