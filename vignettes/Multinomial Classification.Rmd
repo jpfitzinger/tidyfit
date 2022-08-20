@@ -1,0 +1,74 @@
+---
+title: "Multinomial Classification"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Multinomial classification}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+```{r}
+library(tidyverse) # Data wrangling
+library(ggpubr)    # Plotting wrapper for ggplot2
+library(tidyfit)   # Auto-ML modeling
+```
+
+Multinomial classification is possible in `tidyfit` using the methods powered by `glmnet` (LASSO, Ridge, ElasticNet). Currently, none of the other methods support multinomial classification.^[I may add support for multinomial classification with `mboost` in future.] When the response variable contains more than 2 classes, `classify` automatically uses a multinomial response for the above-mentioned methods.
+
+Here's an example using the built-in `iris` dataset:
+
+```{r}
+data("iris")
+
+# For reproducibility
+set.seed(123)
+ix_tst <- sample(1:nrow(iris), round(nrow(iris)*0.2))
+
+data_trn <- iris[-ix_tst,]
+data_tst <- iris[ix_tst,]
+
+as_tibble(iris)
+```
+
+## Penalized classification algorithms to predict `Species`
+
+The code chunk below fits a LASSO, ridge and ElasticNet regression on the training split, using a 10-fold cross validation to select optimal penalties. We then predict using `cross_prod`. Unlike binomial classification, the `fit` and `pred` objects contain a `class` column with separate coefficients and predictions for each class. The predictions sum to one across classes:
+
+```{r}
+fit <- data_trn %>% 
+  classify(Species ~ ., 
+           m("lasso"), 
+           m("ridge"), 
+           m("enet"), 
+           ols = m("ridge", lambda = 1e-4), 
+           .cv = "vfold")
+
+pred <- fit %>% 
+  cross_prod(data_tst)
+```
+
+Note that we can add unregularized least squares estimates by setting `lambda = 0`.
+
+Next, we can use `yardstick` to calculate the log loss accuracy metric and compare the performance of the different models:
+
+```{r, fig.width=6, fig.align="center"}
+metrics <- pred %>% 
+  spread(class, prediction) %>% 
+  group_by(model) %>% 
+  yardstick::mn_log_loss(Species, setosa:virginica)
+
+metrics %>% 
+  ggbarplot("model", ".estimate", fill = "darkblue") %>% 
+  ggpar(ggtheme = theme_bw())
+```
+
