@@ -401,25 +401,25 @@ one-hot encoded:
 fit <- data %>% 
   regress(Return ~ ., lin_reg = m("lm"), .mask = "Date")
 fit
-#> # A tibble: 16 × 5
-#>    variable          beta grid_id model   model_info      
-#>    <chr>            <dbl> <chr>   <chr>   <list>          
-#>  1 (Intercept)   -0.00408 s0001   lin_reg <tibble [1 × 5]>
-#>  2 `Mkt-RF`       0.977   s0001   lin_reg <tibble [1 × 5]>
-#>  3 CMA            0.117   s0001   lin_reg <tibble [1 × 5]>
-#>  4 HML            0.0601  s0001   lin_reg <tibble [1 × 5]>
-#>  5 IndustryEnrgy -0.00409 s0001   lin_reg <tibble [1 × 5]>
-#>  6 IndustryHiTec  0.0559  s0001   lin_reg <tibble [1 × 5]>
-#>  7 IndustryHlth   0.0506  s0001   lin_reg <tibble [1 × 5]>
-#>  8 IndustryManuf -0.0469  s0001   lin_reg <tibble [1 × 5]>
-#>  9 IndustryNoDur  0.0171  s0001   lin_reg <tibble [1 × 5]>
-#> 10 IndustryOther -0.0707  s0001   lin_reg <tibble [1 × 5]>
-#> 11 IndustryShops  0.0405  s0001   lin_reg <tibble [1 × 5]>
-#> 12 IndustryTelcm -0.184   s0001   lin_reg <tibble [1 × 5]>
-#> 13 IndustryUtils -0.181   s0001   lin_reg <tibble [1 × 5]>
-#> 14 RF             1.01    s0001   lin_reg <tibble [1 × 5]>
-#> 15 RMW            0.164   s0001   lin_reg <tibble [1 × 5]>
-#> 16 SMB            0.0178  s0001   lin_reg <tibble [1 × 5]>
+#> # A tibble: 16 × 6
+#>    model   variable          beta grid_id family   model_info      
+#>    <chr>   <chr>            <dbl> <chr>   <list>   <list>          
+#>  1 lin_reg (Intercept)   -0.00408 s0001   <family> <tibble [1 × 4]>
+#>  2 lin_reg `Mkt-RF`       0.977   s0001   <family> <tibble [1 × 4]>
+#>  3 lin_reg CMA            0.117   s0001   <family> <tibble [1 × 4]>
+#>  4 lin_reg HML            0.0601  s0001   <family> <tibble [1 × 4]>
+#>  5 lin_reg IndustryEnrgy -0.00409 s0001   <family> <tibble [1 × 4]>
+#>  6 lin_reg IndustryHiTec  0.0559  s0001   <family> <tibble [1 × 4]>
+#>  7 lin_reg IndustryHlth   0.0506  s0001   <family> <tibble [1 × 4]>
+#>  8 lin_reg IndustryManuf -0.0469  s0001   <family> <tibble [1 × 4]>
+#>  9 lin_reg IndustryNoDur  0.0171  s0001   <family> <tibble [1 × 4]>
+#> 10 lin_reg IndustryOther -0.0707  s0001   <family> <tibble [1 × 4]>
+#> 11 lin_reg IndustryShops  0.0405  s0001   <family> <tibble [1 × 4]>
+#> 12 lin_reg IndustryTelcm -0.184   s0001   <family> <tibble [1 × 4]>
+#> 13 lin_reg IndustryUtils -0.181   s0001   <family> <tibble [1 × 4]>
+#> 14 lin_reg RF             1.01    s0001   <family> <tibble [1 × 4]>
+#> 15 lin_reg RMW            0.164   s0001   <family> <tibble [1 × 4]>
+#> 16 lin_reg SMB            0.0178  s0001   <family> <tibble [1 × 4]>
 ```
 
 Detailed model and hyperparameter information is nested and can be
@@ -429,24 +429,24 @@ expanded:
 fit %>% 
   unnest(model_info)
 #> # A tibble: 16 × 9
-#>    variable         beta grid_id model family      s.e. t val…¹ p valu…² Adj. …³
-#>    <chr>           <dbl> <chr>   <chr> <list>     <dbl>   <dbl>    <dbl>   <dbl>
-#>  1 (Intercept)  -0.00408 s0001   lin_… <family> 0.133   -0.0306 9.76e- 1   0.625
-#>  2 `Mkt-RF`      0.977   s0001   lin_… <family> 0.00985 99.3    0          0.625
-#>  3 CMA           0.117   s0001   lin_… <family> 0.0281   4.18   2.94e- 5   0.625
-#>  4 HML           0.0601  s0001   lin_… <family> 0.0182   3.31   9.30e- 4   0.625
-#>  5 IndustryEnr… -0.00409 s0001   lin_… <family> 0.172   -0.0237 9.81e- 1   0.625
-#>  6 IndustryHiT…  0.0559  s0001   lin_… <family> 0.172    0.325  7.45e- 1   0.625
-#>  7 IndustryHlth  0.0506  s0001   lin_… <family> 0.172    0.294  7.69e- 1   0.625
-#>  8 IndustryMan… -0.0469  s0001   lin_… <family> 0.172   -0.272  7.85e- 1   0.625
-#>  9 IndustryNoD…  0.0171  s0001   lin_… <family> 0.172    0.0994 9.21e- 1   0.625
-#> 10 IndustryOth… -0.0707  s0001   lin_… <family> 0.172   -0.411  6.81e- 1   0.625
-#> 11 IndustrySho…  0.0405  s0001   lin_… <family> 0.172    0.235  8.14e- 1   0.625
-#> 12 IndustryTel… -0.184   s0001   lin_… <family> 0.172   -1.07   2.85e- 1   0.625
-#> 13 IndustryUti… -0.181   s0001   lin_… <family> 0.172   -1.05   2.93e- 1   0.625
-#> 14 RF            1.01    s0001   lin_… <family> 0.145    6.99   2.91e-12   0.625
-#> 15 RMW           0.164   s0001   lin_… <family> 0.0191   8.56   1.41e-17   0.625
-#> 16 SMB           0.0178  s0001   lin_… <family> 0.0140   1.27   2.03e- 1   0.625
+#>    model   variable       beta grid_id family      s.e. t val…¹ p valu…² Adj. …³
+#>    <chr>   <chr>         <dbl> <chr>   <list>     <dbl>   <dbl>    <dbl>   <dbl>
+#>  1 lin_reg (Intercep… -0.00408 s0001   <family> 0.133   -0.0306 9.76e- 1   0.625
+#>  2 lin_reg `Mkt-RF`    0.977   s0001   <family> 0.00985 99.3    0          0.625
+#>  3 lin_reg CMA         0.117   s0001   <family> 0.0281   4.18   2.94e- 5   0.625
+#>  4 lin_reg HML         0.0601  s0001   <family> 0.0182   3.31   9.30e- 4   0.625
+#>  5 lin_reg IndustryE… -0.00409 s0001   <family> 0.172   -0.0237 9.81e- 1   0.625
+#>  6 lin_reg IndustryH…  0.0559  s0001   <family> 0.172    0.325  7.45e- 1   0.625
+#>  7 lin_reg IndustryH…  0.0506  s0001   <family> 0.172    0.294  7.69e- 1   0.625
+#>  8 lin_reg IndustryM… -0.0469  s0001   <family> 0.172   -0.272  7.85e- 1   0.625
+#>  9 lin_reg IndustryN…  0.0171  s0001   <family> 0.172    0.0994 9.21e- 1   0.625
+#> 10 lin_reg IndustryO… -0.0707  s0001   <family> 0.172   -0.411  6.81e- 1   0.625
+#> 11 lin_reg IndustryS…  0.0405  s0001   <family> 0.172    0.235  8.14e- 1   0.625
+#> 12 lin_reg IndustryT… -0.184   s0001   <family> 0.172   -1.07   2.85e- 1   0.625
+#> 13 lin_reg IndustryU… -0.181   s0001   <family> 0.172   -1.05   2.93e- 1   0.625
+#> 14 lin_reg RF          1.01    s0001   <family> 0.145    6.99   2.91e-12   0.625
+#> 15 lin_reg RMW         0.164   s0001   <family> 0.0191   8.56   1.41e-17   0.625
+#> 16 lin_reg SMB         0.0178  s0001   <family> 0.0140   1.27   2.03e- 1   0.625
 #> # … with abbreviated variable names ¹​`t value`, ²​`p value`, ³​`Adj. R-squared`
 ```
 
@@ -586,11 +586,11 @@ Let’s predict out-of-sample return probabilities:
 
 ``` r
 data_train <- data %>% 
-  mutate(Return = ifelse(Return > 0, 1, 0)) %>% 
+  mutate(Return = ifelse(Return > 0, "pos", "neg")) %>% 
   filter(Date <= 202112)
 
 data_test <- data %>% 
-  mutate(Return = ifelse(Return > 0, 1, 0)) %>% 
+  mutate(Return = ifelse(Return > 0, "pos", "neg")) %>% 
   filter(Date > 202112)
 ```
 
@@ -603,7 +603,7 @@ estimator (in this case `glmnet::glmnet`):
 ``` r
 fit <- data_train %>% 
   group_by(Industry) %>% 
-  classify(Return ~ ., enet_clf = m("enet", maxit = 1e+06), .mask = "Date", 
+  classify(Return ~ ., enet_clf = m("enet"), .mask = "Date", 
           .cv = "rolling_origin", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
 ```
 
@@ -622,10 +622,10 @@ pred <- fit %>%
 
 # Print a confusion matrix
 table(pred$Truth, pred$Predicted)
-#>    
-#>       0   1
-#>   0 105   3
-#>   1  63   9
+#>      
+#>         0   1
+#>   neg 153  27
+#>   pos  27  93
 ```
 
 ### Parallel computation
