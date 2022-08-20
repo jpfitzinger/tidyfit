@@ -76,7 +76,7 @@
     `t value` = coef_stats[, 3]
   )
   if (length(control) > 0) {
-    out <- dplyr::bind_cols(out, as_tibble(func_to_list(control)))
+    out <- dplyr::bind_cols(out, dplyr::as_tibble(.func_to_list(control)))
   }
 
   return(out)
