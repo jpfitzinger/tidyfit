@@ -57,7 +57,7 @@
   nu <- control$nu
   # Available args are not accessible using formalArgs without importing mboost:::glmboost.matrix
   boost.default_args <- c("x", "y", "center", "weights", "offset", "family", "na.action", "control", "oobweights")
-  control <- control[names(control) %in% methods::formalArgs(boost.default_args)]
+  control <- control[names(control) %in% boost.default_args]
   control <- control[!names(control) %in% c("control", "center", "family")]
 
   standard_mean <- apply(x, 2, mean)
