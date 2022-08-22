@@ -3,9 +3,9 @@
 #' @importFrom rlang .data
 #' @importFrom purrr map_dfr
 
-.eval_metrics <- function(result, x, y) {
+.eval_metrics <- function(result, x, y, idx, idx_cols) {
 
-  fit <- .fit_from_frame(result, x)
+  fit <- .fit_from_frame(result, x, idx, idx_cols)
 
   f <- result %>%
     dplyr::pull(.data$family) %>%

@@ -39,7 +39,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom tidyr unnest nest any_of
 #' @importFrom purrr map_dfr
-#' @importFrom dplyr group_vars group_by across all_of filter mutate ungroup select distinct left_join do select_if bind_rows
+#' @importFrom dplyr group_vars group_by across all_of filter mutate ungroup select distinct left_join do select_if bind_rows coalesce
 #' @importFrom rlang .data
 #' @importFrom utils globalVariables
 
@@ -52,6 +52,7 @@ regress <- function(
   .cv = c("none", "initial_split", "initial_time_split", "loo", "vfold", "rolling_origin"),
   .cv_args = list(v = 10),
   .weights = NULL,
+  .index = NULL,
   .mask = NULL,
   .remove_dependent_features = FALSE,
   .return_slices = FALSE,
@@ -66,24 +67,19 @@ regress <- function(
     stop("provide at least one method.")
 
   model_names <- names(model_list)
-  if (is.null(model_names)) model_names <- rep("", length(model_list))
-  for (i in seq_along(model_names)) {
-    if (model_names[i]=="") {
-      model_names[i] <- model_list[[i]](.return_method_name = TRUE)
-    }
-  }
+  if (is.null(model_names)) model_names <- rep(NA, length(model_list))
+  model_names <- sapply(model_names, function(nam) ifelse(nam == "", NA, nam))
+  method_names <- sapply(model_list, function(m) m(.return_method_name = TRUE))
+  model_names <- dplyr::coalesce(model_names, method_names)
   names(model_list) <- model_names
 
   if (.force_cv) {
     model_cv <- rep(T, length(model_list))
   } else {
-    model_cv <- sapply(model_list,
-                       function(model) .check_method(model(.return_method_name = TRUE),
-                                                     "cv"))
+    model_cv <- sapply(method_names, .check_method, "cv")
   }
 
-  sapply(model_list, function(model) .check_method(model(.return_method_name = TRUE),
-                                                   "regress"))
+  sapply(method_names, .check_method, "regress", message = TRUE)
 
   .cv <- match.arg(.cv)
   if (is.null(.cv_args)) .cv_args <- list()
@@ -94,8 +90,8 @@ regress <- function(
   # Fit models
   df <- .data %>%
     do(result = .fit(., formula, model_list, .cv, .cv_args,
-                     .weights, gr_vars, .mask, gaussian(), .force_cv,
-                     .remove_dependent_features)) %>%
+                     .weights, .index, gr_vars, .mask, gaussian(),
+                     .force_cv, .remove_dependent_features)) %>%
     tidyr::unnest(.data$result)
 
   if (!.return_slices & .cv == "none") {
@@ -122,7 +118,7 @@ regress <- function(
 
       df_slices <- df %>%
         dplyr::filter(.data$slice_id != "FULL") %>%
-        dplyr::group_by(.data$model, .data$grid_id, .add = T) %>%
+        dplyr::group_by(.data$model, .data$grid_id, .add = TRUE) %>%
         dplyr::mutate(crit = mean(.data$crit)) %>%
         dplyr::ungroup(.data$grid_id) %>%
         dplyr::filter(.data$crit == min(.data$crit)) %>%
@@ -149,13 +145,14 @@ regress <- function(
     dplyr::do(temp = dplyr::select_if(., ~!all(is.na(.))))
 
   df <- df$temp %>%
-    purrr::map_dfr(~tidyr::nest(., model_info = -tidyr::any_of(c(gr_vars, "variable", "beta", "model", "slice_id", "grid_id", "family"))))
+    purrr::map_dfr(~tidyr::nest(., model_info = -tidyr::any_of(c(gr_vars, "variable", "beta", "model", "slice_id", "grid_id"))))
 
   df <- df %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))
 
   attr(df, "formula") <- formula
-  attr(df, "structure") <- list(mask = .mask, weights = .weights, col_names = colnames(df))
+  attr(df, "structure") <- list(mask = .mask, weights = .weights, index = .index,
+                                col_names = colnames(df))
 
   return(df)
 

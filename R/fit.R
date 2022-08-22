@@ -1,6 +1,6 @@
 #' @importFrom purrr map_dfr
-#' @importFrom stats model.frame model.matrix model.response binomial gaussian poisson
-#' @importFrom rsample vfold_cv loo_cv rolling_origin
+#' @importFrom stats binomial gaussian poisson
+#' @importFrom rsample vfold_cv loo_cv rolling_origin complement
 #' @importFrom furrr future_pmap_dfr furrr_options
 #' @importFrom dplyr select tibble mutate left_join bind_rows
 #' @importFrom rlang .data
@@ -12,6 +12,7 @@
     .cv,
     .cv_args,
     .weights,
+    .index,
     gr_vars,
     .mask,
     family,
@@ -26,14 +27,18 @@
     wts <- .data %>%
       dplyr::pull(!!.weights)
     .data <- .data %>%
-      dplyr::select(-!!.weights)
+      dplyr::select(-dplyr::all_of(.weights))
   } else {
-    wts = NULL
+    wts <- NULL
   }
 
-  m <- stats::model.frame(formula = formula, data = .data)
-  x <- stats::model.matrix(formula, m)[, -1]
-  y <- stats::model.response(m)
+  idx <- .get_index_from_df(.data, .index, formula)
+  .data <- .data %>%
+    dplyr::select(-dplyr::any_of(.index))
+
+  m <- .model_frame(formula = formula, data = .data)
+  x <- .model_matrix(formula, m)
+  y <- .model_response(m)
 
   # Prepare CV
   if (.cv == "none")
@@ -59,11 +64,14 @@
   result <- model_list %>%
     purrr::map_dfr(function(model) {
 
+      model_name <- model(.return_method_name = TRUE)
+
       if (.force_cv) {
         do_cv <- TRUE
       } else {
-        do_cv <- .check_method(model(.return_method_name = TRUE), "cv")
+        do_cv <- .check_method(model_name, "cv")
       }
+      if (!.check_method(model_name, "uses_index")) idx <- NULL
 
       if (.cv != "none" & do_cv) {
 
@@ -73,21 +81,32 @@
 
             df_train <- rsample::training(splits)
             df_test <- rsample::testing(splits)
+            train_samples <- splits$in_id
+            test_samples <- rsample::complement(splits)
 
-            df_train_x <- stats::model.matrix(formula, df_train)[, -1]
-            df_train_y <- stats::model.response(df_train)
-            df_test_x <- stats::model.matrix(formula, df_test)
-            df_test_y <- stats::model.response(df_test)
+            df_train_x <- .model_matrix(formula, df_train)
+            df_train_y <- .model_response(df_train)
+            df_test_x <- .model_matrix(formula, df_test)
+            df_test_y <- .model_response(df_test)
 
             model_args <- list(x = df_train_x, y = df_train_y,
                                .remove_dependent_features = .remove_dependent_features)
             if (!model(.check_family = TRUE)) {
               model_args <- append(model_args, list(family = family))
             }
-            if (!is.null(wts)) model_args <- append(model_args, list(weights = wts[splits$in_id]))
+            if (!is.null(wts)) {
+              model_args <- append(model_args, list(weights = wts[train_samples]))
+            }
+            if (!is.null(idx)) {
+              model_args <- append(model_args, list(index_col = idx[train_samples]))
+              idx_test <- idx[test_samples]
+            } else {
+              idx_test <- NULL
+            }
+            model_args$model_formula <- list(formula)
 
             result <- do.call(model, model_args)
-            crit <- .eval_metrics(result, df_test_x, df_test_y)
+            crit <- .eval_metrics(result, df_test_x, df_test_y, idx_test, .index)
 
             result <- result %>%
               dplyr::mutate(slice_id = id) %>%
@@ -107,7 +126,13 @@
       if (!model(.check_family = TRUE)) {
         model_args <- append(model_args, list(family = family))
       }
-      if (!is.null(wts)) model_args <- append(model_args, list(weights = wts))
+      if (!is.null(wts)) {
+        model_args <- append(model_args, list(weights = wts))
+      }
+      if (!is.null(idx)) {
+        model_args <- append(model_args, list(index_col = idx))
+      }
+      model_args$model_formula <- list(formula)
 
       result_all <- do.call(model, model_args) %>%
         mutate(slice_id = "FULL")

@@ -20,7 +20,7 @@
 #'
 #' @importFrom magrittr %>%
 #' @importFrom tidyr unnest nest all_of
-#' @importFrom dplyr group_by across do
+#' @importFrom dplyr group_by across do group_vars
 #' @importFrom purrr map_dfr
 #' @importFrom rlang .data
 #' @importFrom utils globalVariables
@@ -29,7 +29,7 @@ utils::globalVariables(".")
 
 cross_prod <- function(fit, data) {
 
-  gr_vars <- group_vars(fit)
+  gr_vars <- dplyr::group_vars(fit)
   if (!all(gr_vars %in% colnames(data)))
     stop("missing grouping variables in 'data'")
 

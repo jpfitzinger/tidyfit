@@ -10,20 +10,32 @@
   mask <- attr(fit, "structure")$mask
   weights <- attr(fit, "structure")$weights
   formula <- attr(fit, "formula")
+  index_cols <- attr(fit, "structure")$index
 
   has_class <- "class" %in% colnames(fit)
 
+  idx <- .get_index_from_df(.data, index_cols, formula)
+
   .data_core <- .data %>%
-    dplyr::select(-dplyr::any_of(mask), -dplyr::all_of(gr_vars), -dplyr::any_of(weights))
+    dplyr::select(-dplyr::any_of(mask),
+                  -dplyr::all_of(gr_vars),
+                  -dplyr::any_of(weights),
+                  -dplyr::any_of(index_cols))
 
-  m <- stats::model.frame(formula, data = .data_core)
-  x <- stats::model.matrix(formula, data = .data_core)
-  y <- stats::model.response(m)
+  fit_core <- fit %>%
+    dplyr::right_join(.data %>% dplyr::select(!!gr_vars) %>% dplyr::distinct(), by = c(gr_vars)) %>%
+    dplyr::ungroup()
 
-  out <- fit %>%
-    dplyr::group_split(.data$model) %>%
+  m <- .model_frame(formula, data = .data_core)
+  x <- .model_matrix(formula, data = .data_core)
+  y <- .model_response(m)
+
+  out <- fit_core %>%
+    tidyr::unnest(.data$model_info) %>%
+    dplyr::group_by(.data$model) %>%
+    dplyr::group_split() %>%
     purrr::map_dfr(function(fit_mod) {
-      fitted <- .fit_from_frame(fit_mod, x)
+      fitted <- .fit_from_frame(fit_mod, x, idx, index_cols)
       fitted <- purrr::map_dfr(fitted, function(fitted_) {
         fitted_ <- fitted_ %>%
           dplyr::as_tibble() %>%
