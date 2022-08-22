@@ -108,6 +108,8 @@ m <- function(model_method,
   }
 
   x <- data.frame(x, check.names = F)
+  x <- dplyr::select(x, -dplyr::any_of("(Intercept)"))
+  colnames(x) <- gsub("`", "", colnames(x))
 
   # Remove linearly dependent features
   if (.remove_dependent_features) {
