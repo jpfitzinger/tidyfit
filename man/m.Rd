@@ -46,6 +46,8 @@ The function can fit various regression or classification models and returns the
 \code{"robust"} performs a robust regression using \code{MASS::rlm}. See \code{\link{.model.robust}} for details.
 
 \code{"quantile"} performs a quantile regression using \code{quantreg::rq}. See \code{\link{.model.quantile}} for details.
+
+\code{"glmm"} performs a mixed-effects GLM using \code{lme4::glmer}. See \code{\link{.model.glmm}} for details.
 }
 
 \subsection{Regression and classification with L1 and L2 penalties}{
