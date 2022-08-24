@@ -3,11 +3,17 @@
 #' @description This function is a wrapper to fit many different types of linear
 #' classification models on a (grouped) \code{tibble}.
 #'
-#' @details ´
+#' @details \code{classify} fits all models passed in \code{...} using the \code{\link{m}} function. The models can be passed as name-function pairs (e.g. \code{ols = m("lm")}) or without including a name.
 #'
-#' Cross validation is performed using the 'rsample' package with possible methods including 'initial_split' (simple train-test split), 'initial_time_split' (train-test split with retained order), 'vfold' (aka kfold) cross validation, 'loo' and time series ('rolling_origin') cross validation. \code{.cv = "rolling_origin"} implements either rolling or expanding window cross validation using 'rsample::rolling_origin'. The cross-entropy loss is used to validate performance in the cross-validation.
+#' Hyperparameters are tuned automatically using the '.cv' and '.cv_args' arguments, or can be passed to \code{m()} (e.g. \code{lasso = m("lasso", lambda = 0.5)}). See the individual model functions (\code{?m()}) for an overview of hyperparameters.
 #'
-#' Note that arguments for weights are automatically passed to the functions by setting the '.weights' argument.
+#' Cross validation is performed using the 'rsample' package with possible methods including 'initial_split' (simple train-test split), 'initial_time_split' (train-test split with retained order),
+#' 'vfold' (aka kfold) cross validation, 'loo', time series ('rolling_origin') and 'bootstraps' cross validation. \code{.cv = "rolling_origin"} implements either rolling or expanding window cross validation with 'rsample::rolling_origin'.
+#' The negative log loss is used to validate performance in the cross validation.
+#'
+#' Note that arguments for weights are automatically passed to the functions by setting the '.weights' argument. Weights are also considered during cross validation by calculating weighted versions of the cross validation loss function.
+#'
+#' \code{classify} can handle both binomial and multinomial response distributions, however not all underlying methods are capable of handling a multinomial response.
 #'
 #' @param .data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr). The data frame can be grouped.
 #' @param formula an object of class "formula": a symbolic description of the model to be fitted.
@@ -19,24 +25,36 @@
 #' @param .return_slices boolean. Should the output of individual cross validation slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.
 #' @param .tune_each_group boolean. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.
 #' @param .force_cv boolean. Should models be evaluated across all cv slices, even if no hyperparameters are tuned. Default is \code{.force_cv=TRUE}.
-#' @return A \code{tibble} containing estimated coefficients and model details for each group.
+#' @return A \code{tidyfit.models} frame containing model details for each group.
+#'
+#' The **models frame** consists of 3 different components:
+#'
+#'  1. A group of identifying columns (e.g. model name, data groups, grid IDs)
+#'  2. A 'handler' column, which consists of partialized functions that contain all the necessary information to return (a) the model object itself with, (b) model coefficients or (c) predictions.
+#'  3. A nested 'settings' column containing model arguments and hyperparameters
+#'
+#' Coefficients or predictions can be accessed using the built-in \code{coef} and \code{predict} methods. Note that all coefficients are transformed to ensure comparability across methods.
+#'
 #' @author Johann Pfitzinger
 #'
 #' @examples
 #' data <- tidyfit::Factor_Industry_Returns
 #' data <- dplyr::mutate(data, Return = ifelse(Return > 0, 1, 0))
-#' fit <- classify(data, Return ~ ., logit = m("glm"), .mask = "Date")
-#' fit
+#' fit <- classify(data, Return ~ ., m("lasso", lambda = c(0.001, 0.1)), .mask = c("Date", "Industry"))
 #'
-#' # View additional model information
-#' tidyr::unnest(fit, model_info)
+#' # Print the models frame
+#' tidyr::unnest(fit, settings)
+#'
+#' # View coefficients
+#' coef(fit)
 #'
 #' @export
 #'
-#' @seealso \code{\link{regress}} and \code{\link{cross_prod}} method
+#' @seealso \code{\link{regress}}, \code{\link{coef.tidyfit.models}} and \code{\link{predict.tidyfit.models}} method
 #'
 #' @importFrom magrittr %>%
 #' @importFrom tidyr unnest nest any_of
+#' @importFrom tibble new_tibble
 #' @importFrom purrr map_dfr
 #' @importFrom dplyr group_vars group_by across all_of filter mutate ungroup select distinct left_join do select_if bind_rows coalesce
 #' @importFrom rlang .data
@@ -48,10 +66,10 @@ classify <- function(
     .data,
     formula,
     ...,
-    .cv = c("none", "initial_split", "initial_time_split", "loo", "vfold", "rolling_origin"),
-    .cv_args = list(v = 10),
+    .cv = c("none", "initial_split", "initial_time_split", "loo", "vfold",
+            "rolling_origin", "bootstraps"),
+    .cv_args = NULL,
     .weights = NULL,
-    .index = NULL,
     .mask = NULL,
     .remove_dependent_features = FALSE,
     .return_slices = FALSE,
@@ -100,7 +118,7 @@ classify <- function(
   # Fit models
   df <- .data %>%
     do(result = .fit(., formula, model_list, .cv, .cv_args,
-                     .weights, .index, gr_vars, .mask, binomial(), .force_cv,
+                     .weights, gr_vars, .mask, binomial(), .force_cv,
                      .remove_dependent_features)) %>%
     tidyr::unnest(.data$result)
 
@@ -129,11 +147,11 @@ classify <- function(
       df_slices <- df %>%
         dplyr::filter(.data$slice_id != "FULL") %>%
         dplyr::group_by(.data$model, .data$grid_id, .add = TRUE) %>%
-        dplyr::mutate(crit = mean(.data$crit)) %>%
+        dplyr::mutate(metric = mean(.data$metric)) %>%
         dplyr::ungroup(.data$grid_id) %>%
-        dplyr::filter(.data$crit == min(.data$crit)) %>%
+        dplyr::filter(.data$metric == min(.data$metric)) %>%
         dplyr::filter(.data$grid_id == unique(.data$grid_id)[1]) %>%
-        dplyr::select(-.data$crit)
+        dplyr::select(-.data$metric)
 
       if (.return_slices) {
         df <- df_slices %>%
@@ -141,28 +159,19 @@ classify <- function(
       } else {
         df <- df_slices %>%
           dplyr::ungroup() %>%
-          dplyr::select(!!gr_vars, .data$variable, .data$grid_id, .data$model) %>%
-          dplyr::left_join(df %>% dplyr::ungroup() %>% dplyr::filter(.data$slice_id == "FULL"), by = c(gr_vars, "variable", "grid_id", "model")) %>%
-          dplyr::select(-.data$crit, -.data$slice_id) %>%
-          dplyr::bind_rows(df_no_cv)
+          dplyr::select(!!gr_vars, .data$grid_id, .data$model) %>%
+          dplyr::distinct() %>%
+          dplyr::left_join(df %>% dplyr::ungroup() %>% dplyr::filter(.data$slice_id == "FULL"), by = c(gr_vars, "grid_id", "model")) %>%
+          dplyr::bind_rows(df_no_cv) %>%
+          dplyr::select(-.data$metric, -.data$slice_id)
       }
     }
   }
 
-  df <- df %>%
-    dplyr::distinct() %>%
-    dplyr::group_by(.data$model) %>%
-    dplyr::do(temp = dplyr::select_if(., ~!all(is.na(.))))
-
-  df <- df$temp %>%
-    purrr::map_dfr(~tidyr::nest(., model_info = -tidyr::any_of(c(gr_vars, "variable", "beta", "model", "slice_id", "grid_id", "class"))))
-
-  df <- df %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))
-
-  attr(df, "formula") <- formula
-  attr(df, "structure") <- list(mask = .mask, weights = .weights, index = .index,
-                                col_names = colnames(df))
+  df <- tibble::new_tibble(df, class = "tidyfit.models",
+                           structure = list(groups = gr_vars,
+                                            mask = .mask,
+                                            weights = .weights))
 
   return(df)
 

@@ -25,32 +25,45 @@
 \item{.force_cv}{boolean. Should models be evaluated across all cv slices, even if no hyperparameters are tuned. Default is \code{.force_cv=TRUE}.}
 }
 \value{
-A \code{tibble} containing estimated coefficients and model details for each group.
+A \code{tidyfit.models} frame containing model details for each group.
+
+The \strong{models frame} consists of 3 different components:
+\enumerate{
+\item A group of identifying columns (e.g. model name, data groups, grid IDs)
+\item A 'handler' column, which consists of partialized functions that contain all the necessary information to return (a) the model object itself with, (b) model coefficients or (c) predictions.
+\item A nested 'settings' column containing model arguments and hyperparameters
+}
+
+Coefficients or predictions can be accessed using the built-in \code{coef} and \code{predict} methods. Note that all coefficients are transformed to ensure comparability across methods.
 }
 \description{
 This function is a wrapper to fit many different types of linear
 regression models on a (grouped) \code{tibble}.
 }
 \details{
-Models are passed to \code{...} using the \code{\link{m}} function. The models can be passed as name-function pairs (e.g. \code{ols = m("lm")}) or without including a name. In the latter case the 'model_method' argument in \code{m()} becomes the name.
+\code{regress} fits all models passed in \code{...} using the \code{\link{m}} function. The models can be passed as name-function pairs (e.g. \code{ols = m("lm")}) or without including a name.
 
 Hyperparameters are tuned automatically using the '.cv' and '.cv_args' arguments, or can be passed to \code{m()} (e.g. \code{lasso = m("lasso", lambda = 0.5)}). See the individual model functions (\code{?m()}) for an overview of hyperparameters.
 
-Cross validation is performed using the 'rsample' package with possible methods including 'initial_split' (simple train-test split), 'initial_time_split' (train-test split with retained order), 'vfold' (aka kfold) cross validation, 'loo' and time series ('rolling_origin') cross validation. \code{.cv = "rolling_origin"} implements either rolling or expanding window cross validation using 'rsample::rolling_origin'. The mean-squared-error metric is used to validate performance in the cross-validation.
+Cross validation is performed using the 'rsample' package with possible methods including 'initial_split' (simple train-test split), 'initial_time_split' (train-test split with retained order),
+'vfold' (aka kfold) cross validation, 'loo', time series ('rolling_origin') and 'bootstraps' cross validation. \code{.cv = "rolling_origin"} implements either rolling or expanding window cross validation with 'rsample::rolling_origin'.
+The mean squared error loss is used to validate performance in the cross validation.
 
-Note that arguments for weights are automatically passed to the functions by setting the '.weights' argument.
+Note that arguments for weights are automatically passed to the functions by setting the '.weights' argument. Weights are also considered during cross validation by calculating weighted versions of the cross validation loss function.
 }
 \examples{
 data <- tidyfit::Factor_Industry_Returns
-fit <- regress(data, Return ~ ., ols = m("lm"), .mask = "Date")
-fit
+fit <- regress(data, Return ~ ., m("lasso", lambda = c(0.001, 0.1)), .mask = c("Date", "Industry"))
 
-# View additional model information
-tidyr::unnest(fit, model_info)
+# Print the models frame
+tidyr::unnest(fit, settings)
+
+# View coefficients
+coef(fit)
 
 }
 \seealso{
-\code{\link{classify}} and \code{\link{cross_prod}} method
+\code{\link{classify}}, \code{\link{coef.tidyfit.models}} and \code{\link{predict.tidyfit.models}} method
 }
 \author{
 Johann Pfitzinger
