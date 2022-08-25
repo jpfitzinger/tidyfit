@@ -38,7 +38,7 @@
     message = "'%s' cannot be used for classification"
   ),
   multinomial = list(
-    methods = c("ridge", "lasso", "enet"),
+    methods = c("ridge", "lasso", "enet", "adalasso"),
     message = "'%s' cannot be used for multinomial classification"
   )
 )
