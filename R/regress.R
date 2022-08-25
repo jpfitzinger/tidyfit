@@ -154,6 +154,9 @@ regress <- function(
     }
   }
 
+  col_ord <- c(gr_vars, "model", "estimator", "grid_id", "handler", "settings", "warnings", "messages")
+  df <- dplyr::relocate(df, any_of(col_ord))
+
   df <- tibble::new_tibble(df, class = "tidyfit.models",
                            structure = list(groups = gr_vars,
                                             mask = .mask,
