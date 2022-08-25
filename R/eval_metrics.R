@@ -1,43 +1,40 @@
-#' @importFrom dplyr pull mutate filter select tibble
+#' @importFrom dplyr mutate select tibble group_by row_number any_of
 #' @importFrom tidyr spread
 #' @importFrom rlang .data
-#' @importFrom purrr map_dfr
+#' @importFrom yardstick rmse mn_log_loss
 
-.eval_metrics <- function(result, x, y, idx, idx_cols) {
+.eval_metrics <- function(pred, family) {
 
-  fit <- .fit_from_frame(result, x, idx, idx_cols)
-
-  f <- result %>%
-    dplyr::pull(.data$family) %>%
-    unique %>%
-    .[[1]]
-
-  if (f$family == "binomial") {
-    lvls <- levels(y)
+  if ("grid_id" %in% colnames(pred)) {
+    pred <- dplyr::group_by(pred, .data$grid_id)
   }
-
-  if (length(fit)==1) {
-    fit <- fit[[1]]
-    if (f$family == "binomial") {
-      # Calculate cross-entropy loss
-      ix <- ifelse(y == lvls[2], 1, 0)
-      crit <- apply(fit, 2, function(x) -mean(ix * log(x) + (1-ix) * log(1 - x)))
-    } else if (f$family == "gaussian") {
-      crit <- colMeans((y - fit)^2)
-    }
+  if(!"weights" %in% colnames(pred)) {
+    pred <- dplyr::mutate(pred, weights = 1)
+  }
+  if (family$family == "gaussian") {
+    metrics <- pred %>%
+      yardstick::rmse(truth, prediction, case_weights = weights) %>%
+      dplyr::mutate(metric = .data$.estimate^2)
   } else {
-    class_vals <- names(fit)
-    crit <- rep(0, ncol(fit[[1]]))
-    names(crit) <- colnames(fit[[1]])
-    for (i in 1:length(class_vals)) {
-      ix <- ifelse(y == class_vals[i], 1, 0)
-      crit_ <- apply(fit[[i]], 2, function(x) -mean(ix * log(x), na.rm = T))
-      crit <- crit + crit_
+    is_multinomial <- "class" %in% colnames(pred)
+    if (is_multinomial) {
+      level_names <- levels(pred$truth)
+      metrics <- pred %>%
+        dplyr::group_by(.data$class, .add = TRUE) %>%
+        dplyr::mutate(row_n = dplyr::row_number()) %>%
+        tidyr::spread(.data$class, .data$prediction) %>%
+        yardstick::mn_log_loss(truth = .data$truth, any_of(level_names), case_weights = weights) %>%
+        dplyr::mutate(metric = -.data$.estimate)
+    } else {
+      metrics <- pred %>%
+        yardstick::mn_log_loss(truth, prediction, case_weights = weights) %>%
+        dplyr::mutate(metric = -.data$.estimate)
     }
   }
 
-  crit <- dplyr::tibble(grid_id = names(crit), crit = crit)
+  metrics <- metrics %>%
+    dplyr::select(-.data$.metric, -.data$.estimator, -.data$.estimate)
 
-  return(crit)
+  return(metrics)
 
 }
