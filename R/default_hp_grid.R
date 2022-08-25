@@ -18,7 +18,7 @@
   }
   if (model_method %in% c("pcr", "plsr")) {
     if (!"ncomp" %in% args) {
-      grid$ncomp <- unique(seq(1, nvars, length.out = 20))
+      grid$ncomp <- unique(round(seq(1, nvars, length.out = 20)))
     }
   }
   if (model_method == "hfr") {
