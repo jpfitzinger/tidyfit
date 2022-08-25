@@ -13,6 +13,7 @@ RoxygenNote: 7.2.1
 Imports: 
   arm,
   bestglm,
+  broom,
   dials,
   dplyr, 
   furrr,
@@ -32,7 +33,8 @@ Imports:
   sandwich,
   stats,
   tidyr,
-  utils
+  utils,
+  yardstick
 Suggests:
   ggpubr,
   kableExtra,
