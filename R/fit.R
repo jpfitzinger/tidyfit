@@ -12,7 +12,6 @@
     .cv,
     .cv_args,
     .weights,
-    .index,
     gr_vars,
     .mask,
     family,
@@ -32,33 +31,27 @@
     wts <- NULL
   }
 
-  idx <- .get_index_from_df(.data, .index, formula)
-  .data <- .data %>%
-    dplyr::select(-dplyr::any_of(.index))
-
-  m <- .model_frame(formula = formula, data = .data)
-  x <- .model_matrix(formula, m)
-  y <- .model_response(m)
+  mod_frame <- .model_frame(formula = formula, data = .data)
+  mod_response <- .model_response(mod_frame)
 
   # Prepare CV
-  if (.cv == "none")
-    cv <- dplyr::tibble(splits = list(m))
-  if (.cv == "initial_split")
-    cv <- dplyr::tibble(
-      splits = list(do.call(rsample::initial_split, append(list(data = m), .cv_args))),
-      id = "Initial_Split"
+  cv_func <- switch(
+    .cv,
+    initial_split = rsample::initial_split,
+    initial_time_split = rsample::initial_time_split,
+    vfold = rsample::vfold_cv,
+    loo = rsample::loo_cv,
+    rolling_origin = rsample::rolling_origin,
+    boot = rsample::bootstraps
     )
-  if (.cv == "initial_time_split")
-    cv <- dplyr::tibble(
-      splits = list(do.call(rsample::initial_time_split, append(list(data = m), .cv_args))),
-      id = "Initial_Split"
-    )
-  if (.cv == "vfold")
-    cv <- do.call(rsample::vfold_cv, append(list(data = m), .cv_args))
-  if (.cv == "loo")
-    cv <- do.call(rsample::loo_cv, append(list(data = m), .cv_args))
-  if (.cv == "rolling_origin")
-    cv <- do.call(rsample::rolling_origin, append(list(data = m), .cv_args))
+
+  if (.cv == "none") {
+    cv <- dplyr::tibble(splits = list(mod_frame))
+  } else {
+    cv <- do.call(cv_func, append(list(data = mod_frame), .cv_args))
+    if (inherits(cv, "rsplit"))
+      cv <- dplyr::tibble(splits = list(cv), id = .cv)
+  }
 
   # Evaluate methods
   result <- model_list %>%
@@ -83,13 +76,9 @@
             df_test <- rsample::testing(splits)
             train_samples <- splits$in_id
             test_samples <- rsample::complement(splits)
-
-            df_train_x <- .model_matrix(formula, df_train)
-            df_train_y <- .model_response(df_train)
-            df_test_x <- .model_matrix(formula, df_test)
             df_test_y <- .model_response(df_test)
 
-            model_args <- list(x = df_train_x, y = df_train_y,
+            model_args <- list(formula = formula, data = df_train,
                                .remove_dependent_features = .remove_dependent_features)
             if (!model(.check_family = TRUE)) {
               model_args <- append(model_args, list(family = family))
@@ -97,20 +86,15 @@
             if (!is.null(wts)) {
               model_args <- append(model_args, list(weights = wts[train_samples]))
             }
-            if (!is.null(idx)) {
-              model_args <- append(model_args, list(index_col = idx[train_samples]))
-              idx_test <- idx[test_samples]
-            } else {
-              idx_test <- NULL
-            }
-            model_args$model_formula <- list(formula)
 
-            result <- do.call(model, model_args)
-            crit <- .eval_metrics(result, df_test_x, df_test_y, idx_test, .index)
+            result_raw <- do.call(model, model_args)
+            result <- .unnest_settings(result_raw)
+            pred <- predict.tidyfit.models(result_raw, df_test, weights = wts[test_samples], .keep_grid_id = TRUE)
+            metrics <- .eval_metrics(pred, family)
 
             result <- result %>%
               dplyr::mutate(slice_id = id) %>%
-              dplyr::left_join(crit, by = "grid_id")
+              dplyr::left_join(metrics, by = "grid_id")
 
             return(result)
 
@@ -121,7 +105,7 @@
         result <- NULL
       }
 
-      model_args <- list(x = x, y = y,
+      model_args <- list(formula = formula, data = mod_frame,
                          .remove_dependent_features = .remove_dependent_features)
       if (!model(.check_family = TRUE)) {
         model_args <- append(model_args, list(family = family))
@@ -129,13 +113,10 @@
       if (!is.null(wts)) {
         model_args <- append(model_args, list(weights = wts))
       }
-      if (!is.null(idx)) {
-        model_args <- append(model_args, list(index_col = idx))
-      }
-      model_args$model_formula <- list(formula)
 
       result_all <- do.call(model, model_args) %>%
-        mutate(slice_id = "FULL")
+        .unnest_settings() %>%
+        dplyr::mutate(slice_id = "FULL")
 
       # Ensure identical grids as in CV (can differ if some slices have errors)
       if (!is.null(result)) {

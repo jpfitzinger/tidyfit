@@ -6,10 +6,9 @@
 \usage{
 m(
   model_method,
-  x = NULL,
-  y = NULL,
+  formula = NULL,
+  data = NULL,
   ...,
-  .remove_dependent_features = FALSE,
   .return_method_name = FALSE,
   .check_family = FALSE
 )
@@ -17,13 +16,11 @@ m(
 \arguments{
 \item{model_method}{The name of the method to fit. See Details.}
 
-\item{x}{Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{Response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{...}{Additional arguments passed to the underlying method function (e.g. \code{lm} or \code{glm}).}
-
-\item{.remove_dependent_features}{When \code{TRUE}, linearly dependent features are removed using \code{qr(x)}. This avoids errors in several methods such as 'subsets' or´ 'lm'.}
 
 \item{.return_method_name}{When \code{TRUE}, the function simply returns the 'method' argument.}
 
@@ -46,8 +43,6 @@ The function can fit various regression or classification models and returns the
 \code{"robust"} performs a robust regression using \code{MASS::rlm}. See \code{\link{.model.robust}} for details.
 
 \code{"quantile"} performs a quantile regression using \code{quantreg::rq}. See \code{\link{.model.quantile}} for details.
-
-\code{"glmm"} performs a mixed-effects GLM using \code{lme4::glmer}. See \code{\link{.model.glmm}} for details.
 }
 
 \subsection{Regression and classification with L1 and L2 penalties}{
@@ -85,23 +80,23 @@ The function can fit various regression or classification models and returns the
 \code{"bayes"} performs a Bayesian generalized regression or classification using \code{arm::bayesglm}. See \code{\link{.model.bayes}} for details.
 }
 
-\subsection{Miscellaneous}{
+\subsection{Mixed-effects modeling}{
 
-\code{"cor"} calculates Pearson correlation coefficients using \code{stats::cor}. See \code{\link{.model.cor}} for details.
+\code{"glmm"} performs a mixed-effects GLM using \code{lme4::glmer}. See \code{\link{.model.glmm}} for details.
 
-When called without \code{x} and \code{y} arguments, the function returns a partialised version of itself that can be called with data to fit a model.
+When called without \code{formula} and \code{data} arguments, the function returns a partialised version of itself that can be called with data to fit a model.
 }
 }
 \examples{
+# Load data
+data <- tidyfit::Factor_Industry_Returns
+
 # Stand-alone function
-x <- matrix(rnorm(100 * 20), 100, 20)
-y <- rbinom(100, 1, 0.5)
-fit <- m("glm", x, y)
+fit <- m("lm", Return ~ ., data)
 fit
 
 # Within 'regress' function
-data <- tidyfit::Factor_Industry_Returns
-fit <- regress(data, Return ~ ., m("glm"), .mask = "Date")
+fit <- regress(data, Return ~ ., m("lm"), .mask = "Date")
 fit
 
 }

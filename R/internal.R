@@ -1,10 +1,10 @@
 # Internal helper functions
 
-#' @importFrom purrr cross map transpose
-#' @importFrom dplyr pull select filter last
-#' @importFrom tidyr spread
-#' @importFrom lme4 findbars lFormula
+#' @importFrom purrr cross safely quietly
+#' @importFrom dplyr rename mutate select relocate any_of
+#' @importFrom tidyr unnest nest
 #' @importFrom stats model.frame model.matrix model.response
+#' @importFrom lme4 findbars lFormula
 #' @importFrom rlang .data
 
 # Wrap vector/array arguments in list and return a grid of settings
@@ -45,144 +45,28 @@
 
 }
 
-# Create a matrix of fitted values using coefficients and data
-.fit_from_frame <- function(coefs_df, x, idx, idx_cols) {
+# Combine grid_id in settings col and model frame
+.unnest_settings <- function(model_frame) {
 
-  f <- coefs_df %>%
-    dplyr::pull(.data$family) %>%
-    unique %>%
-    .[[1]]
-
-  is_multinomial <- "class" %in% colnames(coefs_df)
-
-  if (is.null(idx_cols) & !is.null(idx)) {
-    idx_cols <- names(idx[[1]])
-  }
-
-  if (!is.null(idx)) {
-    unique_idx <- unique(idx)
-    rows_selector <- coefs_df %>%
-      dplyr::select(dplyr::all_of(idx_cols)) %>%
-      purrr::transpose()
-  }
-
-  .predict_inner <- function(df, x) {
-    beta <- df %>%
-      dplyr::select(.data$grid_id, .data$beta, .data$variable) %>%
-      tidyr::spread(.data$grid_id, .data$beta)
-    x <- x[, beta$variable]
-    beta <- beta[, -1]
-    fitted_values <- x %*% data.matrix(beta)
-    return(fitted_values)
-  }
-
-  if (!is_multinomial) {
-
-    if (!is.null(idx)) {
-
-      fitted_values <- unique_idx %>%
-        purrr::map_dfr(function(i) {
-          which_rows_x <- sapply(idx, function(j) all(j %in% i))
-          which_rows_beta <- sapply(rows_selector, function(j) all(j %in% i))
-          if (!any(which_rows_x)) return(NULL)
-          coefs_df %>%
-            dplyr::filter(which_rows_beta) %>%
-            .predict_inner(x[which_rows_x,]) %>%
-            dplyr::as_tibble() %>%
-            dplyr::mutate(row_n = c(1:nrow(x))[which_rows_x])
-        })
-      fitted_values <- fitted_values %>%
-        dplyr::arrange(.data$row_n) %>%
-        dplyr::select(-.data$row_n) %>%
-        data.frame()
-
+  if ("settings" %in% colnames(model_frame)) {
+    model_frame <- model_frame %>%
+      dplyr::rename(grid_id_ = .data$grid_id) %>%
+      tidyr::unnest(.data$settings)
+    if ("grid_id" %in% colnames(model_frame)) {
+      model_frame <- model_frame %>%
+        dplyr::mutate(grid_id = paste(substring(.data$grid_id_,1, 4), .data$grid_id, sep = ".")) %>%
+        dplyr::select(-.data$grid_id_)
     } else {
-
-      fitted_values <- coefs_df %>%
-        .predict_inner(x)
-
+      model_frame <- model_frame %>%
+        dplyr::rename(grid_id = .data$grid_id_)
     }
-
-    fitted_values <- f$linkinv(fitted_values)
-    fitted_values <- list(fitted_values)
-
-  } else {
-
-    class_vals <- unique(coefs_df$class)
-
-    fitted_values_list <- class_vals %>%
-      purrr::map(function(cls) {
-        if (!is.null(idx)) {
-          fitted_values <- unique_idx %>%
-            purrr::map_dfr(function(i) {
-              which_rows_x <- sapply(idx, function(j) all(j %in% i))
-              which_rows_beta <- sapply(rows_selector, function(j) all(j %in% i))
-              if (!any(which_rows_x)) return(NULL)
-              coefs_df %>%
-                dplyr::filter(which_rows_beta) %>%
-                dplyr::filter(class == cls) %>%
-                .predict_inner(x[which_rows_x,]) %>%
-                dplyr::as_tibble() %>%
-                dplyr::mutate(row_n = c(1:nrow(x))[which_rows_x])
-            })
-
-          fitted_values <- fitted_values %>%
-            dplyr::arrange(.data$row_n) %>%
-            dplyr::select(-.data$row_n) %>%
-            data.frame()
-
-        } else {
-
-          fitted_values <- coefs_df %>%
-            dplyr::filter(class == cls) %>%
-            .predict_inner(x)
-
-        }
-
-        fitted_values <- exp(fitted_values)
-
-        return(fitted_values)
-
-      })
-    fitted_values_sum <- fitted_values_list[[1]]
-    for (i in 2:length(class_vals)) {
-      fitted_values_sum <- fitted_values_sum + fitted_values_list[[i]]
-    }
-    fitted_values <- list()
-    for (i in 1:length(class_vals)) {
-      fitted_values[[i]] <- fitted_values_list[[i]] / fitted_values_sum
-    }
-    names(fitted_values) <- class_vals
+    model_frame <- model_frame %>%
+      dplyr::relocate(.data$grid_id) %>%
+      tidyr::nest(settings = -any_of(c("grid_id", "estimator", "handler", "warnings", "messages"))) %>%
+      dplyr::relocate(any_of(c("warnings", "messages")), .after = settings)
   }
 
-  return(fitted_values)
-
-}
-
-# Extract index vector from data
-.get_index_from_df <- function(.data, .index, formula) {
-
-  # Check if formula contains random effects
-  re_terms <- lme4::findbars(formula)
-  if (!is.null(.index) & length(re_terms) > 0)
-    stop("do not supply an '.index' argument when using random effects")
-
-  if (!is.null(.index)) {
-    idx <- .data %>%
-      dplyr::pull(!!.index)
-  }
-  if (is.null(.index) & length(re_terms) == 0) {
-    idx <- NULL
-  }
-  if (length(re_terms) > 0) {
-    idx_names <- sapply(re_terms, function(re) dplyr::last(all.vars(re)))
-    idx <- .data %>%
-      dplyr::select(dplyr::all_of(idx_names)) %>%
-      dplyr::mutate_if(is.factor, as.character) %>%
-      purrr::transpose()
-  }
-
-  return(idx)
+  return(model_frame)
 
 }
 
@@ -233,4 +117,16 @@
 
   return(mat)
 
+}
+
+.safely_n_quietly <- function(.f, otherwise = NULL) {
+  retfun <- purrr::quietly(purrr::safely(.f, otherwise = otherwise, quiet = FALSE))
+  function(...) {
+    ret <- retfun(...)
+    list(result = ret$result$result,
+         output = ret$output,
+         messages = ret$messages,
+         warnings = ret$warnings,
+         error = ret$result$error)
+  }
 }

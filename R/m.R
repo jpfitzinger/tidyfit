@@ -14,8 +14,6 @@
 #'
 #' \code{"quantile"} performs a quantile regression using \code{quantreg::rq}. See \code{\link{.model.quantile}} for details.
 #'
-#' \code{"glmm"} performs a mixed-effects GLM using \code{lme4::glmer}. See \code{\link{.model.glmm}} for details.
-#'
 #' ### Regression and classification with L1 and L2 penalties
 #'
 #' \code{"lasso"} performs a linear regression or classification with L1 penalty using \code{glmnet::glmnet}. See \code{\link{.model.lasso}} for details.
@@ -46,49 +44,47 @@
 #'
 #' \code{"bayes"} performs a Bayesian generalized regression or classification using \code{arm::bayesglm}. See \code{\link{.model.bayes}} for details.
 #'
-#' ### Miscellaneous
+#' ### Mixed-effects modeling
 #'
-#' \code{"cor"} calculates Pearson correlation coefficients using \code{stats::cor}. See \code{\link{.model.cor}} for details.
+#' \code{"glmm"} performs a mixed-effects GLM using \code{lme4::glmer}. See \code{\link{.model.glmm}} for details.
 #'
-#' When called without \code{x} and \code{y} arguments, the function returns a partialised version of itself that can be called with data to fit a model.
+#' When called without \code{formula} and \code{data} arguments, the function returns a partialised version of itself that can be called with data to fit a model.
 #'
 #' @param model_method The name of the method to fit. See Details.
-#' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
-#' @param y Response variable.
+#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
 #' @param ...  Additional arguments passed to the underlying method function (e.g. \code{lm} or \code{glm}).
-#' @param .remove_dependent_features When \code{TRUE}, linearly dependent features are removed using \code{qr(x)}. This avoids errors in several methods such as 'subsets' or´ 'lm'.
 #' @param .return_method_name When \code{TRUE}, the function simply returns the 'method' argument.
 #' @param .check_family When \code{TRUE}, the function returns a flag indicating whether a custom 'family' object has been passed to \code{...}.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
 #'
 #' @examples
+#' # Load data
+#' data <- tidyfit::Factor_Industry_Returns
+#'
 #' # Stand-alone function
-#' x <- matrix(rnorm(100 * 20), 100, 20)
-#' y <- rbinom(100, 1, 0.5)
-#' fit <- m("glm", x, y)
+#' fit <- m("lm", Return ~ ., data)
 #' fit
 #'
 #' # Within 'regress' function
-#' data <- tidyfit::Factor_Industry_Returns
-#' fit <- regress(data, Return ~ ., m("glm"), .mask = "Date")
+#' fit <- regress(data, Return ~ ., m("lm"), .mask = "Date")
 #' fit
 #'
 #' @export
 #'
 #' @seealso \code{\link{regress}} and \code{\link{classify}} methods
 #'
-#' @importFrom purrr partial
-#' @importFrom dials grid_regular penalty
+#' @importFrom purrr partial quietly
 #' @importFrom tidyr complete expand_grid
-#' @importFrom rlang .data dots_list
-#' @importFrom dplyr mutate arrange relocate bind_rows
+#' @importFrom tibble new_tibble
+#' @importFrom rlang .data
+#' @importFrom dplyr mutate arrange relocate bind_rows bind_cols
 
 m <- function(model_method,
-              x = NULL,
-              y = NULL,
+              formula = NULL,
+              data = NULL,
               ...,
-              .remove_dependent_features = FALSE,
               .return_method_name = FALSE,
               .check_family = FALSE
               ) {
@@ -100,97 +96,52 @@ m <- function(model_method,
   if (.check_family) return("family" %in% names(additional_args))
 
   # Partialised function when no data is passed
-  if (is.null(x) & is.null(y)) {
-    # args <- c(as.list(environment()), additional_args)
-    args <- c(list(model_method = model_method),
-              additional_args)
-    args <- args[!names(args) %in% c("x", "y")]
+  if (is.null(formula) & is.null(data)) {
+    args <- c(list(model_method = model_method), additional_args)
+    args <- args[!names(args) %in% c("formula", "data")]
     args <- append(args, list(.f = m))
     return(do.call(purrr::partial, args))
   }
 
-  x <- data.frame(x, check.names = F)
-  x <- dplyr::select(x, -dplyr::any_of("(Intercept)"))
-  colnames(x) <- gsub("`", "", colnames(x))
-
-  # Remove linearly dependent features
-  if (.remove_dependent_features) {
-    qr_x <- qr(x)
-    x_ <- x[, qr_x$pivot[seq_len(qr_x$rank)]]
-    if (ncol(x) > ncol(x_)) {
-      warning("linearly dependent columns removed")
-      chk_rem_feat <- TRUE
-    } else {
-      chk_rem_feat <- FALSE
-    }
-  } else {
-    x_ <- x
-    chk_rem_feat <- FALSE
-  }
+  mf <- .model_frame(formula, data)
+  x <- .model_matrix(formula, mf)
 
   # Set default hyperparameter grids
   default_grids <- .default_hp_grid(model_method,
                                     additional_args,
-                                    nvars = ncol(x_))
+                                    nvars = ncol(x) - 1)
   additional_args <- append(additional_args, default_grids)
 
   # Used to define the class
   tmp_ <- structure("", class = model_method)
+  qmodel <- purrr::quietly(function(args) do.call(.model, args))
 
   if (length(additional_args)==0) {
-    args <- list(x = x_, y = y, control = additional_args, identifier = tmp_)
-    mod <- do.call(.model, args)
-    if (!"grid_id" %in% colnames(mod)) {
-      mod <- mod %>%
-        dplyr::mutate(grid_id = "s000")
-    }
+    args <- list(formula = formula, data = data, control = additional_args, identifier = tmp_)
+    mod_list <- qmodel(args)
+    mod <- mod_list$result
+    mod <- dplyr::bind_cols(mod, purrr::compact(mod_list[-c(1:2)]))
     mod <- mod %>%
-      dplyr::mutate(grid_id = ifelse("grid_id" %in% colnames(mod), .data$grid_id, "s000"))
+      dplyr::mutate(grid_id = "#0010000")
   } else {
     args_grid <- .args_to_grid(model_method, additional_args)
+    names(args_grid) <- paste0("#", formatC(1:length(args_grid), 2, flag = "0"), "0000")
     mod <- args_grid %>%
-      purrr::map2_dfr(formatC(1:length(args_grid), 2, flag = "0"),
-                      function(additional_args, grd_id) {
-        args <- list(x = x_, y = y, control = additional_args, identifier = tmp_)
-        mod <- do.call(.model, args)
-        if ("grid_id" %in% colnames(mod)) {
-          mod <- mod %>%
-            dplyr::mutate(grid_id = paste0(grd_id, .data$grid_id))
-        } else {
-          mod <- mod %>%
-            dplyr::mutate(grid_id = grd_id)
-        }
+      purrr::map_dfr(function(additional_args) {
+        args <- list(formula = formula, data = data, control = additional_args, identifier = tmp_)
+        mod_list <- qmodel(args)
+        mod <- mod_list$result
+        mod <- dplyr::bind_cols(mod, purrr::compact(mod_list[-c(1:2)]))
         return(mod)
-      })
-
-    # Sanitize grid_id labels
-    grid_names <- sort(unique(mod$grid_id))
-    grid_ids <- paste0("s", formatC(seq_along(grid_names), 3, flag = "0"))
-    names(grid_ids) <- grid_names
-    mod <- mod %>%
-      dplyr::mutate(grid_id = grid_ids[.data$grid_id])
-  }
-
-  # Add removed variables
-  if (chk_rem_feat) {
-    if ("class" %in% colnames(mod)) {
-      missing_vars <- tidyr::expand_grid(variable = setdiff(colnames(x), colnames(x_)),
-                                    grid_id = unique(mod$grid_id),
-                                    family = unique(mod$family),
-                                    class = unique(mod$class))
-    } else {
-      missing_vars <- tidyr::expand_grid(variable = setdiff(colnames(x), colnames(x_)),
-                                    grid_id = unique(mod$grid_id),
-                                    family = unique(mod$family))
-    }
-    missing_vars <- dplyr::mutate(missing_vars, beta = 0)
-    mod <- dplyr::bind_rows(mod, missing_vars)
+      }, .id = "grid_id")
   }
 
   # Arrange output
   mod <- mod %>%
-    dplyr::arrange(.data$grid_id, .data$variable) %>%
-    dplyr::relocate(.data$variable, .data$beta, .data$grid_id, .data$family)
+    dplyr::arrange(.data$grid_id) %>%
+    dplyr::relocate(.data$grid_id)
+
+  mod <- tibble::new_tibble(mod, class = "tidyfit.models")
 
   return(mod)
 

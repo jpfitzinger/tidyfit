@@ -1,3 +1,3 @@
-.model <- function(x, y, control, identifier) {
+.model <- function(formula, data, control, identifier) {
   UseMethod(".model", identifier)
 }
