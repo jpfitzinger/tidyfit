@@ -4,12 +4,12 @@
 \alias{.model.hfr}
 \title{Hierarchical feature regression for \code{tidyfit}}
 \usage{
-\method{.model}{hfr}(x = NULL, y = NULL, control = NULL, ...)
+\method{.model}{hfr}(formula = NULL, data = NULL, control = NULL, ...)
 }
 \arguments{
-\item{x}{Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{Response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{control}{Additional arguments passed to \code{hfr::cv.hfr}.}
 
@@ -32,10 +32,16 @@ The hierarchical feature regression is estimated using the \code{hfr::cv.hfr} fu
 If no hyperparameter grid is provided (\code{is.null(control$kappa)}), the default is \code{seq(0, 1, by = 0.1)}.
 }
 \examples{
-x <- matrix(rnorm(100 * 20), 100, 20)
-y <- rnorm(100)
-fit <- m("hfr", x, y, kappa = 0.5)
+# Load data
+data <- tidyfit::Factor_Industry_Returns
+
+# Stand-alone function
+fit <- m("hfr", Return ~ ., data, kappa = 0.5)
 fit
+
+# Within 'regress' function
+fit <- regress(data, Return ~ ., m("hfr", kappa = c(0.1, 0.5)), .mask = c("Date", "Industry"))
+coef(fit)
 
 }
 \references{

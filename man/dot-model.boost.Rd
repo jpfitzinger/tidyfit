@@ -4,12 +4,12 @@
 \alias{.model.boost}
 \title{Gradient boosting regression for \code{tidyfit}}
 \usage{
-\method{.model}{boost}(x = NULL, y = NULL, control = NULL, ...)
+\method{.model}{boost}(formula = NULL, data = NULL, control = NULL, ...)
 }
 \arguments{
-\item{x}{input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{control}{Additional arguments passed to \code{mboost::glmboost}.}
 
@@ -35,10 +35,16 @@ An intercept is always included and features are standardized with coefficients 
 If no hyperparameter grid is passed (\code{is.null(control$mstop)} and \code{is.null(control$nu)}), the default grid is used with \code{mstop = c(100, 500, 1000, 5000)} and \code{nu = c(0.01, 0.05, 0.1, 0.15, 0.2, 0.25)}.
 }
 \examples{
-x <- matrix(rnorm(100 * 20), 100, 20)
-y <- rbinom(100, 1, 0.5)
-fit <- m("boost", x, y, mstop = 100, family = binomial())
+# Load data
+data <- tidyfit::Factor_Industry_Returns
+
+# Stand-alone function
+fit <- m("boost", Return ~ ., data, nu = 0.1)
 fit
+
+# Within 'regress' function
+fit <- regress(data, Return ~ ., m("boost", nu = c(0.1, 0.05)), .mask = c("Date", "Industry"))
+coef(fit)
 
 }
 \references{

@@ -14,8 +14,8 @@
 #'
 #' If no hyperparameter grid is passed (\code{is.null(control$lambda)}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100. Note that the grid selection tools provided by \code{glmnet::glmnet} cannot be used (e.g. \code{dfmax}). This is to guarantee identical grids across groups in the tibble.
 #'
-#' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
-#' @param y Response variable.
+#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
 #' @param control  Additional arguments passed to \code{glmnet::glmnet}.
 #' @param ... Not used.
 #' @return A 'tibble'.
@@ -26,10 +26,16 @@
 #' Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
 #'
 #' @examples
-#' x <- matrix(rnorm(100 * 20), 100, 20)
-#' y <- rnorm(100)
-#' fit <- m("lasso", x, y)
+#' # Load data
+#' data <- tidyfit::Factor_Industry_Returns
+#'
+#' # Stand-alone function
+#' fit <- m("lasso", Return ~ ., data, lambda = 0.5)
 #' fit
+#'
+#' # Within 'regress' function
+#' fit <- regress(data, Return ~ ., m("lasso", lambda = c(0.1, 0.5)), .mask = c("Date", "Industry"))
+#' coef(fit)
 #'
 #' @seealso \code{\link{.model.enet}}, \code{\link{.model.ridge}}, \code{\link{.model.adalasso}} and \code{\link{m}} methods
 #'
@@ -41,14 +47,19 @@
 #' @importFrom methods formalArgs
 
 .model.lasso <- function(
-    x = NULL,
-    y = NULL,
+    formula = NULL,
+    data = NULL,
     control = NULL,
     ...
 ) {
 
   control <- control[names(control) %in% methods::formalArgs(glmnet::glmnet)]
   control <- control[names(control) != "alpha"]
+  control$lambda <- sort(control$lambda, TRUE)
+
+  mf <- stats::model.frame(formula, data)
+  x <- stats::model.matrix(formula, mf)
+  y <- stats::model.response(mf)
 
   # Prepare 'family' arg
   if (is.null(control$family)) {
@@ -70,44 +81,126 @@
     y <- as.factor(y)
   }
 
-  # Sparse coefficient matrix to tibble
-  gather_coef_mat <- function(coef_mat) {
-    colnames(coef_mat) <- formatC(1:ncol(coef_mat), 2, flag = "0")
-    var_names <- rownames(coef_mat)
-    var_names[1] <- "(Intercept)"
-    out <- coef_mat %>%
-      data.matrix %>%
-      dplyr::as_tibble() %>%
-      dplyr::mutate(variable = var_names) %>%
-      tidyr::gather("grid_id", "beta", -.data$variable) %>%
-      dplyr::mutate(lambda = m$lambda[match(.data$grid_id, colnames(coef_mat))]) %>%
-      dplyr::mutate(family = list(f)) %>%
-      dplyr::select(.data$variable, .data$beta, .data$grid_id, .data$family, .data$lambda)
-    return(out)
-  }
+  incl_intercept <- "(Intercept)" %in% colnames(x)
+  if (incl_intercept) x <- x[, -1]
 
-  m <- do.call(glmnet::glmnet, append(list(x = x, y = y, alpha = 1), control))
+  m <- do.call(glmnet::glmnet, append(list(x = x, y = y, alpha = 1, intercept = incl_intercept), control))
 
-  coefs <- coef(m)
+  control$lambda <- m$lambda
+  grid_ids <- formatC(1:length(control$lambda), 2, flag = "0")
 
-  if (f_name == "gaussian") {
-    out <- gather_coef_mat(coefs)
-  } else {
-    lvls <- levels(y)
-    out <- purrr::map_dfr(coefs, gather_coef_mat, .id = "class")
-    if (length(lvls) == 2) {
-      out <- out %>%
-        dplyr::filter(.data$class == lvls[2]) %>%
-        dplyr::select(-.data$class) %>%
-        dplyr::mutate(beta = .data$beta * 2)
-    }
-  }
+  model_handler <- purrr::partial(.handler.glmnet, object = m, grid_ids = grid_ids,
+                                  formula = formula, family = control$family)
 
-  control <- control[!names(control) %in% c("family", "lambda")]
+  control <- control[!names(control) %in% c("weights")]
   if (length(control) > 0) {
-    out <- dplyr::bind_cols(out, dplyr::as_tibble(.func_to_list(control)))
+    settings <- dplyr::as_tibble(.func_to_list(control)) %>%
+      dplyr::mutate(grid_id = grid_ids)
+  } else {
+    settings <- NULL
   }
+  settings <- tidyr::nest(settings, settings = dplyr::everything())
+
+  out <- tibble(
+    estimator = "glmnet::glmnet",
+    handler = list(model_handler),
+    settings
+  )
 
   return(out)
+
+}
+
+.handler.glmnet <- function(object,
+                           data,
+                           selected_id = NULL,
+                           grid_ids = NULL,
+                           formula = NULL,
+                           family = NULL, ..., .what = "model") {
+
+  if (.what == "model") {
+    return(object)
+  }
+
+  if (.what == "predict") {
+    response_var <- all.vars(formula)[1]
+    if (response_var %in% colnames(data)) {
+      truth <- data[, response_var]
+    } else {
+      data[, response_var] <- 1
+      truth <- NULL
+    }
+    x <- stats::model.matrix(formula, data)
+    if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
+    pred_mat <- stats::predict(object, x, type = "response")
+    dimnames(pred_mat)[[length(dim(pred_mat))]] <- grid_ids
+    if (length(dim(pred_mat))==3) {
+      class_vals <- dimnames(pred_mat)[[2]]
+    } else {
+      class_vals <- NULL
+    }
+    pred <- pred_mat %>%
+      dplyr::as_tibble() %>%
+      dplyr::mutate(row_n = dplyr::row_number())
+    if (!is.null(truth)) {
+      pred <- dplyr::mutate(pred, truth = truth)
+    }
+    if (family == "multinomial") {
+      pred <- pred %>%
+        tidyr::pivot_longer(-dplyr::any_of(c("truth", "row_n")),
+                            names_to = c("class", "grid_id"),
+                            values_to = "prediction",
+                            names_sep = "\\.")
+    } else {
+      pred <- pred %>%
+        tidyr::gather("grid_id", "prediction", -dplyr::any_of(c("truth", "row_n")))
+    }
+    pred <- pred %>%
+      dplyr::select(-.data$row_n)
+    if (length(class_vals)==2) {
+      pred <- pred %>%
+        dplyr::filter(.data$class == sort(class_vals)[2]) %>%
+        dplyr::select(-.data$class)
+    }
+    if (!is.null(selected_id)) {
+      if (grepl("[.]", selected_id)) {
+        pred <- pred %>%
+          dplyr::filter(.data$grid_id == substring(selected_id, 6)) %>%
+          dplyr::mutate(grid_id = selected_id)
+      } else {
+        pred <- pred %>%
+          dplyr::mutate(grid_id = paste(substring(selected_id, 1, 4), .data$grid_id, sep = "."))
+      }
+    }
+    return(pred)
+  }
+
+  if (.what == "estimates") {
+    estimates <- broom::tidy(object)
+    estimates <- estimates %>%
+      dplyr::mutate(grid_id = grid_ids[.data$step]) %>%
+      dplyr::select(-.data$step) %>%
+      dplyr::mutate(term = ifelse(term == "", "(Intercept)", .data$term))
+    if ("class" %in% colnames(estimates)) {
+      class_vals <- unique(estimates$class)
+      if (length(class_vals) == 2) {
+        estimates <- estimates %>%
+          dplyr::mutate(estimate = .data$estimate * 2) %>%
+          dplyr::filter(.data$class == sort(class_vals)[2]) %>%
+          dplyr::select(-.data$class)
+      }
+    }
+    if (!is.null(selected_id)) {
+      if (grepl("[.]", selected_id)) {
+        estimates <- estimates %>%
+          dplyr::filter(.data$grid_id == substring(selected_id, 6)) %>%
+          dplyr::select(-.data$grid_id)
+      } else {
+        estimates <- estimates %>%
+          dplyr::mutate(grid_id = paste(substring(selected_id, 1, 4), .data$grid_id, sep = "."))
+      }
+    }
+    return(estimates)
+  }
 
 }

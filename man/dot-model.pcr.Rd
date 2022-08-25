@@ -4,12 +4,12 @@
 \alias{.model.pcr}
 \title{Principal Components Regression for \code{tidyfit}}
 \usage{
-\method{.model}{pcr}(x = NULL, y = NULL, control = NULL, ...)
+\method{.model}{pcr}(formula = NULL, data = NULL, control = NULL, ...)
 }
 \arguments{
-\item{x}{Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{Response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{control}{Additional arguments passed to \code{pls::pcr}.}
 
@@ -34,10 +34,16 @@ If no hyperparameter grid is passed (\code{is.null(control$ncomp)}), the default
 Note that at present \code{pls} does not offer weighted implementations or non-gaussian response. The method can therefore only be used with \code{\link{regress}}
 }
 \examples{
-x <- matrix(rnorm(100 * 20), 100, 20)
-y <- rnorm(100)
-fit <- m("pcr", x, y, ncomp = 4)
+# Load data
+data <- tidyfit::Factor_Industry_Returns
+
+# Stand-alone function
+fit <- m("pcr", Return ~ ., data, ncomp = 3)
 fit
+
+# Within 'regress' function
+fit <- regress(data, Return ~ ., m("pcr"), .mask = c("Date", "Industry"), .cv = "vfold")
+coef(fit)
 
 }
 \references{

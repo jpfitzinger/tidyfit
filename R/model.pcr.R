@@ -12,8 +12,8 @@
 #'
 #' Note that at present \code{pls} does not offer weighted implementations or non-gaussian response. The method can therefore only be used with \code{\link{regress}}
 #'
-#' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
-#' @param y Response variable.
+#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
 #' @param control  Additional arguments passed to \code{pls::pcr}.
 #' @param ... Not used.
 #' @return A 'tibble'.
@@ -24,10 +24,16 @@
 #' R package version 2.8-1. URL https://CRAN.R-project.org/package=pls.
 #'
 #' @examples
-#' x <- matrix(rnorm(100 * 20), 100, 20)
-#' y <- rnorm(100)
-#' fit <- m("pcr", x, y, ncomp = 4)
+#' # Load data
+#' data <- tidyfit::Factor_Industry_Returns
+#'
+#' # Stand-alone function
+#' fit <- m("pcr", Return ~ ., data, ncomp = 3)
 #' fit
+#'
+#' # Within 'regress' function
+#' fit <- regress(data, Return ~ ., m("pcr"), .mask = c("Date", "Industry"), .cv = "vfold")
+#' coef(fit)
 #'
 #' @seealso \code{\link{.model.plsr}} and \code{\link{m}} methods
 #'
@@ -37,36 +43,41 @@
 #' @importFrom methods formalArgs
 
 .model.pcr <- function(
-    x = NULL,
-    y = NULL,
+    formula = NULL,
+    data = NULL,
     control = NULL,
     ...
-    ) {
+) {
 
   if ("weights" %in% names(control)) {
     warning("pcr cannot handle weights, weights are ignored")
   }
-  f <- control$family
   control <- control[names(control) %in% methods::formalArgs(pls::mvr)]
 
-  standard_mean <- apply(x, 2, mean)
+  mf <- stats::model.frame(formula, data)
+  x <- stats::model.matrix(formula, mf)
+  if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
+
   standard_sd <- apply(x, 2, stats::sd)
-  xs <- as.matrix(scale(x, center = standard_mean, scale = standard_sd))
 
-  m <- do.call(pls::pcr, append(list(formula = y~xs, scale=F, center=T), control))
-  beta <- drop(stats::coef(m, intercept = T))
-  beta[-1] <- beta[-1] / standard_sd
-  beta[1] <- beta[1] - crossprod(beta[-1], standard_mean)
-  var_names <- names(beta)
+  m <- do.call(pls::pcr, append(list(formula = formula, data = data,
+                                      scale=standard_sd, center=T), control))
 
-  out <- dplyr::tibble(
-    variable = var_names,
-    beta = beta,
-    family = list(f)
-  )
+  model_handler <- purrr::partial(.handler.pls, object = m, formula = formula, standard_sd = standard_sd)
+
+  control <- control[!names(control) %in% c("weights")]
   if (length(control) > 0) {
-    out <- dplyr::bind_cols(out, dplyr::as_tibble(.func_to_list(control)))
+    settings <- dplyr::as_tibble(.func_to_list(control))
+    settings <- tidyr::nest(settings, settings = dplyr::everything())
+  } else {
+    settings <- NULL
   }
+
+  out <- tibble(
+    estimator = "pls::plsr",
+    handler = list(model_handler),
+    settings
+  )
 
   return(out)
 

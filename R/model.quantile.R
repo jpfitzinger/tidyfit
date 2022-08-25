@@ -2,8 +2,8 @@
 #' @title Quantile regression for \code{tidyfit}
 #' @description Fits a linear quantile regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
 #'
-#' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
-#' @param y Response variable.
+#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
 #' @param control  Additional arguments passed to \code{quantreg::rq}.
 #' @param ... Not used.
 #' @return A 'tibble'.
@@ -30,8 +30,8 @@
 #' @importFrom methods formalArgs
 
 .model.quantile <- function(
-    x = NULL,
-    y = NULL,
+    formula = NULL,
+    data = NULL,
     control = NULL,
     ...
 ) {
@@ -39,21 +39,22 @@
   f <- control$family
   control <- control[names(control) %in% methods::formalArgs(quantreg::rq)]
 
-  dat <- data.frame(y = y, x, check.names = FALSE)
-  m <- do.call(quantreg::rq, append(list(formula = y~., data = dat), control))
-  coefs <- stats::coef(m)
-  coef_stats <- summary(m)$coefficients
+  m <- do.call(quantreg::rq, append(list(formula = formula, data = data), control))
+  model_handler <- purrr::partial(.handler.stats, object = m, formula = formula)
 
-  out <- dplyr::tibble(
-    variable = c("(Intercept)", colnames(dat)[-1]),
-    beta = coefs,
-    family = list(f),
-    `lower bd` = coef_stats[, 2],
-    `upper bd` = coef_stats[, 3]
-  )
+  control <- control[!names(control) %in% c("weights")]
   if (length(control) > 0) {
-    out <- dplyr::bind_cols(out, dplyr::as_tibble(.func_to_list(control)))
+    settings <- dplyr::as_tibble(.func_to_list(control))
+    settings <- tidyr::nest(settings, settings = dplyr::everything())
+  } else {
+    settings <- NULL
   }
+
+  out <- tibble(
+    estimator = "quantreg::rq",
+    handler = list(model_handler),
+    settings
+  )
 
   return(out)
 

@@ -4,12 +4,12 @@
 \alias{.model.lm}
 \title{Linear regression for \code{tidyfit}}
 \usage{
-\method{.model}{lm}(x = NULL, y = NULL, control = NULL, ...)
+\method{.model}{lm}(formula = NULL, data = NULL, control = NULL, ...)
 }
 \arguments{
-\item{x}{Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{Response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{control}{Additional arguments passed to \code{lm}.}
 
@@ -31,10 +31,16 @@ The function provides a wrapper for \code{stats::lm}.
 An argument \code{vcov.} can be passed in control or to \code{...} in \code{\link{m}} to estimate the model with robust standard errors. \code{vcov.} can be one of "BS", "HAC", "HC" and "OPG" and is passed to the \code{sandwich} package.
 }
 \examples{
-x <- matrix(rnorm(100 * 20), 100, 20)
-y <- rnorm(100)
-fit <- m("lm", x, y)
+# Load data
+data <- tidyfit::Factor_Industry_Returns
+
+# Stand-alone function
+fit <- m("lm", Return ~ ., data)
 fit
+
+# Within 'regress' function
+fit <- regress(data, Return ~ ., m("lm"), .mask = c("Date", "Industry"))
+coef(fit)
 
 # With robust standard errors
 fit <- m("lm", x, y, vcov. = "HAC")

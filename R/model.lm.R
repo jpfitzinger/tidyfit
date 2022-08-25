@@ -2,8 +2,8 @@
 #' @title Linear regression for \code{tidyfit}
 #' @description Fits a linear regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
 #'
-#' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
-#' @param y Response variable.
+#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
 #' @param control  Additional arguments passed to \code{lm}.
 #' @param ... Not used.
 #' @return A 'tibble'.
@@ -19,10 +19,16 @@
 #' @author Johann Pfitzinger
 #'
 #' @examples
-#' x <- matrix(rnorm(100 * 20), 100, 20)
-#' y <- rnorm(100)
-#' fit <- m("lm", x, y)
+#' # Load data
+#' data <- tidyfit::Factor_Industry_Returns
+#'
+#' # Stand-alone function
+#' fit <- m("lm", Return ~ ., data)
 #' fit
+#'
+#' # Within 'regress' function
+#' fit <- regress(data, Return ~ ., m("lm"), .mask = c("Date", "Industry"))
+#' coef(fit)
 #'
 #' # With robust standard errors
 #' fit <- m("lm", x, y, vcov. = "HAC")
@@ -30,53 +36,81 @@
 #'
 #' @seealso \code{\link{.model.robust}}, \code{\link{.model.glm}} and \code{\link{m}} methods
 #'
-#' @importFrom stats lm coef
-#' @importFrom dplyr tibble bind_cols
+#' @importFrom stats lm
+#' @importFrom dplyr tibble everything as_tibble
+#' @importFrom tidyr nest
 #' @importFrom purrr partial
 #' @importFrom lmtest coeftest
 #' @importFrom sandwich vcovBS vcovHAC vcovHC vcovOPG
 #' @importFrom methods formalArgs
 
 .model.lm <- function(
-    x = NULL,
-    y = NULL,
+    formula = NULL,
+    data = NULL,
     control = NULL,
     ...
     ) {
 
   vcov. <- control$vcov.
-  f <- control$family
   control <- control[names(control) %in% methods::formalArgs(stats::lm)]
 
-  dat <- data.frame(y = y, x, check.names = FALSE)
-  m <- do.call(stats::lm, append(list(formula = y~., data = dat), control))
-  coefs <- stats::coef(m)
-
+  m <- do.call(stats::lm, append(list(formula = formula, data = data), control))
   if (is.null(vcov.)) {
-    coef_stats <- summary(m)$coefficients
+    adj_m <- m
   } else if (vcov. == "BS") {
-    coef_stats <- lmtest::coeftest(m, vcov. = sandwich::vcovBS(m))
+    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovBS(m))
   } else if (vcov. == "HAC") {
-    coef_stats <- lmtest::coeftest(m, vcov. = sandwich::vcovHAC(m))
+    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovHAC(m))
   } else if (vcov. == "HC") {
-    coef_stats <- lmtest::coeftest(m, vcov. = sandwich::vcovHC(m))
+    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovHC(m))
   } else if (vcov. == "OPG") {
-    coef_stats <- lmtest::coeftest(m, vcov. = sandwich::vcovOPG(m))
+    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovOPG(m))
   }
 
-  out <- dplyr::tibble(
-    variable = c("(Intercept)", colnames(dat)[-1]),
-    beta = coefs,
-    family = list(f),
-    `s.e.` = coef_stats[, 2],
-    `t value` = coef_stats[, 3],
-    `p value` = coef_stats[, 4],
-    `Adj. R-squared` = summary(m)$adj.r.squared
-    )
+  model_handler <- purrr::partial(.handler.stats, object = m, formula = formula)
+
+  control <- control[!names(control) %in% c("weights")]
+  control$vcov. <- vcov.
   if (length(control) > 0) {
-    out <- dplyr::bind_cols(out, dplyr::as_tibble(.func_to_list(control)))
+    settings <- dplyr::as_tibble(.func_to_list(control))
+    settings <- tidyr::nest(settings, settings = dplyr::everything())
+  } else {
+    settings <- NULL
   }
+
+  out <- tibble(
+    estimator = "stats::lm",
+    handler = list(model_handler),
+    settings
+  )
 
   return(out)
+
+}
+
+.handler.stats <- function(object, data, formula = NULL, ..., .what = "model") {
+
+  if (.what == "model") {
+    return(object)
+  }
+
+  if (.what == "predict") {
+    response_var <- all.vars(formula)[1]
+    if (response_var %in% colnames(data)) {
+      truth <- data[, response_var]
+    } else {
+      truth <- NULL
+    }
+    pred <- dplyr::tibble(
+      prediction = stats::predict(object, data, type = "response"),
+      truth = truth
+    )
+    return(pred)
+  }
+
+  if (.what == "estimates") {
+    estimates <- broom::tidy(object)
+    return(estimates)
+  }
 
 }

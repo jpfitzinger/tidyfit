@@ -12,8 +12,8 @@
 #'
 #' Forward or backward selection can be performed by passing \code{method = "forward"} or \code{method = "backward"} to \code{\link{m}}.
 #'
-#' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
-#' @param y Response variable.
+#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
 #' @param control  Additional arguments passed to \code{bestglm::bestglm}.
 #' @param ... Not used.
 #' @return A 'tibble'.
@@ -24,10 +24,16 @@
 #' R package version 0.37.3. URL https://CRAN.R-project.org/package=bestglm.
 #'
 #' @examples
-#' x <- matrix(rnorm(100 * 20), 100, 20)
-#' y <- rnorm(100)
-#' fit <- m("subset", x, y)
-#' fit
+#' # Load data
+#' data <- tidyfit::Factor_Industry_Returns
+#'
+#' # Stand-alone function
+#' fit <- m("subset", Return ~ ., data, method = c("forward", "backward"))
+#' tidyr::unnest(fit, settings)
+#'
+#' # Within 'regress' function
+#' fit <- regress(data, Return ~ ., m("subset", method = "forward"), .mask = c("Date", "Industry"))
+#' coef(fit)
 #'
 #' @seealso \code{\link{m}} method
 #'
@@ -36,8 +42,8 @@
 #' @importFrom methods formalArgs
 
 .model.subset <- function(
-    x = NULL,
-    y = NULL,
+    formula = NULL,
+    data = NULL,
     control = NULL,
     ...
 ) {
@@ -51,44 +57,76 @@
 
   control <- control[names(control) != "family"]
 
+  mf <- stats::model.frame(formula, data)
+  x <- stats::model.matrix(formula, mf)
+  y <- stats::model.response(mf)
+
+  incl_intercept <- "(Intercept)" %in% colnames(x)
+  if (incl_intercept) x <- x[, -1]
+
   Xy <- data.frame(x, y, check.names = FALSE)
+  var_names_map <- colnames(Xy)
+  var_names_chk <- make.names(var_names_map)
+  var_names_map <- c("(Intercept)", var_names_map)
+  var_names_chk <- c("(Intercept)", var_names_chk)
+  names(var_names_map) <- var_names_chk
 
   quiet_bestglm <- purrr::quietly(bestglm::bestglm)
 
   if (f$family == "gaussian") {
-    part_bestglm <- purrr::partial(quiet_bestglm, family = gaussian)
+    part_bestglm <- purrr::partial(quiet_bestglm, family = gaussian, intercept = incl_intercept)
   } else if (f$family == "binomial") {
-    part_bestglm <- purrr::partial(quiet_bestglm, family = binomial)
+    part_bestglm <- purrr::partial(quiet_bestglm, family = binomial, intercept = incl_intercept)
   }
 
   m <- do.call(part_bestglm, append(list(Xy = Xy), control))$result
+  m <- m$BestModel
 
-  var_names <- colnames(x)
-  coef_stats <- summary(m$BestModel)$coefficients
-  rownames(coef_stats) <- c("(Intercept)", var_names[as.logical(m$BestModels[1,-ncol(m$BestModels)])])
-  cols_omit <- var_names[!as.logical(m$BestModels[1,-ncol(m$BestModels)])]
-  var_names <- c("(Intercept)", var_names)
-  if (length(cols_omit)>0) {
-    coef_stats_omit <- data.frame(matrix(NA, nrow = length(cols_omit), ncol = 4), row.names = cols_omit)
-    coef_stats_omit[, 1] <- 0
-    colnames(coef_stats_omit) <- colnames(coef_stats)
-    coef_stats <- rbind(coef_stats, coef_stats_omit)[var_names,]
+  model_handler <- purrr::partial(.handler.bestglm, object = m, formula = formula, var_names_map = var_names_map)
+
+  control <- control[!names(control) %in% c("weights")]
+  if (length(control) > 0) {
+    settings <- dplyr::as_tibble(.func_to_list(control))
+    settings <- tidyr::nest(settings, settings = dplyr::everything())
+  } else {
+    settings <- NULL
   }
-
 
   out <- tibble(
-    variable = var_names,
-    beta = coef_stats[, 1],
-    family = list(f),
-    `s.e.` = coef_stats[, 2],
-    `t value` = coef_stats[, 3],
-    `p value` = coef_stats[, 4],
-    `Adj. R-squared` = summary(m$BestModel)$adj.r.squared
+    estimator = "bestglm::bestglm",
+    handler = list(model_handler),
+    settings
   )
-  if (length(control) > 0) {
-    out <- dplyr::bind_cols(out, dplyr::as_tibble(.func_to_list(control)))
-  }
 
   return(out)
+
+}
+
+.handler.bestglm <- function(object, data, formula = NULL, var_names_map = NULL, ..., .what = "model") {
+
+  if (.what == "model") {
+    return(object)
+  }
+
+  if (.what == "predict") {
+    response_var <- all.vars(formula)[1]
+    if (response_var %in% colnames(data)) {
+      truth <- data[, response_var]
+    } else {
+      truth <- NULL
+    }
+    data <- data.frame(stats::model.matrix(formula, data))
+    pred <- dplyr::tibble(
+      prediction = stats::predict(object, data, type = "response"),
+      truth = truth
+    )
+    return(pred)
+  }
+
+  if (.what == "estimates") {
+    estimates <- broom::tidy(object)
+    estimates$term <- var_names_map[estimates$term]
+    return(estimates)
+  }
 
 }

@@ -4,12 +4,12 @@
 \alias{.model.bayes}
 \title{Bayesian generalized linear regression for \code{tidyfit}}
 \usage{
-\method{.model}{bayes}(x = NULL, y = NULL, control = NULL, ...)
+\method{.model}{bayes}(formula = NULL, data = NULL, control = NULL, ...)
 }
 \arguments{
-\item{x}{Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{Response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{control}{Additional arguments passed to \code{bayesglm}.}
 
@@ -29,10 +29,16 @@ Fits a Bayesian regression and returns the results as a tibble. The function can
 The function provides a wrapper for \code{stats::glm}.
 }
 \examples{
-x <- matrix(rnorm(100 * 20), 100, 20)
-y <- rbinom(100, 1, 0.5)
-fit <- m("bayes", x, y, family = binomial(link = probit))
+# Load data
+data <- tidyfit::Factor_Industry_Returns
+
+# Stand-alone function
+fit <- m("bayes", Return ~ ., data)
 fit
+
+# Within 'regress' function
+fit <- regress(data, Return ~ ., m("bayes"), .mask = c("Date", "Industry"))
+coef(fit)
 
 
 }

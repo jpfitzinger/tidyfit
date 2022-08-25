@@ -4,12 +4,12 @@
 \alias{.model.glm}
 \title{Generalized linear regression for \code{tidyfit}}
 \usage{
-\method{.model}{glm}(x = NULL, y = NULL, control = NULL, ...)
+\method{.model}{glm}(formula = NULL, data = NULL, control = NULL, ...)
 }
 \arguments{
-\item{x}{Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{Response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{control}{Additional arguments passed to \code{glm}.}
 
@@ -29,11 +29,17 @@ Fits a linear or logistic regression and returns the results as a tibble. The fu
 The function provides a wrapper for \code{stats::glm}.
 }
 \examples{
-x <- matrix(rnorm(100 * 20), 100, 20)
-y <- rbinom(100, 1, 0.5)
-fit <- m("glm", x, y, family = binomial(link = probit))
+# Load data
+data <- tidyfit::Factor_Industry_Returns
+data$Return <- ifelse(data$Return > 0, 1, 0)
+
+# Stand-alone function
+fit <- m("glm", Return ~ ., data)
 fit
 
+# Within 'classify' function
+fit <- classify(data, Return ~ ., m("glm"), .mask = c("Date", "Industry"))
+coef(fit)
 
 }
 \seealso{

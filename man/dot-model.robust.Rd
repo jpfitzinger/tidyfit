@@ -4,12 +4,12 @@
 \alias{.model.robust}
 \title{Robust regression for \code{tidyfit}}
 \usage{
-\method{.model}{robust}(x = NULL, y = NULL, control = NULL, ...)
+\method{.model}{robust}(formula = NULL, data = NULL, control = NULL, ...)
 }
 \arguments{
-\item{x}{Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{Response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{control}{Additional arguments passed to \code{MASS::rlm}.}
 
@@ -31,14 +31,20 @@ The function provides a wrapper for \code{MASS::rlm}.
 An argument \code{vcov.} can be passed in control or to \code{...} in \code{\link{m}} to estimate the model with robust standard errors. \code{vcov.} can be one of "BS", "HAC", "HC" and "OPG" and is passed to the \code{sandwich} package.
 }
 \examples{
-x <- matrix(rnorm(100 * 20), 100, 20)
-y <- rnorm(100)
-fit <- m("robust", x, y, method = "MM")
+# Load data
+data <- tidyfit::Factor_Industry_Returns
+
+# Stand-alone function
+fit <- m("robust", Return ~ ., data)
 fit
 
+# Within 'regress' function
+fit <- regress(data, Return ~ ., m("robust"), .mask = c("Date", "Industry"))
+coef(fit)
+
 # With robust standard errors
-fit <- m("robust", x, y, vcov. = "HAC")
-fit
+fit <- m("robust", Return ~ ., data, vcov. = "HAC")
+tidyr::unnest(fit, settings)
 
 }
 \seealso{

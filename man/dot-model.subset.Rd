@@ -4,12 +4,12 @@
 \alias{.model.subset}
 \title{Best subset regression and classification for \code{tidyfit}}
 \usage{
-\method{.model}{subset}(x = NULL, y = NULL, control = NULL, ...)
+\method{.model}{subset}(formula = NULL, data = NULL, control = NULL, ...)
 }
 \arguments{
-\item{x}{Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{Response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{control}{Additional arguments passed to \code{bestglm::bestglm}.}
 
@@ -33,10 +33,16 @@ An intercept is always included and features are standardized with coefficients 
 Forward or backward selection can be performed by passing \code{method = "forward"} or \code{method = "backward"} to \code{\link{m}}.
 }
 \examples{
-x <- matrix(rnorm(100 * 20), 100, 20)
-y <- rnorm(100)
-fit <- m("subset", x, y)
-fit
+# Load data
+data <- tidyfit::Factor_Industry_Returns
+
+# Stand-alone function
+fit <- m("subset", Return ~ ., data, method = c("forward", "backward"))
+tidyr::unnest(fit, settings)
+
+# Within 'regress' function
+fit <- regress(data, Return ~ ., m("subset", method = "forward"), .mask = c("Date", "Industry"))
+coef(fit)
 
 }
 \references{

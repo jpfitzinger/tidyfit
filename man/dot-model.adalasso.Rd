@@ -4,12 +4,12 @@
 \alias{.model.adalasso}
 \title{Adaptive Lasso regression or classification for \code{tidyfit}}
 \usage{
-\method{.model}{adalasso}(x = NULL, y = NULL, control = NULL, ...)
+\method{.model}{adalasso}(formula = NULL, data = NULL, control = NULL, ...)
 }
 \arguments{
-\item{x}{input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{control}{Additional arguments passed to \code{glmnet::glmnet}.}
 
@@ -34,10 +34,16 @@ An intercept is always included and features are standardized with coefficients 
 If no hyperparameter grid is passed (\code{is.null(control$lambda)}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100. Note that the grid selection tools provided by \code{glmnet::glmnet} cannot be used (e.g. \code{dfmax}). This is to guarantee identical grids across groups in the tibble.
 }
 \examples{
-x <- matrix(rnorm(100 * 20), 100, 20)
-y <- rnorm(100)
-fit <- m("adalasso", x, y, lambda = 0.1)
+# Load data
+data <- tidyfit::Factor_Industry_Returns
+
+# Stand-alone function
+fit <- m("adalasso", Return ~ ., data, lambda = 0.5)
 fit
+
+# Within 'regress' function
+fit <- regress(data, Return ~ ., m("adalasso", lambda = c(0.1, 0.5)), .mask = c("Date", "Industry"))
+coef(fit)
 
 }
 \references{

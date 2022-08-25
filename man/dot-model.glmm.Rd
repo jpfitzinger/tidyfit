@@ -4,12 +4,12 @@
 \alias{.model.glmm}
 \title{Generalized linear mixed-effects model for \code{tidyfit}}
 \usage{
-\method{.model}{glmm}(x = NULL, y = NULL, control = NULL, ...)
+\method{.model}{glmm}(formula = NULL, data = NULL, control = NULL, ...)
 }
 \arguments{
-\item{x}{Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{Response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{control}{Additional arguments passed to \code{glmer}.}
 
@@ -31,8 +31,11 @@ The function provides a wrapper for \code{lme4::glmer}.
 Note that the function should only be used in conjunction with \code{regress} or \code{classify} and not as a stand-alone function. This is because of the reliance on the formula syntax in \code{glmer}, which requires some specialized arguments passed to 'control'.
 }
 \examples{
+# Load data
 data <- tidyfit::Factor_Industry_Returns
-data <- dplyr::mutate(data, Return = ifelse(Return > 0, 1, 0))
+data$Return <- ifelse(data$Return > 0, 1, 0)
+
+# Estimate model with random effects
 fit <- classify(data, Return ~ CMA + (CMA | Industry), logit = m("glmm"), .mask = "Date")
 fit
 

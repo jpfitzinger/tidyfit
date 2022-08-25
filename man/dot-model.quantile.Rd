@@ -4,12 +4,12 @@
 \alias{.model.quantile}
 \title{Quantile regression for \code{tidyfit}}
 \usage{
-\method{.model}{quantile}(x = NULL, y = NULL, control = NULL, ...)
+\method{.model}{quantile}(formula = NULL, data = NULL, control = NULL, ...)
 }
 \arguments{
-\item{x}{Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.}
+\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
 
-\item{y}{Response variable.}
+\item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{control}{Additional arguments passed to \code{quantreg::rq}.}
 

@@ -2,8 +2,8 @@
 #' @title Robust regression for \code{tidyfit}
 #' @description Fits a robust linear regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
 #'
-#' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
-#' @param y Response variable.
+#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
 #' @param control  Additional arguments passed to \code{MASS::rlm}.
 #' @param ... Not used.
 #' @return A 'tibble'.
@@ -19,14 +19,20 @@
 #' @author Johann Pfitzinger
 #'
 #' @examples
-#' x <- matrix(rnorm(100 * 20), 100, 20)
-#' y <- rnorm(100)
-#' fit <- m("robust", x, y, method = "MM")
+#' # Load data
+#' data <- tidyfit::Factor_Industry_Returns
+#'
+#' # Stand-alone function
+#' fit <- m("robust", Return ~ ., data)
 #' fit
 #'
+#' # Within 'regress' function
+#' fit <- regress(data, Return ~ ., m("robust"), .mask = c("Date", "Industry"))
+#' coef(fit)
+#'
 #' # With robust standard errors
-#' fit <- m("robust", x, y, vcov. = "HAC")
-#' fit
+#' fit <- m("robust", Return ~ ., data, vcov. = "HAC")
+#' tidyr::unnest(fit, settings)
 #'
 #' @seealso \code{\link{.model.lm}} and \code{\link{m}} methods
 #'
@@ -38,46 +44,49 @@
 #' @importFrom MASS rlm
 
 .model.robust <- function(
-    x = NULL,
-    y = NULL,
+    formula = NULL,
+    data = NULL,
     control = NULL,
     ...
 ) {
 
   vcov. <- control$vcov.
   f <- control$family
-  # Available args are not accessible using formalArgs without importing MASS:::rlm.default
-  rlm.default_args <- c("x", "y", "weights", "w", "init", "psi", "scale.est", "k2", "method",
-                        "wt.method", "maxit", "acc", "test.vec", "lqs.control")
-  control <- control[names(control) %in% rlm.default_args]
+  # Available args are not accessible using formalArgs without importing MASS:::rlm.formula
+  rlm.formula_args <- c("formula", "data", "weights", "subset", "na.action", "method",
+                        "wt.method", "model", "x.ret", "y.ret", "contrasts")
+  control <- control[names(control) %in% rlm.formula_args]
 
-  x <- data.frame(`(Intercept)` = 1, x, check.names = FALSE)
-
-  m <- do.call(MASS::rlm, append(list(x = x, y = y), control))
-  coefs <- stats::coef(m)
+  m <- do.call(MASS::rlm, append(list(formula = formula, data = data.frame(data)), control))
 
   if (is.null(vcov.)) {
-    coef_stats <- summary(m)$coefficients
+    adj_m <- m
   } else if (vcov. == "BS") {
-    coef_stats <- lmtest::coeftest(m, vcov. = sandwich::vcovBS(m))
+    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovBS(m))
   } else if (vcov. == "HAC") {
-    coef_stats <- lmtest::coeftest(m, vcov. = sandwich::vcovHAC(m))
+    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovHAC(m))
   } else if (vcov. == "HC") {
-    coef_stats <- lmtest::coeftest(m, vcov. = sandwich::vcovHC(m))
+    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovHC(m))
   } else if (vcov. == "OPG") {
-    coef_stats <- lmtest::coeftest(m, vcov. = sandwich::vcovOPG(m))
+    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovOPG(m))
   }
 
-  out <- dplyr::tibble(
-    variable = colnames(x),
-    beta = coefs,
-    family = list(f),
-    `s.e.` = coef_stats[, 2],
-    `t value` = coef_stats[, 3]
-  )
+  model_handler <- purrr::partial(.handler.stats, object = m, formula = formula)
+
+  control <- control[!names(control) %in% c("weights")]
+  control$vcov. <- vcov.
   if (length(control) > 0) {
-    out <- dplyr::bind_cols(out, dplyr::as_tibble(.func_to_list(control)))
+    settings <- dplyr::as_tibble(.func_to_list(control))
+    settings <- tidyr::nest(settings, settings = dplyr::everything())
+  } else {
+    settings <- NULL
   }
+
+  out <- tibble(
+    estimator = "MASS::rlm",
+    handler = list(model_handler),
+    settings
+  )
 
   return(out)
 

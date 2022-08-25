@@ -15,8 +15,8 @@
 #'
 #' If no hyperparameter grid is passed (\code{is.null(control$lambda)} and \code{is.null(control$alpha)}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100 for \code{lambda} and 5 for \code{alpha}. Note that the grid selection tools provided by \code{glmnet::glmnet} cannot be used (e.g. \code{dfmax}). This is to guarantee identical grids across groups in the tibble.
 #'
-#' @param x Input matrix or data.frame, of dimension \eqn{(N\times p)}{(N x p)}; each row is an observation vector.
-#' @param y Response variable.
+#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
 #' @param control  Additional arguments passed to \code{glmnet::glmnet}.
 #' @param ... Not used.
 #' @return A 'tibble'.
@@ -27,10 +27,16 @@
 #' Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
 #'
 #' @examples
-#' x <- matrix(rnorm(100 * 20), 100, 20)
-#' y <- rnorm(100)
-#' fit <- m("enet", x, y, kappa = 0.5)
+#' # Load data
+#' data <- tidyfit::Factor_Industry_Returns
+#'
+#' # Stand-alone function
+#' fit <- m("enet", Return ~ ., data, lambda = 0.5, alpha = 0.5)
 #' fit
+#'
+#' # Within 'regress' function
+#' fit <- regress(data, Return ~ ., m("enet"), .mask = c("Date", "Industry"), .cv = "vfold")
+#' coef(fit)
 #'
 #' @seealso \code{\link{.model.lasso}}, \code{\link{.model.adalasso}}, \code{\link{.model.ridge}} and \code{\link{m}} methods
 #'
@@ -42,13 +48,18 @@
 #' @importFrom rlang .data
 #' @importFrom methods formalArgs
 
-.model.enet <- function(x = NULL,
-                        y = NULL,
+.model.enet <- function(formula = NULL,
+                        data = NULL,
                         control = NULL,
                         ...
                         ) {
 
   control <- control[names(control) %in% methods::formalArgs(glmnet::glmnet)]
+  control$lambda <- sort(control$lambda, TRUE)
+
+  mf <- stats::model.frame(formula, data)
+  x <- stats::model.matrix(formula, mf)
+  y <- stats::model.response(mf)
 
   # Prepare 'family' arg
   if (is.null(control$family)) {
@@ -70,43 +81,31 @@
     y <- as.factor(y)
   }
 
-  # Sparse coefficient matrix to tibble
-  gather_coef_mat <- function(coef_mat) {
-    colnames(coef_mat) <- formatC(1:ncol(coef_mat), 2, flag = "0")
-    var_names <- rownames(coef_mat)
-    var_names[1] <- "(Intercept)"
-    out <- coef_mat %>%
-      data.matrix %>%
-      dplyr::as_tibble() %>%
-      dplyr::mutate(variable = var_names) %>%
-      tidyr::gather("grid_id", "beta", -.data$variable) %>%
-      dplyr::mutate(lambda = m$lambda[match(.data$grid_id, colnames(coef_mat))]) %>%
-      dplyr::mutate(family = list(f)) %>%
-      dplyr::select(.data$variable, .data$beta, .data$grid_id, .data$family, .data$lambda)
-    return(out)
-  }
+  incl_intercept <- "(Intercept)" %in% colnames(x)
+  if (incl_intercept) x <- x[, -1]
 
-  m <- do.call(glmnet::glmnet, append(list(x = x, y = y), control))
+  m <- do.call(glmnet::glmnet, append(list(x = x, y = y, intercept = incl_intercept), control))
 
-  coefs <- coef(m)
+  control$lambda <- m$lambda
+  grid_ids <- formatC(1:length(control$lambda), 2, flag = "0")
 
-  if (f_name == "gaussian") {
-    out <- gather_coef_mat(coefs)
-  } else {
-    lvls <- levels(y)
-    out <- purrr::map_dfr(coefs, gather_coef_mat, .id = "class")
-    if (length(lvls) == 2) {
-      out <- out %>%
-        dplyr::filter(.data$class == lvls[2]) %>%
-        dplyr::select(-.data$class) %>%
-        dplyr::mutate(beta = .data$beta * 2)
-    }
-  }
+  model_handler <- purrr::partial(.handler.glmnet, object = m, grid_ids = grid_ids,
+                                  formula = formula, family = control$family)
 
-  control <- control[!names(control) %in% c("family", "lambda")]
+  control <- control[!names(control) %in% c("weights")]
   if (length(control) > 0) {
-    out <- dplyr::bind_cols(out, dplyr::as_tibble(.func_to_list(control)))
+    settings <- dplyr::as_tibble(.func_to_list(control)) %>%
+      dplyr::mutate(grid_id = grid_ids)
+  } else {
+    settings <- NULL
   }
+  settings <- tidyr::nest(settings, settings = dplyr::everything())
+
+  out <- tibble(
+    estimator = "glmnet::glmnet",
+    handler = list(model_handler),
+    settings
+  )
 
   return(out)
 
