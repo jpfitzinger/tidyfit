@@ -130,3 +130,11 @@
          error = ret$result$error)
   }
 }
+
+.names_map <- function(names_vec) {
+  # names_vec <- gsub("`", "", names_vec)
+  names_chk <- make.names(names_vec)
+  names(names_vec) <- names_chk
+  names_vec["(Intercept)"] <- "(Intercept)"
+  return(names_vec)
+}

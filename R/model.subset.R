@@ -65,11 +65,7 @@
   if (incl_intercept) x <- x[, -1]
 
   Xy <- data.frame(x, y, check.names = FALSE)
-  var_names_map <- colnames(Xy)
-  var_names_chk <- make.names(var_names_map)
-  var_names_map <- c("(Intercept)", var_names_map)
-  var_names_chk <- c("(Intercept)", var_names_chk)
-  names(var_names_map) <- var_names_chk
+  var_names_map <- .names_map(colnames(Xy))
 
   quiet_bestglm <- purrr::quietly(bestglm::bestglm)
 
@@ -79,10 +75,10 @@
     part_bestglm <- purrr::partial(quiet_bestglm, family = binomial, intercept = incl_intercept)
   }
 
-  m <- do.call(part_bestglm, append(list(Xy = Xy), control))$result
+  m <- do.call(part_bestglm, append(list(Xy = data.frame(Xy)), control))$result
   m <- m$BestModel
 
-  model_handler <- purrr::partial(.handler.bestglm, object = m, formula = formula, var_names_map = var_names_map)
+  model_handler <- purrr::partial(.handler.bestglm, object = m, formula = formula, names_map = var_names_map)
 
   control <- control[!names(control) %in% c("weights")]
   if (length(control) > 0) {
@@ -102,7 +98,7 @@
 
 }
 
-.handler.bestglm <- function(object, data, formula = NULL, var_names_map = NULL, ..., .what = "model") {
+.handler.bestglm <- function(object, data, formula = NULL, names_map = NULL, ..., .what = "model") {
 
   if (.what == "model") {
     return(object)
@@ -125,7 +121,7 @@
 
   if (.what == "estimates") {
     estimates <- broom::tidy(object)
-    estimates$term <- var_names_map[estimates$term]
+    estimates$term <- names_map[estimates$term]
     return(estimates)
   }
 

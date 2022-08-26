@@ -88,7 +88,7 @@
 
 }
 
-.handler.stats <- function(object, data, formula = NULL, ..., .what = "model") {
+.handler.stats <- function(object, data, formula = NULL, names_map = NULL, ..., .what = "model") {
 
   if (.what == "model") {
     return(object)
@@ -101,6 +101,7 @@
     } else {
       truth <- NULL
     }
+    if (!is.null(names_map)) data <- data.frame(data)
     pred <- dplyr::tibble(
       prediction = stats::predict(object, data, type = "response"),
       truth = truth
@@ -110,6 +111,7 @@
 
   if (.what == "estimates") {
     estimates <- broom::tidy(object)
+    if (!is.null(names_map)) estimates$term <- names_map[estimates$term]
     return(estimates)
   }
 

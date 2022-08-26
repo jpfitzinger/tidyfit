@@ -53,11 +53,16 @@
   vcov. <- control$vcov.
   f <- control$family
   # Available args are not accessible using formalArgs without importing MASS:::rlm.formula
-  rlm.formula_args <- c("formula", "data", "weights", "subset", "na.action", "method",
-                        "wt.method", "model", "x.ret", "y.ret", "contrasts")
-  control <- control[names(control) %in% rlm.formula_args]
+  rlm_args <- c("x", "y", "weights", "w", "init", "psi", "scale.est", "k2", "method",
+                        "wt.method", "maxit", "acc", "test.vec", "lqs.control")
+  control <- control[names(control) %in% rlm_args]
 
-  m <- do.call(MASS::rlm, append(list(formula = formula, data = data.frame(data)), control))
+  mf <- stats::model.frame(formula, data)
+  x <- stats::model.matrix(formula, data)
+  y <- stats::model.response(mf)
+  #var_names_map <- .names_map(colnames(model_mat))
+
+  m <- do.call(MASS::rlm, append(list(x = x, y = y), control))
 
   if (is.null(vcov.)) {
     adj_m <- m
@@ -71,7 +76,7 @@
     adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovOPG(m))
   }
 
-  model_handler <- purrr::partial(.handler.stats, object = m, formula = formula)
+  model_handler <- purrr::partial(.handler.MASS, object = m, formula = formula)
 
   control <- control[!names(control) %in% c("weights")]
   control$vcov. <- vcov.
@@ -89,5 +94,37 @@
   )
 
   return(out)
+
+}
+
+.handler.MASS <- function(object, data, formula = NULL, names_map = NULL, ..., .what = "model") {
+
+  if (.what == "model") {
+    return(object)
+  }
+
+  if (.what == "predict") {
+    response_var <- all.vars(formula)[1]
+    if (response_var %in% colnames(data)) {
+      truth <- data[, response_var]
+    } else {
+      data[, response_var] <- 1
+      truth <- NULL
+    }
+    mf <- stats::model.frame(formula, data)
+    x <- stats::model.matrix(formula, data)
+    y <- stats::model.response(mf)
+    pred <- dplyr::tibble(
+      prediction = drop(crossprod(t(x), object$coefficients)),
+      truth = truth
+    )
+    return(pred)
+  }
+
+  if (.what == "estimates") {
+    estimates <- broom::tidy(object)
+    if (!is.null(names_map)) estimates$term <- names_map[estimates$term]
+    return(estimates)
+  }
 
 }
