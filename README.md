@@ -10,11 +10,11 @@
 regression and classification modeling in a tidy environment. The
 package includes several methods, such as Lasso, PLS and ElasticNet
 regressions. `tidyfit` builds on the `tidymodels` suite, but emphasizes
-automated modeling with a focus on the linear regression and
-classification coefficients, which are the primary output of `tidyfit`.
-The objective is to make model fitting, cross validation and model
-output very simple and standardized across all methods, with the
-necessary method-specific transformations handled in the background.
+automated modeling with a focus on grouped data, model comparisons, and
+high-volume analytics with standardized input/output interfaces. The
+objective is to make model fitting, cross validation and model output
+very simple and standardized across all methods, with any necessary
+method-specific transformations handled in the background.
 
 ## Installation
 
@@ -27,20 +27,22 @@ devtools::install_github("jpfitzinger/tidyfit")
 library(tidyfit)
 ```
 
-## Overview
+## Overview and usage
 
-`tidyfit` includes 4 deceptively simple functions:
+`tidyfit` includes 3 deceptively simple functions:
 
 -   `regress()`
 -   `classify()`
 -   `m()`
--   `cross_prod()`
 
-`regress` and `classify` perform regression and classification on tidy
-data. The functions ingest a tibble, prepare input data for the models
-by splitting groups, partitioning cross validation slices and handling
-any necessary adjustments and transformations. The data is then passed
-to the model wrapper `m()` which fits the models:
+All 3 of these functions return a `tidyfit.models` frame, which is a
+tibble containing information about the fitted models. `regress` and
+`classify` perform regression and classification on tidy data. The
+functions ingest a tibble, prepare input data for the models by
+splitting groups, partitioning cross validation slices and handling any
+necessary adjustments and transformations. The data is ultimately passed
+to the model wrapper `m()` which fits the models. The basic usage is as
+follows:
 
 ``` r
 regress(
@@ -48,7 +50,7 @@ regress(
   formula = y ~ x1 + x2, 
   mod1 = m(<args for underlying method>), mod2 = m(), ...,    # Pass multiple model wrappers
   .cv = "vfold", .cv_args = list(), .weights = "weight_col",  # Additional settings
-  <some additional arguments>)
+  <further arguments>)
 )
 ```
 
@@ -61,7 +63,7 @@ classification techniques that can be used with `regress` and
 ``` r
 m(
   <method>,           # e.g. "lm" or "lasso"
-  x, y,               # not passed when used within regress or classify
+  formula, data,      # not passed when used within regress or classify
   ...                 # Args passed to underlying method, e.g. stats::lm or glmnet::glmnet
 )
 ```
@@ -77,19 +79,200 @@ for any method:
 -   Logit and Probit models:
     `m("glm", family = list(binomial(link="logit"), binomial(link="probit")))`
 
-`m()` performs **feature standardization** whenever necessary, it
-**always includes an intercept** and outputs regression coefficients and
-additional model information in a tidy format with **statistically
-comparable results** across all methods.
+## A minimal workflow
 
-Finally, predictions are produced using `cross_prod(<fit>, <data>)`. The
-function takes data groups, different models, different model settings,
-as well as the response family into account and produces predicted
-values.
+In this section, a minimal workflow is used to demonstrate how the
+package works. `tidyfit` includes a data set of financial factor returns
+freely available
+[here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html).
+The data set includes monthly industry returns for 10 industries, as
+well as monthly factor returns for 5 factors:
 
-`tidyfit` integrates with `tidymodels`. It uses `dials` to set sensible
-default hyperparameter grids, it uses `rsample` for cross validation and
-the prediction results can easily be evaluated using `yardstick`.
+``` r
+data <- tidyfit::Factor_Industry_Returns
+data
+#> # A tibble: 7,080 × 9
+#>      Date Industry Return `Mkt-RF`   SMB   HML   RMW   CMA    RF
+#>     <dbl> <chr>     <dbl>    <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
+#>  1 196307 NoDur     -0.49    -0.39 -0.44 -0.89  0.68 -1.23  0.27
+#>  2 196308 NoDur      4.89     5.07 -0.75  1.68  0.36 -0.34  0.25
+#>  3 196309 NoDur     -1.69    -1.57 -0.55  0.08 -0.71  0.29  0.27
+#>  4 196310 NoDur      2.65     2.53 -1.37 -0.14  2.8  -2.02  0.29
+#>  5 196311 NoDur     -1.13    -0.85 -0.89  1.81 -0.51  2.31  0.27
+#>  6 196312 NoDur      2.81     1.83 -2.07 -0.08  0.03 -0.04  0.29
+#>  7 196401 NoDur      0.79     2.24  0.11  1.47  0.17  1.51  0.3 
+#>  8 196402 NoDur      1.87     1.54  0.3   2.74 -0.05  0.9   0.26
+#>  9 196403 NoDur      3.08     1.41  1.36  3.36 -2.21  3.19  0.31
+#> 10 196404 NoDur     -0.48     0.1  -1.59 -0.58 -1.27 -1.04  0.29
+#> # … with 7,070 more rows
+```
+
+We will only use a subset of the data to keep things simple:
+
+``` r
+df_train <- data %>% 
+  filter(Date > 201800 & Date < 202000)
+df_test <- data %>% 
+  filter(Date >= 202000)
+```
+
+The objective is to fit a ElasticNet regression for each industry group,
+and compare results to a robust least squares regression. This can be
+done with `regress`:
+
+``` r
+model_frame <- df_train %>% 
+  group_by(Industry) %>% 
+  regress(Return ~ ., m("enet"), m("robust", method = "MM", psi = MASS::psi.huber), 
+          .cv = "initial_time_split", .mask = "Date")
+```
+
+Note that the penalty and mixing parameters are chosen automatically
+using a time series train/test split (`rsample::initial_time_split`),
+with a hyperparameter grid set by the package `dials`. See `?regress`
+for additional CV methods. A custom grid can easily be passed using
+`lambda = c(...)` in the `m("enet")` wrapper.
+
+The resulting `tidyfit.models` frame consists of 3 components:
+
+1.  A group of identifying columns. This includes the `Industry` column,
+    the model name, and grid ID (the ID for the model settings used).
+2.  A `handler` column. This column contains a partialised function
+    (created with `purrr::partial`) that contains the model object as
+    well as any additional information needed to perform predictions or
+    access coefficients (e.g. the sample mean and s.d. for rescaling
+    coefficients)
+3.  `settings`, as well as (if applicable) `messages` and `warnings`.
+
+``` r
+subset_mod_frame <- filter(model_frame, Industry %in% unique(Industry)[1:2])
+subset_mod_frame
+#> # A tibble: 4 × 6
+#>   Industry model  estimator      grid_id  handler    settings        
+#>   <chr>    <chr>  <chr>          <chr>    <list>     <list>          
+#> 1 Durbl    enet   glmnet::glmnet #005.002 <prrr_fn_> <tibble [1 × 3]>
+#> 2 Enrgy    enet   glmnet::glmnet #001.002 <prrr_fn_> <tibble [1 × 3]>
+#> 3 Durbl    robust MASS::rlm      #0010000 <prrr_fn_> <tibble [1 × 2]>
+#> 4 Enrgy    robust MASS::rlm      #0010000 <prrr_fn_> <tibble [1 × 2]>
+```
+
+Let’s unnest the settings columns:
+
+``` r
+subset_mod_frame %>% 
+  tidyr::unnest(settings, keep_empty = TRUE)
+#> # A tibble: 4 × 10
+#>   Industry model  estimator grid_id handler    family lambda alpha method psi   
+#>   <chr>    <chr>  <chr>     <chr>   <list>     <chr>   <dbl> <dbl> <chr>  <list>
+#> 1 Durbl    enet   glmnet::… #005.0… <prrr_fn_> gauss…  0.792     1 <NA>   <NULL>
+#> 2 Enrgy    enet   glmnet::… #001.0… <prrr_fn_> gauss…  0.792     0 <NA>   <NULL>
+#> 3 Durbl    robust MASS::rlm #00100… <prrr_fn_> <NA>   NA        NA MM     <fn>  
+#> 4 Enrgy    robust MASS::rlm #00100… <prrr_fn_> <NA>   NA        NA MM     <fn>
+```
+
+The `model_frame` can be used to access additional information. We can
+predict:
+
+``` r
+predict(subset_mod_frame, data)
+#> # A tibble: 2,832 × 4
+#> # Groups:   Industry, model [4]
+#>    Industry model prediction truth
+#>    <chr>    <chr>      <dbl> <dbl>
+#>  1 Durbl    enet      -0.897 -0.22
+#>  2 Durbl    enet       5.11   6.55
+#>  3 Durbl    enet      -1.85  -0.24
+#>  4 Durbl    enet       2.16   9.72
+#>  5 Durbl    enet      -0.739 -4.84
+#>  6 Durbl    enet       1.48   0.27
+#>  7 Durbl    enet       2.26   1.19
+#>  8 Durbl    enet       1.86   2.14
+#>  9 Durbl    enet       1.88   0.93
+#> 10 Durbl    enet      -0.351  1.93
+#> # … with 2,822 more rows
+```
+
+Or we can look at the actual fitted parameters:
+
+``` r
+estimates <- coef(subset_mod_frame)
+estimates
+#> # A tibble: 25 × 5
+#> # Groups:   Industry, model [4]
+#>    Industry model term        estimate model_info      
+#>    <chr>    <chr> <chr>          <dbl> <list>          
+#>  1 Durbl    enet  (Intercept) -0.302   <tibble [1 × 4]>
+#>  2 Durbl    enet  `Mkt-RF`     0.992   <tibble [1 × 4]>
+#>  3 Durbl    enet  SMB          0.00978 <tibble [1 × 4]>
+#>  4 Durbl    enet  HML          0.229   <tibble [1 × 4]>
+#>  5 Enrgy    enet  (Intercept)  1.47    <tibble [1 × 4]>
+#>  6 Enrgy    enet  `Mkt-RF`     1.13    <tibble [1 × 4]>
+#>  7 Enrgy    enet  SMB          0.649   <tibble [1 × 4]>
+#>  8 Enrgy    enet  HML          0.0703  <tibble [1 × 4]>
+#>  9 Enrgy    enet  RMW         -0.552   <tibble [1 × 4]>
+#> 10 Enrgy    enet  CMA          1.16    <tibble [1 × 4]>
+#> # … with 15 more rows
+```
+
+The estimates contain additional method-specific information that is
+nested in `model_info`. This can include standard errors, t-values and
+similar information:
+
+``` r
+tidyr::unnest(estimates, model_info)
+#> # A tibble: 25 × 8
+#> # Groups:   Industry, model [4]
+#>    Industry model term        estimate lambda dev.ratio std.error statistic
+#>    <chr>    <chr> <chr>          <dbl>  <dbl>     <dbl>     <dbl>     <dbl>
+#>  1 Durbl    enet  (Intercept) -0.302    0.792     0.735        NA        NA
+#>  2 Durbl    enet  `Mkt-RF`     0.992    0.792     0.735        NA        NA
+#>  3 Durbl    enet  SMB          0.00978  0.792     0.735        NA        NA
+#>  4 Durbl    enet  HML          0.229    0.792     0.735        NA        NA
+#>  5 Enrgy    enet  (Intercept)  1.47     0.792     0.807        NA        NA
+#>  6 Enrgy    enet  `Mkt-RF`     1.13     0.792     0.807        NA        NA
+#>  7 Enrgy    enet  SMB          0.649    0.792     0.807        NA        NA
+#>  8 Enrgy    enet  HML          0.0703   0.792     0.807        NA        NA
+#>  9 Enrgy    enet  RMW         -0.552    0.792     0.807        NA        NA
+#> 10 Enrgy    enet  CMA          1.16     0.792     0.807        NA        NA
+#> # … with 15 more rows
+```
+
+Suppose we would like to evaluate the relative performance of the two
+methods. This becomes exceedingly simple using the `yardstick` package:
+
+``` r
+model_frame %>% 
+  # Generate predictions
+  predict(df_test) %>% 
+  # Calculate RMSE
+  yardstick::rmse(truth, prediction) %>% 
+  # Plot
+  ggplot(aes(Industry, .estimate)) +
+  geom_col(aes(fill = model), position = position_dodge()) +
+  theme_bw()
+```
+
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" style="display: block; margin: auto;" />
+
+The ElasticNet performs a little better (unsurprising really, given the
+small data set).
+
+A **more detailed analysis of Boston house price data** using a fleet of
+regularized regression estimators can be found
+**[here](inst/doc/Predicting%20Boston%20House%20Prices.html)**.
+
+## More detailed examples
+
+Guides discussing a number of specialized topics are listed below:
+
+1.  Regularized regression (Boston house price data)
+2.  Multinomial classification (iris data)
+3.  Rolling window regression for time series (factor data)
+4.  Time-varying parameters (factor data)
+5.  Fixed and Random effects (factor data)
+6.  Quantile regression (Boston house price data)
+7.  Accessing and using the model object
+8.  Bootstrap standard errors
 
 ## Methods implemented in `tidyfit`
 
@@ -354,310 +537,22 @@ yes
 </tr>
 <tr>
 <td style="text-align:left;">
-Pearson correlation
+Generalized mixed-effects regression
 </td>
 <td style="text-align:center;">
-cor
+glmm
 </td>
 <td style="text-align:center;">
-`stats::cor`
+`lme4::glmer`
 </td>
 <td style="text-align:center;">
-n/a
+yes
 </td>
 <td style="text-align:center;">
-n/a
+yes
 </td>
 </tr>
 </tbody>
 </table>
 
 See `?m` for additional information.
-
-## Example
-
-### Fama-French factor and industry data
-
-`tidyfit` includes a data set of financial factor returns freely
-available
-[here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html).
-The data set includes monthly industry returns for 10 industries, as
-well as monthly factor returns for 5 factors:
-
-``` r
-data <- tidyfit::Factor_Industry_Returns
-```
-
-### Fitting a linear regression
-
-Models are fitted using `tidyfit::regress` for regression or
-`tidyfit::classify` for binomial classification problems. Below a linear
-regression is fitted using the `tidyfit::m` model wrapper, which
-standardizes a large number of regression and classification techniques.
-The date column is masked and the industry column is automatically
-one-hot encoded:
-
-``` r
-fit <- data %>% 
-  regress(Return ~ ., lin_reg = m("lm"), .mask = "Date")
-fit
-#> # A tibble: 16 × 6
-#>    model   variable          beta grid_id family   model_info      
-#>    <chr>   <chr>            <dbl> <chr>   <list>   <list>          
-#>  1 lin_reg (Intercept)   -0.00408 s0001   <family> <tibble [1 × 4]>
-#>  2 lin_reg `Mkt-RF`       0.977   s0001   <family> <tibble [1 × 4]>
-#>  3 lin_reg CMA            0.117   s0001   <family> <tibble [1 × 4]>
-#>  4 lin_reg HML            0.0601  s0001   <family> <tibble [1 × 4]>
-#>  5 lin_reg IndustryEnrgy -0.00409 s0001   <family> <tibble [1 × 4]>
-#>  6 lin_reg IndustryHiTec  0.0559  s0001   <family> <tibble [1 × 4]>
-#>  7 lin_reg IndustryHlth   0.0506  s0001   <family> <tibble [1 × 4]>
-#>  8 lin_reg IndustryManuf -0.0469  s0001   <family> <tibble [1 × 4]>
-#>  9 lin_reg IndustryNoDur  0.0171  s0001   <family> <tibble [1 × 4]>
-#> 10 lin_reg IndustryOther -0.0707  s0001   <family> <tibble [1 × 4]>
-#> 11 lin_reg IndustryShops  0.0405  s0001   <family> <tibble [1 × 4]>
-#> 12 lin_reg IndustryTelcm -0.184   s0001   <family> <tibble [1 × 4]>
-#> 13 lin_reg IndustryUtils -0.181   s0001   <family> <tibble [1 × 4]>
-#> 14 lin_reg RF             1.01    s0001   <family> <tibble [1 × 4]>
-#> 15 lin_reg RMW            0.164   s0001   <family> <tibble [1 × 4]>
-#> 16 lin_reg SMB            0.0178  s0001   <family> <tibble [1 × 4]>
-```
-
-Detailed model and hyperparameter information is nested and can be
-expanded:
-
-``` r
-fit %>% 
-  unnest(model_info)
-#> # A tibble: 16 × 9
-#>    model   variable       beta grid_id family      s.e. t val…¹ p valu…² Adj. …³
-#>    <chr>   <chr>         <dbl> <chr>   <list>     <dbl>   <dbl>    <dbl>   <dbl>
-#>  1 lin_reg (Intercep… -0.00408 s0001   <family> 0.133   -0.0306 9.76e- 1   0.625
-#>  2 lin_reg `Mkt-RF`    0.977   s0001   <family> 0.00985 99.3    0          0.625
-#>  3 lin_reg CMA         0.117   s0001   <family> 0.0281   4.18   2.94e- 5   0.625
-#>  4 lin_reg HML         0.0601  s0001   <family> 0.0182   3.31   9.30e- 4   0.625
-#>  5 lin_reg IndustryE… -0.00409 s0001   <family> 0.172   -0.0237 9.81e- 1   0.625
-#>  6 lin_reg IndustryH…  0.0559  s0001   <family> 0.172    0.325  7.45e- 1   0.625
-#>  7 lin_reg IndustryH…  0.0506  s0001   <family> 0.172    0.294  7.69e- 1   0.625
-#>  8 lin_reg IndustryM… -0.0469  s0001   <family> 0.172   -0.272  7.85e- 1   0.625
-#>  9 lin_reg IndustryN…  0.0171  s0001   <family> 0.172    0.0994 9.21e- 1   0.625
-#> 10 lin_reg IndustryO… -0.0707  s0001   <family> 0.172   -0.411  6.81e- 1   0.625
-#> 11 lin_reg IndustryS…  0.0405  s0001   <family> 0.172    0.235  8.14e- 1   0.625
-#> 12 lin_reg IndustryT… -0.184   s0001   <family> 0.172   -1.07   2.85e- 1   0.625
-#> 13 lin_reg IndustryU… -0.181   s0001   <family> 0.172   -1.05   2.93e- 1   0.625
-#> 14 lin_reg RF          1.01    s0001   <family> 0.145    6.99   2.91e-12   0.625
-#> 15 lin_reg RMW         0.164   s0001   <family> 0.0191   8.56   1.41e-17   0.625
-#> 16 lin_reg SMB         0.0178  s0001   <family> 0.0140   1.27   2.03e- 1   0.625
-#> # … with abbreviated variable names ¹​`t value`, ²​`p value`, ³​`Adj. R-squared`
-```
-
-Now, instead of fitting a single regression, we need to fit a regression
-per industry. This is achieved simply by grouping:
-
-``` r
-fit <- data %>% 
-  group_by(Industry) %>% 
-  regress(Return ~ ., lin_reg = m("lm"), .mask = "Date")
-```
-
-Let’s plot the factor loadings in a heatmap:
-
-``` r
-fit %>% 
-  ggplot(aes(variable, Industry)) +
-  geom_tile(aes(fill = beta)) +
-  scale_fill_gradient2(low = "firebrick", high = "forestgreen")
-```
-
-<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" style="display: block; margin: auto;" />
-
-### Multiple arguments
-
-One advantage of `tidyfit` is that it allows arguments to be passed to
-the underlying methods as vectors. For instance, fitting a robust Huber
-regression (using `MASS::rlm` in the background) instead of a linear
-regression, it is possible to compare different estimation algorithms by
-passing a vector of arguments:
-
-``` r
-fit <- data %>% 
-  group_by(Industry) %>% 
-  regress(Return ~ ., robust_reg = m("robust", method = c("M", "MM")), .mask = "Date")
-```
-
-Let’s examine the difference in coefficients for a single
-sector-regression:
-
-``` r
-fit %>% 
-  filter(Industry == "Durbl") %>% 
-  unnest(model_info) %>% 
-  select(Industry, variable, beta, method) %>% 
-  spread(method, beta)
-#> # A tibble: 7 × 4
-#> # Groups:   Industry [1]
-#>   Industry variable         M     MM
-#>   <fct>    <chr>        <dbl>  <dbl>
-#> 1 Durbl    (Intercept) -0.232 -0.341
-#> 2 Durbl    `Mkt-RF`     1.20   1.18 
-#> 3 Durbl    CMA          0.229  0.184
-#> 4 Durbl    HML          0.265  0.251
-#> 5 Durbl    RF           0.526  0.816
-#> 6 Durbl    RMW          0.173  0.125
-#> 7 Durbl    SMB          0.184  0.188
-```
-
-Passing multiple arguments is also useful when fitting a quantile
-regression (using `quantreg::rq` in the background):
-
-``` r
-fit <- data %>% 
-  group_by(Industry) %>% 
-  regress(Return ~ ., quantile_reg = m("quantile", tau = c(0.1, 0.5, 0.9)), .mask = "Date")
-
-fit %>% 
-  filter(Industry == "Durbl") %>% 
-  unnest(model_info) %>% 
-  select(Industry, variable, beta, tau) %>% 
-  mutate(tau = as.factor(tau)) %>% 
-  ggplot(aes(variable, beta, color = tau)) +
-  geom_point()
-```
-
-<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" style="display: block; margin: auto;" />
-
-### Fitting a Lasso regression
-
-Fitting a Lasso regression requires hyperparameter tuning for the
-penalty `lambda`. This can be done by passing values to `.cv` and
-`.cv_args`. Cross validation is performed using `rsample`. See
-`?rsample::vfold_cv`, `?rsample::loo_cv`, `?rsample::initial_split`,
-`?rsample::initial_time_split` or `?rsample::rolling_origin` to see
-optional arguments that can be passed to `.cv_args`. A reasonable
-hyperparameter grid is determined using the `dials` package, or can be
-passed manually.
-
-``` r
-fit <- data %>% 
-  group_by(Industry) %>% 
-  regress(Return ~ ., lasso_reg = m("lasso"), .mask = "Date", 
-          .cv = "vfold", .cv_args = list(v = 5))
-
-fit %>% 
-  ggplot(aes(variable, Industry)) +
-  geom_tile(aes(fill = beta)) +
-  scale_fill_gradient2(low = "firebrick", high = "forestgreen")
-```
-
-<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" style="display: block; margin: auto;" />
-
-The results do not appear to be different from a linear regression. To
-compare methods, simply pass multiple models:
-
-``` r
-fit <- data %>% 
-  group_by(Industry) %>% 
-  regress(Return ~ ., lasso_reg = m("lasso"), lin_reg = m("lm"), .mask = "Date", 
-          .cv = "vfold", .cv_args = list(v = 5))
-```
-
-Of course, a v-fold cross validation is not valid for ordered data.
-Instead simply set a rolling cross validation. In addition, we can pass
-a custom grid for `lambda` by adding the argument to `m`. Note also that
-it is not necessary to specify a model name:
-
-``` r
-fit <- data %>% 
-  group_by(Industry) %>% 
-  regress(Return ~ ., m("lasso", lambda = seq(0, 0.4, by = 0.05)), .mask = "Date", 
-          .cv = "rolling_origin", 
-          .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
-
-fit %>% 
-  ggplot(aes(variable, Industry)) +
-  geom_tile(aes(fill = beta)) +
-  scale_fill_gradient2(low = "firebrick", high = "forestgreen")
-```
-
-<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" style="display: block; margin: auto;" />
-
-### Predicting with an ElasticNet classifier
-
-Let’s predict out-of-sample return probabilities:
-
-``` r
-data_train <- data %>% 
-  mutate(Return = ifelse(Return > 0, "pos", "neg")) %>% 
-  filter(Date <= 202112)
-
-data_test <- data %>% 
-  mutate(Return = ifelse(Return > 0, "pos", "neg")) %>% 
-  filter(Date > 202112)
-```
-
-Classification is possible with `tidyfit` using the `classify` function
-instead of `regress`. This passes a `family = binomial()` argument to
-the underlying model functions. Note that additional arguments can be
-specified in the model function that are passed on to the underlying
-estimator (in this case `glmnet::glmnet`):
-
-``` r
-fit <- data_train %>% 
-  group_by(Industry) %>% 
-  classify(Return ~ ., enet_clf = m("enet"), .mask = "Date", 
-          .cv = "rolling_origin", .cv_args = list(initial = 60, assess = 24, skip = 24, cumulative = FALSE))
-```
-
-Predictions can be made for all models using `cross_prod`. As the name
-indicates, this generates predictions by multiplying data and
-coefficients (and passing through the respective link function). No
-model-specific predict methods are used. Predictions automatically apply
-along the same groups as in the fitted object, and use the response
-family specified during fitting:
-
-``` r
-pred <- fit %>% 
-  cross_prod(data_test) %>% 
-  mutate(Predicted = ifelse(prediction > 0.5, 1, 0)) %>% 
-  rename(Truth = Return)
-
-# Print a confusion matrix
-table(pred$Truth, pred$Predicted)
-#>      
-#>         0   1
-#>   neg 153  27
-#>   pos  27  93
-```
-
-### Parallel computation
-
-`tidyfit` parallelizes cross validation computations using the `future`
-package in conjunction with `furrr`. Parallel computation can therefore
-be activated by setting an appropriate plan:
-
-``` r
-library(furrr)
-plan(multisession(workers = 4))
-fit <- data %>% 
-  group_by(Industry) %>% 
-  regress(Return ~ ., lasso_reg = m("lasso"), .mask = "Date", 
-          .cv = "vfold", .cv_args = list(v = 5))
-```
-
-### Additional functionality
-
-`tidyfit` makes a few things easier:
-
--   Methods return statistically comparable outputs. For instance, all
-    covariates are standardized and the coefficients are
-    back-transformed to the original scale. This is not done by all
-    underlying packages (e.g. `pls`, which is used for the PCR and PLSR
-    methods).
--   Hyperparameter grids are set to reasonable starting values. Custom
-    grids can be passed to the model wrapper
-    (e.g. `m("lasso", lambda = seq(0, 1, by = 0.1))`).
--   Hyperparameters can be tuned across all groups or separately within
-    each group by setting the `.tune_each_group` flag.
--   Results for the individual slices can be returned using the
-    `.return_slices` flag. This is particularly useful for rolling
-    window estimation, which can be done by returning the results of a
-    rolling cross validation.
