@@ -70,7 +70,7 @@ predict.tidyfit.models <- function(object, newdata, ..., .keep_grid_id = FALSE) 
       dplyr::ungroup()
   }
 
-  col_ord <- c(gr_vars, "model", "grid_id", "class", "prediction", "truth")
+  col_ord <- c(gr_vars, "model", "grid_id", "slice_id", "class", "prediction", "truth")
   out <- out %>%
     dplyr::relocate(any_of(col_ord))
 

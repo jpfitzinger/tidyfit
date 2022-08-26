@@ -45,7 +45,7 @@ coef.tidyfit.models <- function(object, ..., .keep_grid_id = FALSE) {
     out <- dplyr::rename(out, grid_id = .data$grid_id_)
   }
 
-  col_ord <- c(gr_vars, "model", "term", "class", "estimate", "grid_id")
+  col_ord <- c(gr_vars, "model", "term", "class", "estimate", "grid_id", "slice_id")
   out <- out %>%
     tidyr::nest(model_info = -dplyr::any_of(col_ord)) %>%
     dplyr::relocate(any_of(col_ord))
