@@ -16,7 +16,7 @@
   exists = list(
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
-                "glmm"),
+                "glmm", "tvp"),
     message = "'%s' is not a valid method. See '?m' for details"
   ),
   cv = list(
@@ -30,7 +30,7 @@
   regress = list(
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
-                "glmm"),
+                "glmm", "tvp"),
     message = "'%s' cannot be used for regression"
   ),
   classify = list(
