@@ -58,17 +58,17 @@ Let's create a helper function to assess performance. The helper function wraps 
 assess <- function(fit, data_trn, data_tst) {
   
   oos <- fit %>% 
-    cross_prod(data_tst) %>% 
+    predict(data_tst) %>% 
     group_by(model, .add = TRUE) %>% 
-    yardstick::rsq_trad(medv, prediction) %>% 
+    yardstick::rsq_trad(truth, prediction) %>% 
     mutate(type = "Out-of-sample") %>% 
     arrange(desc(.estimate)) %>% 
     mutate(model = factor(model, levels = unique(.$model)))
   
   is <- fit %>% 
-    cross_prod(data_trn) %>% 
+    predict(data_trn) %>% 
     group_by(model, .add = TRUE) %>% 
-    yardstick::rsq_trad(medv, prediction) %>% 
+    yardstick::rsq_trad(truth, prediction) %>% 
     mutate(type = "In-sample")
   
   return(bind_rows(oos, is))
@@ -100,7 +100,7 @@ The in-sample fit of the regression is naturally better than out-of-sample, but 
 
 ```{r, fig.width=3, fig.height=3, fig.align="center"}
 fit <- data_trn %>% 
-  regress(medv ~ . + .*., OLS = m("lm"))
+  regress(medv ~ .*., OLS = m("lm"))
 
 fit %>% 
   assess(data_trn, data_tst) %>% 
@@ -140,7 +140,7 @@ In the next code chunk, most of the available regression techniques are fitted t
 ```{r, eval=F}
 plan(multisession(workers = 12))
 fit <- data_trn %>% 
-  regress(medv ~ . + .*., 
+  regress(medv ~ .*., 
           OLS = m("lm"),
           BAYES = m("bayes"),
           `FORWARD SELECTION` = m("subset", method = "forward", IC = "AIC"),
