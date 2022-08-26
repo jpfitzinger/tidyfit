@@ -50,11 +50,12 @@ fit <- data_trn %>%
            m("lasso"), 
            m("ridge"), 
            m("enet"), 
+           m("adalasso"),
            ols = m("ridge", lambda = 1e-4), 
            .cv = "vfold")
 
 pred <- fit %>% 
-  cross_prod(data_tst)
+  predict(data_tst)
 ```
 
 Note that we can add unregularized least squares estimates by setting `lambda = 0`.
@@ -63,9 +64,11 @@ Next, we can use `yardstick` to calculate the log loss accuracy metric and compa
 
 ```{r, fig.width=6, fig.align="center"}
 metrics <- pred %>% 
+  group_by(model, class) %>% 
+  mutate(row_n = row_number()) %>% 
   spread(class, prediction) %>% 
   group_by(model) %>% 
-  yardstick::mn_log_loss(Species, setosa:virginica)
+  yardstick::mn_log_loss(truth, setosa:virginica)
 
 metrics %>% 
   ggbarplot("model", ".estimate", fill = "darkblue") %>% 
