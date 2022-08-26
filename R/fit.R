@@ -35,6 +35,10 @@
   mod_response <- .model_response(mod_frame)
 
   # Prepare CV
+  if ("index" %in% names(.cv_args)) {
+    mod_frame[, .cv_args$index] <- .data[, .cv_args$index]
+  }
+
   cv_func <- switch(
     .cv,
     initial_split = rsample::initial_split,
@@ -42,7 +46,10 @@
     vfold = rsample::vfold_cv,
     loo = rsample::loo_cv,
     rolling_origin = rsample::rolling_origin,
-    boot = rsample::bootstraps
+    sliding_index = rsample::sliding_index,
+    sliding_period = rsample::sliding_period,
+    sliding_window = rsample::sliding_window,
+    bootstraps = rsample::bootstraps
     )
 
   if (.cv == "none") {
@@ -51,6 +58,11 @@
     cv <- do.call(cv_func, append(list(data = mod_frame), .cv_args))
     if (inherits(cv, "rsplit"))
       cv <- dplyr::tibble(splits = list(cv), id = .cv)
+    if (!is.null(.cv_args$index)) {
+      adj_id <- seq(1L, nrow(mod_frame), by = ifelse(is.null(.cv_args$step), 1, .cv_args$step))
+      adj_id <- adj_id[(length(adj_id) - nrow(cv) + 1):length(adj_id)]
+      cv$id <- as.character(mod_frame[adj_id, .cv_args$index])
+    }
   }
 
   # Evaluate methods
@@ -89,9 +101,10 @@
 
             result_raw <- do.call(model, model_args)
             result <- .unnest_settings(result_raw)
+            result <- dplyr::mutate(result, slice_id = id)
             pred <- predict.tidyfit.models(result_raw, df_test, weights = wts[test_samples], .keep_grid_id = TRUE)
+            if (nrow(pred) == 0) return(dplyr::mutate(result, metric = 0))
             metrics <- .eval_metrics(pred, family)
-
             result <- result %>%
               dplyr::mutate(slice_id = id) %>%
               dplyr::left_join(metrics, by = "grid_id")
