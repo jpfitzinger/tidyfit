@@ -4,12 +4,22 @@
 \alias{coef.tidyfit.models}
 \title{Extract coefficients from a \code{tidyfit.models} frame}
 \usage{
-\method{coef}{tidyfit.models}(object, ..., .keep_grid_id = FALSE)
+\method{coef}{tidyfit.models}(
+  object,
+  ...,
+  .add_bootstrap_interval = FALSE,
+  .bootstrap_alpha = 0.05,
+  .keep_grid_id = FALSE
+)
 }
 \arguments{
 \item{object}{\code{model.frame} created using \code{\link{regress}}, \code{\link{classify}} or \code{\link{m}}}
 
 \item{...}{currently not used}
+
+\item{.add_bootstrap_interval}{calculate bootstrap intervals for the parameters. See Details.}
+
+\item{.bootstrap_alpha}{confidence level used for the bootstrap interval. Default is \code{.bootstrap_alpha = 0.05}.}
 
 \item{.keep_grid_id}{boolean. By default the grid ID column is dropped, if there is only one unique setting per model or group. \code{.keep_grid_id = TRUE} ensures that the column is never dropped.}
 }
@@ -25,6 +35,10 @@ The function uses the 'handler' column in a \code{tidyfit.model} frame to return
 Results are 'tidied' using \code{broom::tidy} whenever possible.
 
 All coefficients are transformed to ensure statistical comparability. For instance, standardized coefficients are always transformed back to the original data scale, naming conventions are harmonized etc.
+\subsection{Bootstrap intervals}{
+
+Bootstrap intervals can be calculated using \code{rsample::int_pctl}. Only set \code{.add_bootstrap_interval = TRUE} if you are using \code{.cv = "bootstraps"} in combination with \code{.return_slices = TRUE} to generate the model frame.
+}
 }
 \examples{
 data <- tidyfit::Factor_Industry_Returns
