@@ -31,12 +31,12 @@
     wts <- NULL
   }
 
-  mod_frame <- .model_frame(formula = formula, data = .data)
-  mod_response <- .model_response(mod_frame)
+  mf <- data.frame(.data, check.names = FALSE)
 
   # Prepare CV
-  if ("index" %in% names(.cv_args)) {
-    mod_frame[, .cv_args$index] <- .data[, .cv_args$index]
+  if (!is.null(.cv_args$index)) {
+    if (!.cv_args$index %in% colnames(mf))
+      stop("'index_col' not found in the data")
   }
 
   cv_func <- switch(
@@ -53,15 +53,15 @@
     )
 
   if (.cv == "none") {
-    cv <- dplyr::tibble(splits = list(mod_frame))
+    cv <- dplyr::tibble(splits = list(mf))
   } else {
-    cv <- do.call(cv_func, append(list(data = mod_frame), .cv_args))
+    cv <- do.call(cv_func, append(list(data = mf), .cv_args))
     if (inherits(cv, "rsplit"))
       cv <- dplyr::tibble(splits = list(cv), id = .cv)
     if (!is.null(.cv_args$index)) {
-      adj_id <- seq(1L, nrow(mod_frame), by = ifelse(is.null(.cv_args$step), 1, .cv_args$step))
+      adj_id <- seq(1L, nrow(mf), by = ifelse(is.null(.cv_args$step), 1, .cv_args$step))
       adj_id <- adj_id[(length(adj_id) - nrow(cv) + 1):length(adj_id)]
-      cv$id <- as.character(mod_frame[adj_id, .cv_args$index])
+      cv$id <- as.character(mf[adj_id, .cv_args$index])
     }
   }
 
@@ -88,7 +88,6 @@
             df_test <- rsample::testing(splits)
             train_samples <- splits$in_id
             test_samples <- rsample::complement(splits)
-            df_test_y <- .model_response(df_test)
 
             model_args <- list(formula = formula, data = df_train,
                                .remove_dependent_features = .remove_dependent_features)
@@ -118,7 +117,7 @@
         result <- NULL
       }
 
-      model_args <- list(formula = formula, data = mod_frame,
+      model_args <- list(formula = formula, data = mf,
                          .remove_dependent_features = .remove_dependent_features)
       if (!model(.check_family = TRUE)) {
         model_args <- append(model_args, list(family = family))

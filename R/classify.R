@@ -100,15 +100,18 @@ classify <- function(
   sapply(method_names, .check_method, "classify", message = TRUE)
 
   # Multinomial classification
-  response_var <- all.vars(formula)[1]
-  response_lvls <- unique(.data[[response_var]])
-  if (length(response_lvls) < 2)
-    stop("response must contain at least 2 classes")
-  if (length(response_lvls) > 2) {
-    sapply(method_names, .check_method, "multinomial", message = TRUE)
+  # Check if formula specified as two-column response
+  multi_column <- grepl("cbind", deparse(formula))
+  if (!multi_column) {
+    response_var <- all.vars(formula)[1]
+    response_lvls <- unique(.data[[response_var]])
+    if (length(response_lvls) < 2)
+      stop("response must contain at least 2 classes")
+    if (length(response_lvls) > 2) {
+      sapply(method_names, .check_method, "multinomial", message = TRUE)
+    }
+    .data[[response_var]] <- as.factor(.data[[response_var]])
   }
-  .data[[response_var]] <- as.factor(.data[[response_var]])
-
 
   .cv <- match.arg(.cv)
   if (is.null(.cv_args)) .cv_args <- list()
@@ -151,12 +154,12 @@ classify <- function(
         dplyr::mutate(metric = mean(.data$metric)) %>%
         dplyr::ungroup(.data$grid_id) %>%
         dplyr::filter(.data$metric == min(.data$metric)) %>%
-        dplyr::filter(.data$grid_id == unique(.data$grid_id)[1]) %>%
-        dplyr::select(-.data$metric)
+        dplyr::filter(.data$grid_id == unique(.data$grid_id)[1])
 
       if (.return_slices) {
         df <- df_slices %>%
-          dplyr::bind_rows(df_no_cv)
+          dplyr::bind_rows(df_no_cv) %>%
+          dplyr::select(-.data$metric)
       } else {
         df <- df_slices %>%
           dplyr::ungroup() %>%

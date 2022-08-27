@@ -76,7 +76,7 @@ predict.tidyfit.models <- function(object, newdata, ..., .keep_grid_id = FALSE) 
 
   out <- out %>%
     dplyr::group_by(across(any_of(c(gr_vars, "model")))) %>%
-    dplyr::mutate(nids = length(unique(grid_id)))
+    dplyr::mutate(nids = length(unique(.data$grid_id)))
 
   if (all(out$nids==1) & !.keep_grid_id) {
     out <- dplyr::select(out, -.data$grid_id)

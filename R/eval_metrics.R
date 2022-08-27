@@ -13,7 +13,7 @@
   }
   if (family$family == "gaussian") {
     metrics <- pred %>%
-      yardstick::rmse(truth, prediction, case_weights = weights) %>%
+      yardstick::rmse(.data$truth, .data$prediction, case_weights = .data$weights) %>%
       dplyr::mutate(metric = .data$.estimate^2)
   } else {
     is_multinomial <- "class" %in% colnames(pred)
@@ -23,11 +23,11 @@
         dplyr::group_by(.data$class, .add = TRUE) %>%
         dplyr::mutate(row_n = dplyr::row_number()) %>%
         tidyr::spread(.data$class, .data$prediction) %>%
-        yardstick::mn_log_loss(truth = .data$truth, any_of(level_names), case_weights = weights) %>%
+        yardstick::mn_log_loss(truth = .data$truth, any_of(level_names), case_weights = .data$weights) %>%
         dplyr::mutate(metric = -.data$.estimate)
     } else {
       metrics <- pred %>%
-        yardstick::mn_log_loss(truth, prediction, case_weights = weights) %>%
+        yardstick::mn_log_loss(.data$truth, .data$prediction, case_weights = .data$weights) %>%
         dplyr::mutate(metric = -.data$.estimate)
     }
   }

@@ -138,12 +138,12 @@ regress <- function(
         dplyr::mutate(metric = mean(.data$metric)) %>%
         dplyr::ungroup(.data$grid_id) %>%
         dplyr::filter(.data$metric == min(.data$metric)) %>%
-        dplyr::filter(.data$grid_id == unique(.data$grid_id)[1]) %>%
-        dplyr::select(-.data$metric)
+        dplyr::filter(.data$grid_id == unique(.data$grid_id)[1])
 
       if (.return_slices) {
         df <- df_slices %>%
-          dplyr::bind_rows(df_no_cv)
+          dplyr::bind_rows(df_no_cv) %>%
+          dplyr::select(-.data$metric)
       } else {
         df <- df_slices %>%
           dplyr::ungroup() %>%

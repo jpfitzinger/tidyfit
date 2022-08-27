@@ -103,13 +103,11 @@ m <- function(model_method,
     return(do.call(purrr::partial, args))
   }
 
-  mf <- .model_frame(formula, data)
-  x <- .model_matrix(formula, mf)
-
   # Set default hyperparameter grids
   default_grids <- .default_hp_grid(model_method,
                                     additional_args,
-                                    nvars = ncol(x) - 1)
+                                    formula,
+                                    data)
   additional_args <- append(additional_args, default_grids)
 
   # Used to define the class

@@ -1,7 +1,8 @@
 
 #' @importFrom dials grid_regular penalty mixture
+#' @importFrom stats terms
 
-.default_hp_grid <- function(model_method, control, nvars) {
+.default_hp_grid <- function(model_method, control, formula, data) {
 
   args <- names(control)
   grid <- list()
@@ -17,6 +18,7 @@
     }
   }
   if (model_method %in% c("pcr", "plsr")) {
+    nvars <- length(labels(stats::terms(formula, data = data)))
     if (!"ncomp" %in% args) {
       grid$ncomp <- unique(round(seq(1, nvars, length.out = 20)))
     }

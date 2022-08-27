@@ -4,7 +4,6 @@
 #' @importFrom dplyr rename mutate select relocate any_of
 #' @importFrom tidyr unnest nest
 #' @importFrom stats model.frame model.matrix model.response
-#' @importFrom lme4 findbars lFormula
 #' @importFrom rlang .data
 
 # Wrap vector/array arguments in list and return a grid of settings
@@ -63,76 +62,14 @@
     model_frame <- model_frame %>%
       dplyr::relocate(.data$grid_id) %>%
       tidyr::nest(settings = -any_of(c("grid_id", "estimator", "handler", "warnings", "messages"))) %>%
-      dplyr::relocate(any_of(c("warnings", "messages")), .after = settings)
+      dplyr::relocate(any_of(c("warnings", "messages")), .after = .data$settings)
   }
 
   return(model_frame)
 
 }
 
-# Returns model.frame using formula
-.model_frame <- function(formula, data) {
-
-  # Check if formula contains random effects
-  re_terms <- lme4::findbars(formula)
-  has_re <- length(re_terms) > 0
-
-  if (!has_re) {
-    mat <- stats::model.frame(formula, data)
-  } else {
-    model_terms <- lme4::lFormula(formula, data)
-    mat <- model_terms$fr
-  }
-
-  colnames(mat) <- gsub("`", "", colnames(mat))
-
-  return(mat)
-
-}
-
-# Returns model.matrix using formula
-.model_matrix <- function(formula, data) {
-
-  # Check if formula contains random effects
-  re_terms <- lme4::findbars(formula)
-  has_re <- length(re_terms) > 0
-
-  if (!has_re) {
-    mat <- stats::model.matrix(formula, data)
-  } else {
-    model_terms <- lme4::lFormula(formula, data)
-    mat <- model_terms$X
-  }
-
-  colnames(mat) <- gsub("`", "", colnames(mat))
-
-  return(mat)
-
-}
-
-# Returns model.response using model.frame
-.model_response <- function(data) {
-
-  mat <- data[, 1]
-
-  return(mat)
-
-}
-
-.safely_n_quietly <- function(.f, otherwise = NULL) {
-  retfun <- purrr::quietly(purrr::safely(.f, otherwise = otherwise, quiet = FALSE))
-  function(...) {
-    ret <- retfun(...)
-    list(result = ret$result$result,
-         output = ret$output,
-         messages = ret$messages,
-         warnings = ret$warnings,
-         error = ret$result$error)
-  }
-}
-
 .names_map <- function(names_vec) {
-  # names_vec <- gsub("`", "", names_vec)
   names_chk <- make.names(names_vec)
   names(names_vec) <- names_chk
   names_vec["(Intercept)"] <- "(Intercept)"

@@ -59,7 +59,7 @@ coef.tidyfit.models <- function(
 
   out <- out %>%
     dplyr::group_by(across(any_of(c(gr_vars, "model")))) %>%
-    dplyr::mutate(nids = length(unique(grid_id)))
+    dplyr::mutate(nids = length(unique(.data$grid_id)))
 
   if (.add_bootstrap_interval) {
     if (!"slice_id" %in% colnames(out))
@@ -69,7 +69,7 @@ coef.tidyfit.models <- function(
     intervals <- out %>%
       dplyr::group_by(.data$grid_id, .add = TRUE) %>%
       dplyr::summarise(interval = .make_rsample_bootstraps(.)) %>%
-      tidyr::unnest(interval)
+      tidyr::unnest(.data$interval)
     out <- out %>%
       dplyr::select(-.data$estimate, -.data$slice_id) %>%
       dplyr::distinct() %>%
