@@ -1,0 +1,109 @@
+---
+title: "Time-varying parameters vs. rolling windows"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Time-varying parameters vs. rolling windows}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+In this tutorial, I compare the coefficients estimated using a rolling window regression to those estimated using a Bayesian time-varying parameter model. For a primer on how to fit rolling window regressions using `tidyfit`, please see [here]. This articles follows directly from the linked primer, but focusses on only one industry.
+
+```{r}
+library(tidyverse)   # Data wrangling
+library(lubridate)   # Date calculations
+library(tidyfit)     # Model fitting
+```
+
+## Load the data
+
+```{r}
+data <- Factor_Industry_Returns
+data <- data %>% 
+  mutate(Date = ym(Date)) %>%         # Parse dates
+  mutate(Return = Return - RF) %>%    # Excess return
+  select(-RF)
+data
+```
+
+We will examine only the HiTec industry to avoid unnecessary complexity:
+
+```{r}
+data <- data %>% 
+  filter(Industry == "HiTec") %>% 
+  select(-Industry)
+```
+
+## Model fitting
+
+We begin by fitting a rolling window OLS regression with adjusted standard errors. In this example, we cannot simply pass both the TVP and the OLS models to the same `regress` function because the rolling window regression requires a `.force_cv = TRUE` argument, while the TVP model does not need to be fitted on rolling slices. The below code is adapted directly from the previous article on rolling window regressions:
+
+```{r}
+mod_rolling <- data %>% 
+  regress(Return ~ CMA + HML + `Mkt-RF` + RMW + SMB,
+          m("lm", vcov. = "HAC"),
+          .cv = "sliding_index", .cv_args = list(lookback = years(5), step = 6, index = "Date"),
+          .force_cv = TRUE, .return_slices = TRUE)
+```
+
+The TVP model is fitted next. `tidyfit` uses the `shrinkTVP` package to fit TVP models. The package is extremely powerful and provides a Bayesian implementation with a specialized hierarchical prior that automatically shrinks some of the parameters towards constant processes based on the data. While I do not discuss this in more detail, have a look here for more information.
+
+```{r}
+mod_tvp <- data %>% 
+  regress(Return ~ .,
+          m("tvp", sv = TRUE, niter = 1000, index_col = "Date"))
+```
+
+The `sv = TRUE` adds stochastic volatility, while the `index_col` argument is a convenience feature added by `tidyfit` to allow the index column (i.e. the dates) to be passed through to the estimates.
+
+Next we combine the two model frames:
+
+```{r}
+mod_frame <- bind_rows(mod_rolling, mod_tvp)
+```
+
+The coefficients for all models can be obtained in the usual manner:
+
+```{r}
+beta <- coef(mod_frame)
+```
+
+Now, however, we require some wrangling to adapt the output of the two methods. First we unnest the detailed model information. This contains upper and lower credible intervals for the TVP model. For the OLS model we generate the confidence interval, as before. Finally, we combine the `slice_id` and `index` columns into a joint `date` column:
+
+```{r}
+beta <- beta %>% 
+  unnest(model_info) %>% 
+  mutate(lower = ifelse(is.na(lower), estimate - 2*std.error, lower)) %>% 
+  mutate(upper = ifelse(is.na(upper), estimate + 2*std.error, upper)) %>% 
+  mutate(date = coalesce(as.Date(index), as.Date(slice_id)))
+```
+
+## Plotting the results
+
+Plotting the outcome is relatively simple with `ggplot2`:
+
+```{r, fig.width=7, fig.height=6, fig.align="center"}
+beta %>% 
+  ggplot(aes(date, estimate)) +
+  facet_wrap("term", scales = "free", ncol = 2) +
+  geom_ribbon(aes(ymax = upper, ymin = lower, fill = model), alpha = 0.25) +
+  geom_line(aes(color = model)) +
+  theme_bw(8)
+```
+
+We can make a two interesting observations from these results:
+
+  1. The variation seen in the rolling regression for some of the parameters --- specifically the risk-adjusted alpha (intercept) and the market beta --- is not supported by the TVP model, which shrinks these to almost constant parameters.
+  2. The TVP estimates are markedly smoother and importantly remove the window effects seen in the rolling regression (i.e. the rolling regression adjusts too late).
+
+The TVP model seems to offer a much better tool analyse the factor betas in this case. 

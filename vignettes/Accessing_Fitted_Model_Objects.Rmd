@@ -1,0 +1,74 @@
+---
+title: "Accessing Fitted Model Objects"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Accessing Fitted Model Objects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+```{r}
+library(tidyverse) # Data wrangling
+library(tidyfit)   # Auto-ML modeling
+```
+
+The fitted model object is contained in `tidyfit.models` frame and can be accessed using the `handler` column. Suppose we want to visualize the regression tree of the hierarchical features regression for different degrees of shrinkage (see `?hfr::plot.hfr`). We begin by loading Boston house price data and fitting a regression for 4 different shrinkage parameters. Note that we do not need to specify a `.cv` argument, since we are not looking to select the optimal degree of shrinkage:
+
+```{r}
+data <- MASS::Boston
+mod_frame <- data %>% 
+  regress(medv ~ ., m("hfr", kappa = c(0.25, 0.5, 0.75, 1))) %>% 
+  unnest(settings)
+mod_frame
+```
+
+`kappa` defines the extent of shrinkage, with `kappa = 1` equal to an unregularized least squares (OLS) regression, and `kappa = 0.25` representing a regression graph that is shrunken to 25% of its original size, with 25% of the effective degrees of freedom. The regression graph is visualized using the `plot` function.
+
+## Accessing the fitted model
+
+The `handler` column in the `tidyfit.models` frame contains partialised functions that contain the fitted object, as well as any additional information needed to perform 3 functions: (i) returning the model object, (ii) return estimates and (iii) returning predictions. To obtain the model option, we simply need to call the handler function without any arguments:
+
+```{r}
+mod_frame <- mod_frame %>% 
+  mutate(model_obj = map(handler, ~.()))
+mod_frame
+```
+
+Let's have a look at the unregularized regression graph:
+
+```{r, fig.width=7, fig.height=6, fig.align='center'}
+mod_frame %>% 
+  filter(kappa_grid == 1) %>% 
+  pull(model_obj) %>% 
+  .[[1]] %>% 
+  plot(kappa = 1)
+```
+
+The regression graph shows which variables have a similar explanatory effect on the target (variables that are adjacent have a similar effect). The sizes of the leaf-nodes represent the absolute size of the coefficients.
+
+## Comparing different regression graphs
+
+Finally, we can use `pwalk` to compare the different settings in a plot:
+
+```{r, fig.width=7, fig.height=6, fig.align='center'}
+par(mfrow = c(2, 2))
+par(family = "sans", cex = 0.7)
+mod_frame %>% 
+  arrange(desc(kappa_grid)) %>% 
+  select(model_obj, kappa_grid) %>% 
+  pwalk(~plot(.x, kappa = .y, 
+              max_leaf_size = 2, 
+              show_details = FALSE))
+```
+
+Notice how with each smaller value of `kappa` the height of the tree shrinks and the model parameters become more similar in size. This is precisely how HFR regularization works: it shrinks the parameters towards group means over groups of similar features as determined by the regression graph.

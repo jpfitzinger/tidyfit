@@ -3,7 +3,7 @@ title: "Predicting Boston House Prices"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Predicting Boston House Prices}
-  %\VignetteEngine{knitr::knitr}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
