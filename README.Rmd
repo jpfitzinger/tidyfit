@@ -52,7 +52,7 @@ regress(
   formula = y ~ x1 + x2, 
   mod1 = m(<args for underlying method>), mod2 = m(), ...,    # Pass multiple model wrappers
   .cv = "vfold", .cv_args = list(), .weights = "weight_col",  # Additional settings
-  <further arguments>)
+  <further arguments>
 )
 ```
 
@@ -64,7 +64,7 @@ The syntax is identical for `classify`.
 m(
   <method>,           # e.g. "lm" or "lasso"
   formula, data,      # not passed when used within regress or classify
-  ...                 # Args passed to underlying method, e.g. stats::lm or glmnet::glmnet
+  ...                 # Args passed to underlying method, e.g. to stats::lm for OLS regression
 )
 ```
 
@@ -72,11 +72,52 @@ An important feature of `m()` is that all arguments can be passed as vectors, al
 
  - Passing a hyperparameter grid: `m("lasso", lambda = seq(0, 1, by = 0.1))`
  - Different algorithms for robust regression: `m("robust", method = c("M", "MM"))`
+ - Forward vs. backward selection: `m("subset", method = c("forward", "backward"))`
  - Logit and Probit models: `m("glm", family = list(binomial(link="logit"), binomial(link="probit")))`
+
+## Methods implemented in `tidyfit`
+
+```{r, echo = F}
+library(kableExtra)
+tbl <- data.frame(
+  Method = c("OLS", "Generalized least squares", "Robust regression (e.g. Huber loss)", 
+             "Quantile regression", "LASSO", "Ridge", "Adaptive LASSO", "ElasticNet",
+             "Gradient boosting regression", "Principal components regression", "Partial least squares",
+             "Hierarchical feature regression", "Best subset selection", "Bayesian regression", "Bayesian time-varying parameters regression", "Generalized mixed-effects regression"),
+  Name = c("lm", "glm", "robust", "quantile", "lasso", "ridge", "adalasso", "enet", "boost", "pcr", "plsr", 
+           "hfr", "subset", "bayes", "tvp", "glmm"),
+  Package = c("`stats::lm`", "`stats::glm`", "`MASS::rlm`", "`quantreg`", "`glmnet`", "`glmnet`", "`glmnet`", "`glmnet`",
+              "`mboost`", "`pls`", "`pls`", "`hfr`", "`bestglm`", "`arm`", "`shrinkTVP`", "`lme4::glmer`"),
+  Regression = c("yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes"),
+  Classification = c("no", "yes", "no", "no", "yes", "yes", "yes", "yes", "yes", "no", "no", "no", "yes", "yes", "no", "yes"),
+  group = c("Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Gradient boosting", "Factor regressions", "Factor regressions", "Factor regressions", "Best subset selection", "Bayesian regression", "Bayesian regression", "Mixed-effects modeling")
+)
+
+kbl(tbl[,1:5], align = "lcccc") %>% 
+  pack_rows(index = table(fct_inorder(tbl$group))) %>% 
+  kable_styling("striped")
+
+```
+
+See `?m` for additional information.
+
+It is important to note that the above list is not complete, since some of the methods encompass multiple algorithms. For instance, "subset" can be used to perform forward, backward or exhaustive search selection using `leaps`. Similarly, "lasso" includes certain grouped LASSO implementations that can be fitted with `glmnet`.
 
 ## A minimal workflow
 
-In this section, a minimal workflow is used to demonstrate how the package works. `tidyfit` includes a data set of financial factor returns freely available [here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html). The data set includes monthly industry returns for 10 industries, as well as monthly factor returns for 5 factors:
+In this section, a minimal workflow is used to demonstrate how the package works. For more detailed guides of specialized topics, or simply for further reading, follow these links:
+
+  - Accessing fitted models
+  - Regularized regression (Boston house price data)
+  - Multinomial classification (iris data)
+  - Rolling window regression for time series (factor data)
+  - Time-varying parameters (factor data)
+  - Bootstrap standard errors
+  - [coming soon] Fixed and Random effects (factor data)
+  - [coming soon] Quantile regression (Boston house price data)
+  - [coming soon] Custom models
+
+`tidyfit` includes a data set of financial factor returns freely available [here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html). The data set includes monthly industry returns for 10 industries, as well as monthly factor returns for 5 factors:
 
 ```{r example}
 data <- tidyfit::Factor_Industry_Returns
@@ -92,7 +133,7 @@ df_test <- data %>%
   filter(Date >= 202000)
 ```
 
-The objective is to fit a ElasticNet regression for each industry group, and compare results to a robust least squares regression. This can be done with `regress`:
+For purposes of this demonstration, the objective will be to fit an ElasticNet regression for each industry group, and compare results to a robust least squares regression. This can be done with `regress`:
 
 ```{r}
 model_frame <- df_train %>% 
@@ -101,7 +142,7 @@ model_frame <- df_train %>%
           .cv = "initial_time_split", .mask = "Date")
 ```
 
-Note that the penalty and mixing parameters are chosen automatically using a time series train/test split (`rsample::initial_time_split`), with a hyperparameter grid set by the package `dials`. See `?regress` for additional CV methods. A custom grid can easily be passed using `lambda = c(...)` in the `m("enet")` wrapper. 
+Note that the penalty and mixing parameters are chosen automatically using a time series train/test split (`rsample::initial_time_split`), with a hyperparameter grid set by the package `dials`. See `?regress` for additional CV methods. A custom grid can easily be passed using `lambda = c(...)` and/or `alpha = c(...)` in the `m("enet")` wrapper. 
 
 The resulting `tidyfit.models` frame consists of 3 components:
 
@@ -157,40 +198,3 @@ model_frame %>%
 The ElasticNet performs a little better (unsurprising really, given the small data set).
 
 A **more detailed analysis of Boston house price data** using a fleet of regularized regression estimators can be found **[here](inst/doc/Predicting Boston House Prices.html)**.
-
-## More detailed examples
-
-Guides discussing a number of specialized topics are listed below:
-
-  1. Regularized regression (Boston house price data)
-  2. Multinomial classification (iris data)
-  3. Rolling window regression for time series (factor data)
-  4. Time-varying parameters (factor data)
-  3. Fixed and Random effects (factor data)
-  4. Quantile regression (Boston house price data)
-  5. Accessing and using the model object
-  6. Bootstrap standard errors
-
-## Methods implemented in `tidyfit`
-
-```{r, echo = F}
-library(kableExtra)
-tbl <- data.frame(
-  Method = c("OLS", "Generalized least squares", "Robust regression (e.g. Huber loss)", 
-             "Quantile regression", "LASSO", "Ridge", "Adaptive LASSO", "ElasticNet",
-             "Gradient boosting regression", "Principal components regression", "Partial least squares",
-             "Hierarchical feature regression", "Best subset selection", "Bayesian regression", "Generalized mixed-effects regression"),
-  Name = c("lm", "glm", "robust", "quantile", "lasso", "ridge", "adalasso", "enet", "boost", "pcr", "plsr", 
-           "hfr", "subset", "bayes", "glmm"),
-  Package = c("`stats::lm`", "`stats::glm`", "`MASS::rlm`", "`quantreg`", "`glmnet`", "`glmnet`", "`glmnet`", "`glmnet`",
-              "`mboost`", "`pls`", "`pls`", "`hfr`", "`bestglm`", "`arm`", "`lme4::glmer`"),
-  Regression = c("yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes"),
-  Classification = c("no", "yes", "no", "no", "yes", "yes", "yes", "yes", "yes", "no", "no", "no", "yes", "yes", "yes")
-)
-
-kbl(tbl, align = "lcccc") %>% 
-  kable_styling("striped")
-
-```
-
-See `?m` for additional information.

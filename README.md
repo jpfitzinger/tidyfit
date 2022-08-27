@@ -50,7 +50,7 @@ regress(
   formula = y ~ x1 + x2, 
   mod1 = m(<args for underlying method>), mod2 = m(), ...,    # Pass multiple model wrappers
   .cv = "vfold", .cv_args = list(), .weights = "weight_col",  # Additional settings
-  <further arguments>)
+  <further arguments>
 )
 ```
 
@@ -64,7 +64,7 @@ classification techniques that can be used with `regress` and
 m(
   <method>,           # e.g. "lm" or "lasso"
   formula, data,      # not passed when used within regress or classify
-  ...                 # Args passed to underlying method, e.g. stats::lm or glmnet::glmnet
+  ...                 # Args passed to underlying method, e.g. to stats::lm for OLS regression
 )
 ```
 
@@ -76,14 +76,370 @@ for any method:
     `m("lasso", lambda = seq(0, 1, by = 0.1))`
 -   Different algorithms for robust regression:
     `m("robust", method = c("M", "MM"))`
+-   Forward vs. backward selection:
+    `m("subset", method = c("forward", "backward"))`
 -   Logit and Probit models:
     `m("glm", family = list(binomial(link="logit"), binomial(link="probit")))`
+
+## Methods implemented in `tidyfit`
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Method
+</th>
+<th style="text-align:center;">
+Name
+</th>
+<th style="text-align:center;">
+Package
+</th>
+<th style="text-align:center;">
+Regression
+</th>
+<th style="text-align:center;">
+Classification
+</th>
+</tr>
+</thead>
+<tbody>
+<tr grouplength="4">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>Linear (generalized) regression or classification</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+OLS
+</td>
+<td style="text-align:center;">
+lm
+</td>
+<td style="text-align:center;">
+`stats::lm`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Generalized least squares
+</td>
+<td style="text-align:center;">
+glm
+</td>
+<td style="text-align:center;">
+`stats::glm`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Robust regression (e.g. Huber loss)
+</td>
+<td style="text-align:center;">
+robust
+</td>
+<td style="text-align:center;">
+`MASS::rlm`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Quantile regression
+</td>
+<td style="text-align:center;">
+quantile
+</td>
+<td style="text-align:center;">
+`quantreg`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr grouplength="4">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>Regression and classification with L1 and L2 penalties</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+LASSO
+</td>
+<td style="text-align:center;">
+lasso
+</td>
+<td style="text-align:center;">
+`glmnet`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Ridge
+</td>
+<td style="text-align:center;">
+ridge
+</td>
+<td style="text-align:center;">
+`glmnet`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Adaptive LASSO
+</td>
+<td style="text-align:center;">
+adalasso
+</td>
+<td style="text-align:center;">
+`glmnet`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+ElasticNet
+</td>
+<td style="text-align:center;">
+enet
+</td>
+<td style="text-align:center;">
+`glmnet`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr grouplength="1">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>Gradient boosting</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Gradient boosting regression
+</td>
+<td style="text-align:center;">
+boost
+</td>
+<td style="text-align:center;">
+`mboost`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr grouplength="3">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>Factor regressions</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Principal components regression
+</td>
+<td style="text-align:center;">
+pcr
+</td>
+<td style="text-align:center;">
+`pls`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Partial least squares
+</td>
+<td style="text-align:center;">
+plsr
+</td>
+<td style="text-align:center;">
+`pls`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Hierarchical feature regression
+</td>
+<td style="text-align:center;">
+hfr
+</td>
+<td style="text-align:center;">
+`hfr`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr grouplength="1">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>Best subset selection</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Best subset selection
+</td>
+<td style="text-align:center;">
+subset
+</td>
+<td style="text-align:center;">
+`bestglm`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr grouplength="2">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>Bayesian regression</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Bayesian regression
+</td>
+<td style="text-align:center;">
+bayes
+</td>
+<td style="text-align:center;">
+`arm`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Bayesian time-varying parameters regression
+</td>
+<td style="text-align:center;">
+tvp
+</td>
+<td style="text-align:center;">
+`shrinkTVP`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr grouplength="1">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>Mixed-effects modeling</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Generalized mixed-effects regression
+</td>
+<td style="text-align:center;">
+glmm
+</td>
+<td style="text-align:center;">
+`lme4::glmer`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+</tbody>
+</table>
+
+See `?m` for additional information.
+
+It is important to note that the above list is not complete, since some
+of the methods encompass multiple algorithms. For instance, “subset” can
+be used to perform forward, backward or exhaustive search selection
+using `leaps`. Similarly, “lasso” includes certain grouped LASSO
+implementations that can be fitted with `glmnet`.
 
 ## A minimal workflow
 
 In this section, a minimal workflow is used to demonstrate how the
-package works. `tidyfit` includes a data set of financial factor returns
-freely available
+package works. For more detailed guides of specialized topics, or simply
+for further reading, follow these links:
+
+-   Accessing fitted models
+-   Regularized regression (Boston house price data)
+-   Multinomial classification (iris data)
+-   Rolling window regression for time series (factor data)
+-   Time-varying parameters (factor data)
+-   Bootstrap standard errors
+-   \[coming soon\] Fixed and Random effects (factor data)
+-   \[coming soon\] Quantile regression (Boston house price data)
+-   \[coming soon\] Custom models
+
+`tidyfit` includes a data set of financial factor returns freely
+available
 [here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html).
 The data set includes monthly industry returns for 10 industries, as
 well as monthly factor returns for 5 factors:
@@ -116,9 +472,9 @@ df_test <- data %>%
   filter(Date >= 202000)
 ```
 
-The objective is to fit a ElasticNet regression for each industry group,
-and compare results to a robust least squares regression. This can be
-done with `regress`:
+For purposes of this demonstration, the objective will be to fit an
+ElasticNet regression for each industry group, and compare results to a
+robust least squares regression. This can be done with `regress`:
 
 ``` r
 model_frame <- df_train %>% 
@@ -131,7 +487,7 @@ Note that the penalty and mixing parameters are chosen automatically
 using a time series train/test split (`rsample::initial_time_split`),
 with a hyperparameter grid set by the package `dials`. See `?regress`
 for additional CV methods. A custom grid can easily be passed using
-`lambda = c(...)` in the `m("enet")` wrapper.
+`lambda = c(...)` and/or `alpha = c(...)` in the `m("enet")` wrapper.
 
 The resulting `tidyfit.models` frame consists of 3 components:
 
@@ -252,7 +608,7 @@ model_frame %>%
   theme_bw()
 ```
 
-<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" style="display: block; margin: auto;" />
 
 The ElasticNet performs a little better (unsurprising really, given the
 small data set).
@@ -260,299 +616,3 @@ small data set).
 A **more detailed analysis of Boston house price data** using a fleet of
 regularized regression estimators can be found
 **[here](inst/doc/Predicting%20Boston%20House%20Prices.html)**.
-
-## More detailed examples
-
-Guides discussing a number of specialized topics are listed below:
-
-1.  Regularized regression (Boston house price data)
-2.  Multinomial classification (iris data)
-3.  Rolling window regression for time series (factor data)
-4.  Time-varying parameters (factor data)
-5.  Fixed and Random effects (factor data)
-6.  Quantile regression (Boston house price data)
-7.  Accessing and using the model object
-8.  Bootstrap standard errors
-
-## Methods implemented in `tidyfit`
-
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-Method
-</th>
-<th style="text-align:center;">
-Name
-</th>
-<th style="text-align:center;">
-Package
-</th>
-<th style="text-align:center;">
-Regression
-</th>
-<th style="text-align:center;">
-Classification
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-OLS
-</td>
-<td style="text-align:center;">
-lm
-</td>
-<td style="text-align:center;">
-`stats::lm`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-no
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Generalized least squares
-</td>
-<td style="text-align:center;">
-glm
-</td>
-<td style="text-align:center;">
-`stats::glm`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-yes
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Robust regression (e.g. Huber loss)
-</td>
-<td style="text-align:center;">
-robust
-</td>
-<td style="text-align:center;">
-`MASS::rlm`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-no
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Quantile regression
-</td>
-<td style="text-align:center;">
-quantile
-</td>
-<td style="text-align:center;">
-`quantreg`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-no
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-LASSO
-</td>
-<td style="text-align:center;">
-lasso
-</td>
-<td style="text-align:center;">
-`glmnet`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-yes
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Ridge
-</td>
-<td style="text-align:center;">
-ridge
-</td>
-<td style="text-align:center;">
-`glmnet`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-yes
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Adaptive LASSO
-</td>
-<td style="text-align:center;">
-adalasso
-</td>
-<td style="text-align:center;">
-`glmnet`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-yes
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ElasticNet
-</td>
-<td style="text-align:center;">
-enet
-</td>
-<td style="text-align:center;">
-`glmnet`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-yes
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Gradient boosting regression
-</td>
-<td style="text-align:center;">
-boost
-</td>
-<td style="text-align:center;">
-`mboost`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-yes
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Principal components regression
-</td>
-<td style="text-align:center;">
-pcr
-</td>
-<td style="text-align:center;">
-`pls`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-no
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Partial least squares
-</td>
-<td style="text-align:center;">
-plsr
-</td>
-<td style="text-align:center;">
-`pls`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-no
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Hierarchical feature regression
-</td>
-<td style="text-align:center;">
-hfr
-</td>
-<td style="text-align:center;">
-`hfr`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-no
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Best subset selection
-</td>
-<td style="text-align:center;">
-subset
-</td>
-<td style="text-align:center;">
-`bestglm`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-yes
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Bayesian regression
-</td>
-<td style="text-align:center;">
-bayes
-</td>
-<td style="text-align:center;">
-`arm`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-yes
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Generalized mixed-effects regression
-</td>
-<td style="text-align:center;">
-glmm
-</td>
-<td style="text-align:center;">
-`lme4::glmer`
-</td>
-<td style="text-align:center;">
-yes
-</td>
-<td style="text-align:center;">
-yes
-</td>
-</tr>
-</tbody>
-</table>
-
-See `?m` for additional information.

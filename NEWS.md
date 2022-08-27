@@ -18,3 +18,10 @@
 
 - This version adds the concept of an index which facilitates the addition of methods with heterogenous coefficients (e.g. mixed-effects model)
 - The backend handling of predictions has been adapted to allow coefficients to vary over one or more index columns
+
+## tidyfit 0.4.0
+
+- This versions add the concept of a 'tidyfit.models' frame. Instead of producing coefficients directly, the models objects are stored and are accessed to obtain coefficients or predictions. This approach allows vastly more flexibility in the types of methods that can be included.
+- Several additional cross validation methods such as bootstrap and sliding window methods
+- Several new vignettes to illustrate how to use CV methods
+- The version also adds a new method: the TVP method, which uses shrinkTVP to estimate a Bayesian time-varying parameter model.

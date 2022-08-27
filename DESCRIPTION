@@ -1,8 +1,8 @@
 Package: tidyfit
 Type: Package
 Title: Regularized Linear Modeling with Tidy Data
-Date: 2022-08-22
-Version: 0.3.0
+Date: 2022-08-27
+Version: 0.4.0
 Author: Johann Pfitzinger [aut, cre]
 Maintainer: Johann Pfitzinger <johann.pfitzinger@gmail.com>
 Description: An extension to the R tidyverse for automated ML. The package allows fitting and cross validation of linear regression and classification algorithms on grouped data. 
@@ -11,36 +11,38 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
 Imports: 
-  arm,
-  bestglm,
   broom,
   dials,
   dplyr, 
   furrr,
-  glmnet,
-  hfr,
-  lme4,
-  lmtest,
   magrittr,
   MASS,
-  mboost,
   methods,
-  pls,
   purrr,
-  quantreg,
   rlang,
   rsample,
-  sandwich,
   stats,
+  tibble,
   tidyr,
   utils,
   yardstick
 Suggests:
+  arm,
+  bestglm,
   ggpubr,
+  glmnet,
+  hfr,
   kableExtra,
   knitr,
+  lme4,
+  lmtest,
+  lubridate,
+  mboost,
+  pls,
+  quantreg,
+  sandwich,
+  shrinkTVP,
   tidyverse,
-  rmarkdown,
-  yardstick
+  rmarkdown
 Roxygen: list(markdown=TRUE)
-VignetteBuilder: rmarkdown
+VignetteBuilder: knitr
