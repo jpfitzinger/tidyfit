@@ -428,12 +428,22 @@ In this section, a minimal workflow is used to demonstrate how the
 package works. For more detailed guides of specialized topics, or simply
 for further reading, follow these links:
 
--   Accessing fitted models
--   Regularized regression (Boston house price data)
--   Multinomial classification (iris data)
--   Rolling window regression for time series (factor data)
--   Time-varying parameters (factor data)
--   Bootstrap standard errors
+-   [Accessing fitted
+    models](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
+-   [Regularized
+    regression](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html)
+    (Boston house price data)
+-   [Multinomial
+    classification](https://tidyfit.unchartedml.com/articles/Multinomial_Classification.html)
+    (iris data)
+-   [Rolling window regression for time
+    series](https://tidyfit.unchartedml.com/articles/Rolling_Window_Time_Series_Regression.html)
+    (factor data)
+-   [Time-varying
+    parameters](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html)
+    (factor data)
+-   [Bootstrap confidence
+    intervals](https://tidyfit.unchartedml.com/articles/Bootstrapping_Confidence_Intervals.html)
 -   \[coming soon\] Fixed and Random effects (factor data)
 -   \[coming soon\] Quantile regression (Boston house price data)
 -   \[coming soon\] Custom models
@@ -615,4 +625,4 @@ small data set).
 
 A **more detailed analysis of Boston house price data** using a fleet of
 regularized regression estimators can be found
-**[here](inst/doc/Predicting%20Boston%20House%20Prices.html)**.
+[here](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html).
