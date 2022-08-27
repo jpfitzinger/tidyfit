@@ -35,7 +35,6 @@
 #'
 #' @seealso \code{\link{m}} method
 #'
-#' @importFrom hfr cv.hfr
 #' @importFrom dplyr mutate as_tibble select
 #' @importFrom tidyr gather
 #' @importFrom stats coef

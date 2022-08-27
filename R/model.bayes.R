@@ -32,7 +32,6 @@
 #'
 #' @importFrom dplyr tibble as_tibble everything
 #' @importFrom tidyr nest
-#' @importFrom arm bayesglm
 #' @importFrom methods formalArgs
 #' @importFrom purrr partial
 

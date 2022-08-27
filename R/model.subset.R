@@ -37,7 +37,6 @@
 #'
 #' @seealso \code{\link{m}} method
 #'
-#' @importFrom bestglm bestglm
 #' @importFrom purrr quietly partial
 #' @importFrom methods formalArgs
 

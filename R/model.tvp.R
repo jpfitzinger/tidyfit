@@ -34,10 +34,10 @@
 #'
 #' @seealso \code{\link{.model.robust}}, \code{\link{.model.glm}} and \code{\link{m}} methods
 #'
-#' @importFrom shrinkTVP shrinkTVP
 #' @importFrom dplyr tibble everything as_tibble
 #' @importFrom tidyr nest
 #' @importFrom purrr partial
+#' @importFrom stats quantile
 #' @importFrom methods formalArgs
 
 .model.tvp <- function(
@@ -105,15 +105,15 @@
     estimates <- map_dfr(beta, function(bet) {
       tibble(
         estimate = apply(bet, 2, mean)[-1],
-        upper = apply(bet, 2, quantile, 0.925)[-1],
-        lower = apply(bet, 2, quantile, 0.025)[-1],
+        upper = apply(bet, 2, stats::quantile, 0.925)[-1],
+        lower = apply(bet, 2, stats::quantile, 0.025)[-1],
         posterior.sd = apply(bet, 2, sd)[-1],
         index = index_var
       )
     }, .id = "term")
     estimates <- estimates %>%
-      dplyr::mutate(term = gsub("beta_", "", term)) %>%
-      dplyr::mutate(term = ifelse(term == "Intercept", "(Intercept)", term))
+      dplyr::mutate(term = gsub("beta_", "", .data$term)) %>%
+      dplyr::mutate(term = ifelse(.data$term == "Intercept", "(Intercept)", .data$term))
     return(estimates)
   }
 

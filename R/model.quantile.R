@@ -17,16 +17,23 @@
 #' @author Johann Pfitzinger
 #'
 #' @examples
-#' x <- matrix(rnorm(100 * 20), 100, 20)
-#' y <- rnorm(100)
-#' fit <- m("quantile", x, y, tau = c(0.1, 0.5, 0.9))
+#' # Load data
+#' data <- tidyfit::Factor_Industry_Returns
+#'
+#' # Stand-alone function
+#' fit <- m("quantile", Return ~ ., data, tau = 0.5)
 #' fit
+#'
+#' # Within 'regress' function
+#' fit <- regress(data, Return ~ .,
+#'                m("quantile", tau = c(0.1, 0.5, 0.9)),
+#'                .mask = c("Date", "Industry"))
+#' coef(fit)
 #'
 #' @seealso \code{\link{.model.lm}}, \code{\link{.model.bayes}} and \code{\link{m}} methods
 #'
 #' @importFrom stats coef
 #' @importFrom dplyr tibble bind_cols
-#' @importFrom quantreg rq
 #' @importFrom methods formalArgs
 
 .model.quantile <- function(

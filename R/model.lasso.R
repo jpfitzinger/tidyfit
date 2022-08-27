@@ -39,7 +39,6 @@
 #'
 #' @seealso \code{\link{.model.enet}}, \code{\link{.model.ridge}}, \code{\link{.model.adalasso}} and \code{\link{m}} methods
 #'
-#' @importFrom glmnet glmnet
 #' @importFrom dplyr mutate as_tibble select
 #' @importFrom tidyr gather
 #' @importFrom stats coef
@@ -180,7 +179,7 @@
     estimates <- estimates %>%
       dplyr::mutate(grid_id = grid_ids[.data$step]) %>%
       dplyr::select(-.data$step) %>%
-      dplyr::mutate(term = ifelse(term == "", "(Intercept)", .data$term))
+      dplyr::mutate(term = ifelse(.data$term == "", "(Intercept)", .data$term))
     if ("class" %in% colnames(estimates)) {
       class_vals <- unique(estimates$class)
       if (length(class_vals) == 2) {

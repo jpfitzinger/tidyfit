@@ -38,7 +38,6 @@
 #' @seealso \code{\link{m}} method
 #'
 #' @importFrom stats coef
-#' @importFrom mboost glmboost Gaussian Binomial
 #' @importFrom purrr map_dbl partial quietly
 #' @importFrom dplyr mutate left_join n
 #' @importFrom tidyr gather expand_grid
@@ -57,6 +56,7 @@
   if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
 
   f <- control$family
+  if (is.null(f)) f <- gaussian()
   if (f$family == "gaussian") {
     family <- mboost::Gaussian()
   } else if (f$family == "binomial") {

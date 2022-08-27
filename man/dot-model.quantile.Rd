@@ -29,10 +29,18 @@ Fits a linear quantile regression and returns the results as a tibble. The funct
 The function provides a wrapper for \code{quantreg::rq}. The argument \code{tau} is the chosen quantile (default \code{tau = 0.5}).
 }
 \examples{
-x <- matrix(rnorm(100 * 20), 100, 20)
-y <- rnorm(100)
-fit <- m("quantile", x, y, tau = c(0.1, 0.5, 0.9))
+# Load data
+data <- tidyfit::Factor_Industry_Returns
+
+# Stand-alone function
+fit <- m("quantile", Return ~ ., data, tau = 0.5)
 fit
+
+# Within 'regress' function
+fit <- regress(data, Return ~ .,
+               m("quantile", tau = c(0.1, 0.5, 0.9)),
+               .mask = c("Date", "Industry"))
+coef(fit)
 
 }
 \seealso{

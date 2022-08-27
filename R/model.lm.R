@@ -23,7 +23,7 @@
 #' data <- tidyfit::Factor_Industry_Returns
 #'
 #' # Stand-alone function
-#' fit <- m("lm", Return ~ ., data)
+#' fit <- m("lm", Return ~ `Mkt-RF` + HML + SMB, data)
 #' fit
 #'
 #' # Within 'regress' function
@@ -31,7 +31,7 @@
 #' coef(fit)
 #'
 #' # With robust standard errors
-#' fit <- m("lm", x, y, vcov. = "HAC")
+#' fit <- m("lm", Return ~ `Mkt-RF` + HML + SMB, data, vcov. = "HAC")
 #' fit
 #'
 #' @seealso \code{\link{.model.robust}}, \code{\link{.model.glm}} and \code{\link{m}} methods
@@ -40,8 +40,6 @@
 #' @importFrom dplyr tibble everything as_tibble
 #' @importFrom tidyr nest
 #' @importFrom purrr partial
-#' @importFrom lmtest coeftest
-#' @importFrom sandwich vcovBS vcovHAC vcovHC vcovOPG
 #' @importFrom methods formalArgs
 
 .model.lm <- function(

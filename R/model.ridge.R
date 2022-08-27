@@ -39,7 +39,6 @@
 #'
 #' @seealso \code{\link{.model.lasso}}, \code{\link{.model.adalasso}}, \code{\link{.model.enet}} and \code{\link{m}} methods
 #'
-#' @importFrom glmnet glmnet
 #' @importFrom dplyr mutate as_tibble select
 #' @importFrom tidyr gather
 #' @importFrom stats coef

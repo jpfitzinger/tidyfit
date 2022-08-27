@@ -37,7 +37,6 @@
 #'
 #' @seealso \code{\link{.model.plsr}} and \code{\link{m}} methods
 #'
-#' @importFrom pls pcr
 #' @importFrom stats coef sd
 #' @importFrom dplyr as_tibble mutate tibble bind_cols
 #' @importFrom methods formalArgs

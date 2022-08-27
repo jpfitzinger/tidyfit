@@ -29,10 +29,10 @@
 #'
 #' @seealso \code{\link{.model.glm}} and \code{\link{m}} methods
 #'
-#' @importFrom lme4 glmer ranef fixef
 #' @importFrom dplyr tibble bind_cols mutate all_of
 #' @importFrom tidyr expand_grid pivot_longer
-#' @importFrom purrr map_dfr
+#' @importFrom purrr map_dfr map2_dfr
+#' @importFrom rlang :=
 #' @importFrom methods formalArgs
 
 .model.glmm <- function(formula = NULL, data = NULL, control = NULL, ...) {
@@ -84,7 +84,7 @@
   if (.what == "estimates") {
     coefs <- stats::coef(object)
     estimates <- coefs %>%
-      map2_dfr(names(coefs), function(cf, nam) {
+      purrr::map2_dfr(names(coefs), function(cf, nam) {
         coefs_ <- cf %>%
           dplyr::as_tibble() %>%
           dplyr::mutate(!! nam := rownames(cf)) %>%

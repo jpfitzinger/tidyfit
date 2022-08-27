@@ -41,7 +41,6 @@
 #'
 #' @seealso \code{\link{.model.lasso}}, \code{\link{.model.enet}}, \code{\link{.model.ridge}} and \code{\link{m}} methods
 #'
-#' @importFrom glmnet glmnet
 #' @importFrom dplyr mutate as_tibble bind_cols select
 #' @importFrom tidyr gather
 #' @importFrom stats coef

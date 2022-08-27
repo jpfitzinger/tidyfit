@@ -35,7 +35,7 @@ An argument \code{vcov.} can be passed in control or to \code{...} in \code{\lin
 data <- tidyfit::Factor_Industry_Returns
 
 # Stand-alone function
-fit <- m("lm", Return ~ ., data)
+fit <- m("lm", Return ~ `Mkt-RF` + HML + SMB, data)
 fit
 
 # Within 'regress' function
@@ -43,7 +43,7 @@ fit <- regress(data, Return ~ ., m("lm"), .mask = c("Date", "Industry"))
 coef(fit)
 
 # With robust standard errors
-fit <- m("lm", x, y, vcov. = "HAC")
+fit <- m("lm", Return ~ `Mkt-RF` + HML + SMB, data, vcov. = "HAC")
 fit
 
 }

@@ -40,7 +40,6 @@
 #'
 #' @seealso \code{\link{.model.lasso}}, \code{\link{.model.adalasso}}, \code{\link{.model.ridge}} and \code{\link{m}} methods
 #'
-#' @importFrom glmnet glmnet
 #' @importFrom dplyr mutate as_tibble
 #' @importFrom tidyr gather
 #' @importFrom purrr map_dfc map_dfr map

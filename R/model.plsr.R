@@ -37,7 +37,6 @@
 #'
 #' @seealso \code{\link{.model.pcr}} and \code{\link{m}} methods
 #'
-#' @importFrom pls plsr
 #' @importFrom stats coef sd
 #' @importFrom dplyr as_tibble mutate tibble bind_cols
 #' @importFrom rlang .data
