@@ -68,7 +68,7 @@ coef.tidyfit.models <- function(
       stop("only use '.add_bootstrap_interval = TRUE' if '.cv = \"bootstraps\"'")
     intervals <- out %>%
       dplyr::group_by(.data$grid_id, .add = TRUE) %>%
-      dplyr::summarise(interval = .make_rsample_bootstraps(.)) %>%
+      dplyr::do(interval = .make_rsample_bootstraps(.)) %>%
       tidyr::unnest(.data$interval)
     out <- out %>%
       dplyr::select(-.data$estimate, -.data$slice_id) %>%

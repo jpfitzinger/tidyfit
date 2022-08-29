@@ -19,9 +19,8 @@
   intervals <- rsample::int_pctl(df_boot, .data$result, alpha = alpha)
   intervals <- intervals %>%
     dplyr::rename(estimate = .data$.estimate) %>%
-    dplyr::select(.data$term, .data$estimate, .data$.upper, .data$.lower) %>%
-    tidyr::nest(interval = dplyr::everything())
+    dplyr::select(.data$term, .data$estimate, .data$.upper, .data$.lower)
 
-  return(intervals$interval)
+  return(intervals)
 
 }

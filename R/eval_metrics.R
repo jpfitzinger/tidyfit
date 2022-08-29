@@ -24,11 +24,11 @@
         dplyr::mutate(row_n = dplyr::row_number()) %>%
         tidyr::spread(.data$class, .data$prediction) %>%
         yardstick::mn_log_loss(truth = .data$truth, any_of(level_names), case_weights = .data$weights) %>%
-        dplyr::mutate(metric = -.data$.estimate)
+        dplyr::mutate(metric = .data$.estimate)
     } else {
       metrics <- pred %>%
         yardstick::mn_log_loss(.data$truth, .data$prediction, case_weights = .data$weights) %>%
-        dplyr::mutate(metric = -.data$.estimate)
+        dplyr::mutate(metric = .data$.estimate)
     }
   }
 
