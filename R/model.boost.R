@@ -42,6 +42,7 @@
 #' @importFrom dplyr mutate left_join n
 #' @importFrom tidyr gather expand_grid
 #' @importFrom methods formalArgs
+#' @importFrom utils object.size
 
 .model.boost <- function(
     formula = NULL,
@@ -99,6 +100,7 @@
 
   out <- tibble(
     estimator = "mboost::glmboost",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )

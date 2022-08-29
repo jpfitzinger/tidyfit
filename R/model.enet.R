@@ -45,6 +45,7 @@
 #' @importFrom purrr map_dfc map_dfr map
 #' @importFrom stats coef
 #' @importFrom rlang .data
+#' @importFrom utils object.size
 #' @importFrom methods formalArgs
 
 .model.enet <- function(formula = NULL,
@@ -102,6 +103,7 @@
 
   out <- tibble(
     estimator = "glmnet::glmnet",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )

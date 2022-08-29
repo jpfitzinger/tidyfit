@@ -46,6 +46,7 @@
 #' @importFrom stats coef
 #' @importFrom rlang .data
 #' @importFrom methods formalArgs
+#' @importFrom utils object.size
 
 .model.adalasso <- function(
     formula = NULL,
@@ -117,6 +118,7 @@
 
   out <- tibble(
     estimator = "glmnet::glmnet",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )

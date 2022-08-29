@@ -41,6 +41,7 @@
 #' @importFrom dplyr as_tibble mutate tibble bind_cols
 #' @importFrom rlang .data
 #' @importFrom methods formalArgs
+#' @importFrom utils object.size
 
 
 .model.plsr <- function(
@@ -53,6 +54,9 @@
   if ("weights" %in% names(control)) {
     warning("pcr cannot handle weights, weights are ignored")
   }
+  control$model <- FALSE
+  control$x <- FALSE
+  control$y <- FALSE
   control <- control[names(control) %in% methods::formalArgs(pls::mvr)]
 
   mf <- stats::model.frame(formula, data)
@@ -76,6 +80,7 @@
 
   out <- tibble(
     estimator = "pls::plsr",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )

@@ -33,9 +33,13 @@
 #' @importFrom stats glm coef
 #' @importFrom dplyr tibble bind_cols
 #' @importFrom methods formalArgs
+#' @importFrom utils object.size
 
 .model.glm <- function(formula = NULL, data = NULL, control = NULL, ...) {
 
+  control$x <- FALSE
+  control$y <- FALSE
+  control$model <- FALSE
   control <- control[names(control) %in% methods::formalArgs(stats::glm)]
 
   m <- do.call(stats::glm, append(list(formula = formula, data = data), control))
@@ -52,6 +56,7 @@
 
   out <- tibble(
     estimator = "stats::glm",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )

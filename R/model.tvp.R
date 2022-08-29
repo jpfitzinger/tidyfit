@@ -39,6 +39,7 @@
 #' @importFrom purrr partial
 #' @importFrom stats quantile
 #' @importFrom methods formalArgs
+#' @importFrom utils object.size
 
 .model.tvp <- function(
     formula = NULL,
@@ -71,6 +72,7 @@
 
   out <- tibble(
     estimator = "shrinkTVP::shrinkTVP",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )

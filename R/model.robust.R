@@ -40,6 +40,7 @@
 #' @importFrom dplyr tibble bind_cols
 #' @importFrom purrr partial
 #' @importFrom MASS rlm
+#' @importFrom utils size
 
 .model.robust <- function(
     formula = NULL,
@@ -62,19 +63,7 @@
 
   m <- do.call(MASS::rlm, append(list(x = x, y = y), control))
 
-  if (is.null(vcov.)) {
-    adj_m <- m
-  } else if (vcov. == "BS") {
-    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovBS(m))
-  } else if (vcov. == "HAC") {
-    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovHAC(m))
-  } else if (vcov. == "HC") {
-    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovHC(m))
-  } else if (vcov. == "OPG") {
-    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovOPG(m))
-  }
-
-  model_handler <- purrr::partial(.handler.MASS, object = m, formula = formula)
+  model_handler <- purrr::partial(.handler.MASS, object = m, formula = formula, vcov. = vcov.)
 
   control <- control[!names(control) %in% c("weights")]
   control$vcov. <- vcov.
@@ -87,6 +76,7 @@
 
   out <- tibble(
     estimator = "MASS::rlm",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )
@@ -95,7 +85,7 @@
 
 }
 
-.handler.MASS <- function(object, data, formula = NULL, names_map = NULL, ..., .what = "model") {
+.handler.MASS <- function(object, data, formula = NULL, names_map = NULL, vcov. = NULL, ..., .what = "model") {
 
   if (.what == "model") {
     return(object)
@@ -120,7 +110,18 @@
   }
 
   if (.what == "estimates") {
-    estimates <- broom::tidy(object)
+    if (is.null(vcov.)) {
+      adj_obj <- object
+    } else if (vcov. == "BS") {
+      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovBS(object))
+    } else if (vcov. == "HAC") {
+      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovHAC(object))
+    } else if (vcov. == "HC") {
+      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovHC(object))
+    } else if (vcov. == "OPG") {
+      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovOPG(object))
+    }
+    estimates <- broom::tidy(adj_obj)
     if (!is.null(names_map)) estimates$term <- names_map[estimates$term]
     return(estimates)
   }

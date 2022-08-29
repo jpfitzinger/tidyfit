@@ -61,7 +61,7 @@
     }
     model_frame <- model_frame %>%
       dplyr::relocate(.data$grid_id) %>%
-      tidyr::nest(settings = -any_of(c("grid_id", "estimator", "handler", "warnings", "messages"))) %>%
+      tidyr::nest(settings = -any_of(c("grid_id", "estimator", "size", "handler", "warnings", "messages"))) %>%
       dplyr::relocate(any_of(c("warnings", "messages")), .after = .data$settings)
   }
 

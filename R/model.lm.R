@@ -41,6 +41,7 @@
 #' @importFrom tidyr nest
 #' @importFrom purrr partial
 #' @importFrom methods formalArgs
+#' @importFrom utils object.size
 
 .model.lm <- function(
     formula = NULL,
@@ -50,22 +51,14 @@
     ) {
 
   vcov. <- control$vcov.
+  control$model <- FALSE
+  control$x <- FALSE
+  control$y <- FALSE
   control <- control[names(control) %in% methods::formalArgs(stats::lm)]
 
   m <- do.call(stats::lm, append(list(formula = formula, data = data), control))
-  if (is.null(vcov.)) {
-    adj_m <- m
-  } else if (vcov. == "BS") {
-    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovBS(m))
-  } else if (vcov. == "HAC") {
-    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovHAC(m))
-  } else if (vcov. == "HC") {
-    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovHC(m))
-  } else if (vcov. == "OPG") {
-    adj_m <- lmtest::coeftest(m, vcov. = sandwich::vcovOPG(m))
-  }
 
-  model_handler <- purrr::partial(.handler.stats, object = m, formula = formula)
+  model_handler <- purrr::partial(.handler.stats, object = m, formula = formula, vcov. = vcov.)
 
   control <- control[!names(control) %in% c("weights")]
   control$vcov. <- vcov.
@@ -78,6 +71,7 @@
 
   out <- tibble(
     estimator = "stats::lm",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )
@@ -86,7 +80,7 @@
 
 }
 
-.handler.stats <- function(object, data, formula = NULL, names_map = NULL, ..., .what = "model") {
+.handler.stats <- function(object, data, formula = NULL, names_map = NULL, vcov. = NULL, ..., .what = "model") {
 
   if (.what == "model") {
     return(object)
@@ -108,7 +102,18 @@
   }
 
   if (.what == "estimates") {
-    estimates <- broom::tidy(object)
+    if (is.null(vcov.)) {
+      adj_obj <- object
+    } else if (vcov. == "BS") {
+      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovBS(object))
+    } else if (vcov. == "HAC") {
+      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovHAC(object))
+    } else if (vcov. == "HC") {
+      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovHC(object))
+    } else if (vcov. == "OPG") {
+      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovOPG(object))
+    }
+    estimates <- broom::tidy(adj_obj)
     if (!is.null(names_map)) estimates$term <- names_map[estimates$term]
     return(estimates)
   }

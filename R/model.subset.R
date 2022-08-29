@@ -39,6 +39,7 @@
 #'
 #' @importFrom purrr quietly partial
 #' @importFrom methods formalArgs
+#' @importFrom utils object.size
 
 .model.subset <- function(
     formula = NULL,
@@ -89,6 +90,7 @@
 
   out <- tibble(
     estimator = "bestglm::bestglm",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )

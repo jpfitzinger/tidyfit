@@ -35,6 +35,7 @@
 #' @importFrom stats coef
 #' @importFrom dplyr tibble bind_cols
 #' @importFrom methods formalArgs
+#' @importFrom utils object.size
 
 .model.quantile <- function(
     formula = NULL,
@@ -59,6 +60,7 @@
 
   out <- tibble(
     estimator = "quantreg::rq",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )

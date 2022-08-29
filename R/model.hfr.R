@@ -40,6 +40,7 @@
 #' @importFrom stats coef
 #' @importFrom rlang .data
 #' @importFrom methods formalArgs
+#' @importFrom utils object.size
 
 .model.hfr <- function(
     formula = NULL,
@@ -77,6 +78,7 @@
 
   out <- tibble(
     estimator = "hfr::hfr",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )

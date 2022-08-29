@@ -34,10 +34,14 @@
 #' @importFrom tidyr nest
 #' @importFrom methods formalArgs
 #' @importFrom purrr partial
+#' @importFrom utils object.size
 
 .model.bayes <- function(formula = NULL, data = NULL, control = NULL, ...) {
 
   f <- control$family
+  control$x <- FALSE
+  control$y <- FALSE
+  control$model <- FALSE
   control <- control[names(control) %in% methods::formalArgs(arm::bayesglm)]
 
   m <- do.call(arm::bayesglm, append(list(formula = formula, data = data), control))
@@ -54,6 +58,7 @@
 
   out <- dplyr::tibble(
     estimator = "arm::bayesglm",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )

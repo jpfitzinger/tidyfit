@@ -81,8 +81,8 @@
       if (.cv != "none" & do_cv) {
 
         result <- cv %>%
-          #furrr::future_pmap_dfr(function(splits, id) {
-          purrr::pmap_dfr(function(splits, id) {
+          furrr::future_pmap_dfr(function(splits, id) {
+          #purrr::pmap_dfr(function(splits, id) {
 
             df_train <- rsample::training(splits)
             df_test <- rsample::testing(splits)
@@ -110,8 +110,8 @@
 
             return(result)
 
-          })#,
-          #.options = furrr::furrr_options(seed = TRUE))
+          },
+          .options = furrr::furrr_options(seed = TRUE))
 
       } else {
         result <- NULL

@@ -34,6 +34,7 @@
 #' @importFrom purrr map_dfr map2_dfr
 #' @importFrom rlang :=
 #' @importFrom methods formalArgs
+#' @importFrom utils object.size
 
 .model.glmm <- function(formula = NULL, data = NULL, control = NULL, ...) {
 
@@ -53,6 +54,7 @@
 
   out <- tibble(
     estimator = "lme4::glmm",
+    size = utils::object.size(m),
     handler = list(model_handler),
     settings
   )
