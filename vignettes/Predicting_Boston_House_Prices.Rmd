@@ -45,19 +45,19 @@ The aim is to predict the median value of owner-occupied homes (`'medv'` in the 
 
 ## A simple regression
 
-To establish a baseline, we fit an OLS regression model and examine the test and training set R-squared. The `tidyfit::cross_prod` function can be used to obtain predictions, and `yardstick` is used to obtain performance metrics. The regression is estimated using `tidyfit::regress`. `tidyfit::m` is a generic model wrapper that is capable of fitting a large number of different algorithms:
+To establish a baseline, we fit an OLS regression model and examine the test and training set R-squared. The `predict` function can be used to obtain predictions, and `yardstick` is used to assess performance. The regression is estimated using `tidyfit::regress`. `tidyfit::m` is a generic model wrapper that is capable of fitting a large number of different algorithms:
 
 ```{r}
-fit <- data_trn %>% 
+model_frame <- data_trn %>% 
   regress(medv ~ ., OLS = m("lm"))
 ```
 
-Let's create a helper function to assess performance. The helper function wraps `tidyfit::cross_prod` and prepares in and out-of-sample performance stats:
+Let's create a helper function to assess performance. The helper function wraps `predict` and prepares in and out-of-sample performance stats:
 
 ```{r}
-assess <- function(fit, data_trn, data_tst) {
+assess <- function(model_frame, data_trn, data_tst) {
   
-  oos <- fit %>% 
+  oos <- model_frame %>% 
     predict(data_tst) %>% 
     group_by(model, .add = TRUE) %>% 
     yardstick::rsq_trad(truth, prediction) %>% 
@@ -65,7 +65,7 @@ assess <- function(fit, data_trn, data_tst) {
     arrange(desc(.estimate)) %>% 
     mutate(model = factor(model, levels = unique(.$model)))
   
-  is <- fit %>% 
+  is <- model_frame %>% 
     predict(data_trn) %>% 
     group_by(model, .add = TRUE) %>% 
     yardstick::rsq_trad(truth, prediction) %>% 
@@ -90,7 +90,7 @@ plotter <- function(df) {
 Now we plot the resulting metrics:
 
 ```{r, fig.width=3, fig.height=3, fig.align="center"}
-fit %>% 
+model_frame %>% 
   assess(data_trn, data_tst) %>% 
   plotter %>% 
   ggpar(legend = "right")
@@ -99,10 +99,10 @@ fit %>%
 The in-sample fit of the regression is naturally better than out-of-sample, but the difference is not large. The results can be improved substantially by adding interaction terms between features. This leads to a vast improvement in in-sample fit (again, this is a logical consequence of including a large number of regressors), but leads to no improvement in out-of-sample fit, suggesting substantial overfit:
 
 ```{r, fig.width=3, fig.height=3, fig.align="center"}
-fit <- data_trn %>% 
+model_frame <- data_trn %>% 
   regress(medv ~ .*., OLS = m("lm"))
 
-fit %>% 
+model_frame %>% 
   assess(data_trn, data_tst) %>% 
   plotter %>% 
   ggpar(legend = "right")
@@ -135,11 +135,11 @@ kbl(tbl, align = "ccccc") %>%
 
 ```
 
-In the next code chunk, most of the available regression techniques are fitted to the data set. Hyperparameters are optimized using a 10-fold cross validation powered by `rsample` and `furrr` in the background. Using `furrr` ensures that a `future` plan can be set to perform hyperparameter tuning on a parallelized backend:
+In the next code chunk, most of the available regression techniques are fitted to the data set. Hyperparameters are optimized using a 10-fold cross validation powered by `rsample` and `furrr` in the background. Using `furrr` ensures that a `future` plan can be set to perform hyperparameter tuning on a parallelized backend:^[Parallelizing happens at the level of cross validation slices, so always consider if the overhead of parallel computation is worth it. For instance, parallelizing will likely be very useful with `.cv = "loo"` but can be less useful with `.cv = "vfold"`.]
 
 ```{r, eval=F}
 plan(multisession(workers = 12))
-fit <- data_trn %>% 
+model_frame <- data_trn %>% 
   regress(medv ~ .*., 
           OLS = m("lm"),
           BAYES = m("bayes"),
@@ -157,17 +157,17 @@ fit <- data_trn %>%
 ```
 
 ```{r, eval=F, include=F}
-saveRDS(fit, "Boston_Horserace_results.rds")
+saveRDS(model_frame, "vignettes/Boston_Horserace_results.rds")
 ```
 
 ```{r, include=F}
-fit <- readRDS("Boston_Horserace_results.rds")
+model_frame <- readRDS("Boston_Horserace_results.rds")
 ```
 
 Let's use `yardstick` again to calculate in-sample and out-of-sample performance statistics. The models are arranged descending order of test set performance:
 
 ```{r, fig.width=7.25, fig.height=4.25, fig.align="center"}
-fit %>% 
+model_frame %>% 
   assess(data_trn, data_tst) %>% 
   plotter +
   rotate_x_text(90)
@@ -179,7 +179,7 @@ The adaptive Lasso regression achieves the highest out-of-sample performance, ro
 
 `tidyfit` makes it exceedingly simple to fit different regularized linear regressions. The package ensures that the input and output of the modeling engine, `tidyfit::m` are standardized and model results are comparable. For instance, whenever necessary, features are standardized with the coefficients transformed back to the original scale. Hyperparameter grids are set to reasonable starting values and can be passed manually to `tidyfit::m`.
 
-The package further includes a `tidyfit::classify` method that assumes a binomial response. Most of the methods implemented can handle Gaussian and binomial responses. Furthermore, the `tidyfit::regress` and `tidyfit::classify` methods seamlessly integrate with grouped tibbles, making it extremely powerful to estimate a large number of regressions for different data groupings. Groups as well as response distributions are automatically respected by the `tidyfit::cross_prod` prediction method.
+The package further includes a `tidyfit::classify` method that assumes a binomial or multinomial response. Most of the methods implemented can handle Gaussian and binomial responses. Furthermore, the `tidyfit::regress` and `tidyfit::classify` methods seamlessly integrate with grouped tibbles, making it extremely powerful to estimate a large number of regressions for different data groupings. Groups as well as response distributions are automatically respected by the `predict` method.
 
 ## What's the difference to `caret` or `parsnip`
 

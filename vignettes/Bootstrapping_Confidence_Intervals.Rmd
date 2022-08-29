@@ -22,7 +22,7 @@ library(tidyverse)   # Data wrangling
 library(tidyfit)     # Model fitting
 ```
 
-The combination of `.cv = "bootstraps"` and `.return_slices = TRUE` in `tidyfit::regress` or `tidyfit::classify` makes it very easy to calculate bootstrap confidence intervals for estimated coefficients. As an additional convenience function, `coef.tidyfit.models` includes the option of adding percentile bootstrap intervals directly. In this short example, I will calculate bootstrap confidence bands for a partial least squares regression using Boston house price data:
+The combination of `.cv = "bootstraps"` and `.return_slices = TRUE` in `tidyfit::regress` or `tidyfit::classify` makes it very easy to calculate bootstrap confidence intervals for estimated coefficients. As an additional convenience function, `coef.tidyfit.models` includes the option of adding percentile bootstrap intervals directly. In this short example, I will calculate and compare bootstrap confidence bands for a partial least squares regression and a principal components regression using Boston house price data:
 
 ```{r}
 data <- MASS::Boston %>% 
@@ -30,15 +30,15 @@ data <- MASS::Boston %>%
   as_tibble
 ```
 
-`tidyfit` handles data scaling internally (i.e. PLSR is always fitted on scaled data), however, scaling the data manually here will give us standardized coefficients, which are easier to visualize and compare.
+`tidyfit` handles data scaling internally (i.e. PLSR and PCR are always fitted on scaled data), however, scaling the data manually here will give us standardized coefficients, which are easier to visualize and compare.
 
 ## Fit the model
 
-Instead of selecting an optimal number of latent components, I define a preset. This keeps things a little simpler. Note that dropping the `ncomp = 5` argument results the optimal number of components being selected using boostrap resampling.
+Instead of selecting an optimal number of latent components, I define a preset. This keeps things a little simpler. Note that dropping the `ncomp = 5` argument results the optimal number of components being selected using bootstrap resampling.
 
 ```{r}
 model_frame <- data %>% 
-  regress(medv ~ ., m("plsr", ncomp = 5), 
+  regress(medv ~ ., m("plsr", ncomp = 5), m("pcr", ncomp = 5),
           .cv = "bootstraps", .cv_args = list(times = 100), 
           .return_slices = TRUE)
 ```
@@ -52,7 +52,9 @@ coef(model_frame)
 Now I calculate bootstrap intervals:
 
 ```{r}
-estimates <- coef(model_frame, .add_bootstrap_interval = TRUE, .bootstrap_alpha = 0.05)
+estimates <- coef(model_frame, 
+                  .add_bootstrap_interval = TRUE, 
+                  .bootstrap_alpha = 0.05)
 estimates
 ```
 
@@ -66,14 +68,13 @@ estimates
 
 ## Plot the results
 
-And thus, in a concise workflow, we have 95% bootstrap confidence intervals for the coefficients of a PLS regression:
+And thus, in a concise workflow, we have 95% bootstrap confidence intervals for the coefficients of a PCR and PLS regression:
 
 ```{r, fig.width=7, fig.height=3.5, fig.align="center"}
 estimates %>% 
-  ggplot(aes(term, estimate)) +
+  ggplot(aes(term, estimate, color = model)) +
   geom_hline(yintercept = 0) +
-  geom_errorbar(aes(ymin = .lower, ymax = .upper), color = "darkblue") +
-  geom_point(color = "darkblue") +
+  geom_errorbar(aes(ymin = .lower, ymax = .upper), position = position_dodge()) +
   theme_bw(8)
 ```
 

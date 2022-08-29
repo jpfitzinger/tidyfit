@@ -44,7 +44,7 @@ library(tidyfit)
  - `classify()`
  - `m()`
 
-All 3 of these functions return a `tidyfit.models` frame, which is a tibble containing information about the fitted models. `regress` and `classify` perform regression and classification on tidy data. The functions ingest a tibble, prepare input data for the models by splitting groups, partitioning cross validation slices and handling any necessary adjustments and transformations. The data is ultimately passed to the model wrapper `m()` which fits the models. The basic usage is as follows:
+All 3 of these functions return a `tidyfit.models` frame, which is a tibble containing information about fitted regression and classification models. `regress` and `classify` perform regression and classification on tidy data. The functions ingest a tibble, prepare input data for the models by splitting groups, partitioning cross validation slices and handling any necessary adjustments and transformations. The data is ultimately passed to the model wrapper `m()` which fits the models. The basic usage is as follows:
 
 ```{r, eval=F}
 regress(
@@ -58,7 +58,7 @@ regress(
 
 The syntax is identical for `classify`.
 
-`m` is a powerful wrapper for many different regression and classification techniques that can be used with `regress` and `classify`, or stand-alone:
+`m` is a powerful wrapper for many different regression and classification techniques that can be used with `regress` and `classify`, or as a stand-alone function:
 
 ```{r, eval=F}
 m(
@@ -74,8 +74,12 @@ An important feature of `m()` is that all arguments can be passed as vectors, al
  - Different algorithms for robust regression: `m("robust", method = c("M", "MM"))`
  - Forward vs. backward selection: `m("subset", method = c("forward", "backward"))`
  - Logit and Probit models: `m("glm", family = list(binomial(link="logit"), binomial(link="probit")))`
+ 
+Arguments that are meant to be vectors (e.g. weights) are recognized by the function and not interpreted as grids.
 
 ## Methods implemented in `tidyfit`
+
+`tidyfit` currently implements the following methods:
 
 ```{r, echo = F}
 library(kableExtra)
@@ -113,11 +117,11 @@ In this section, a minimal workflow is used to demonstrate how the package works
   - [Rolling window regression for time series](https://tidyfit.unchartedml.com/articles/Rolling_Window_Time_Series_Regression.html) (factor data)
   - [Time-varying parameters](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html) (factor data)
   - [Bootstrap confidence intervals](https://tidyfit.unchartedml.com/articles/Bootstrapping_Confidence_Intervals.html)
-  - [coming soon] Fixed and Random effects (factor data)
-  - [coming soon] Quantile regression (Boston house price data)
+  - [coming soon] Fixed and Random effects
+  - [coming soon] Quantile regression
   - [coming soon] Custom models
 
-`tidyfit` includes a data set of financial factor returns freely available [here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html). The data set includes monthly industry returns for 10 industries, as well as monthly factor returns for 5 factors:
+`tidyfit` includes a data set of financial Fama-French factor returns freely available [here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html). The data set includes monthly industry returns for 10 industries, as well as monthly factor returns for 5 factors:
 
 ```{r example}
 data <- tidyfit::Factor_Industry_Returns
@@ -133,12 +137,14 @@ df_test <- data %>%
   filter(Date >= 202000)
 ```
 
-For purposes of this demonstration, the objective will be to fit an ElasticNet regression for each industry group, and compare results to a robust least squares regression. This can be done with `regress`:
+For purposes of this demonstration, the objective will be to fit an ElasticNet regression for each industry group, and compare results to a robust least squares regression. This can be done with `regress` after grouping the data. For grouped data, the functions `regress` and `classify` estimate models for each group independently:
 
 ```{r}
 model_frame <- df_train %>% 
   group_by(Industry) %>% 
-  regress(Return ~ ., m("enet"), m("robust", method = "MM", psi = MASS::psi.huber), 
+  regress(Return ~ ., 
+          m("enet"), 
+          m("robust", method = "MM", psi = MASS::psi.huber), 
           .cv = "initial_time_split", .mask = "Date")
 ```
 
@@ -151,7 +157,8 @@ The resulting `tidyfit.models` frame consists of 3 components:
   3. `settings`, as well as (if applicable) `messages` and `warnings`.
 
 ```{r}
-subset_mod_frame <- filter(model_frame, Industry %in% unique(Industry)[1:2])
+subset_mod_frame <- model_frame %>% 
+  filter(Industry %in% unique(Industry)[1:2])
 subset_mod_frame
 ```
 
@@ -162,13 +169,26 @@ subset_mod_frame %>%
   tidyr::unnest(settings, keep_empty = TRUE)
 ```
 
-The `model_frame` can be used to access additional information. We can predict:
+The `tidyfit.models` frame can be used to access additional information. Specifically, we can do 3 things:
+
+  1. Access the fitted model
+  2. Predict
+  3. Access a tibble of estimated parameters
+
+To **access the fitted models**, we need to call the handler function without any arguments (see [here](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html) for another example):
+
+```{r}
+subset_mod_frame %>% 
+  mutate(fitted_model = map(handler, ~.()))
+```
+
+To **predict**, we need data with the same columns as the input data and simply use the generic `predict` function. Groups are respected and if the response variable is in the data, it is included as a `truth` column in the resulting object:
 
 ```{r}
 predict(subset_mod_frame, data)
 ```
 
-Or we can look at the actual fitted parameters:
+Finally, we can obtain a **tidy frame of the coefficients** using the generic `coef` function:
 
 ```{r}
 estimates <- coef(subset_mod_frame)
@@ -197,4 +217,4 @@ model_frame %>%
 
 The ElasticNet performs a little better (unsurprising really, given the small data set).
 
-A **more detailed analysis of Boston house price data** using a fleet of regularized regression estimators can be found [here](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html).
+A **more detailed regression analysis of Boston house price data** using a panel of regularized regression estimators can be found [here](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html).

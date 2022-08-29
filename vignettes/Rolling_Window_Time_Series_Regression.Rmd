@@ -142,3 +142,5 @@ df_beta %>%
 ```
 
 While there are certainly very interesting insights to be had here, the aim of this walkthrough is not to interpret these results, but rather to demonstrate how a complex piece of analysis can be done very efficiently using the `tidyfit` package.
+
+In a follow-up article found [here](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html), I compare the results in the plot above to a time-varying parameter regression to show how more robust methods can be used to avoid window effects in the rolling sample and to shrink some coefficients to constant values.
