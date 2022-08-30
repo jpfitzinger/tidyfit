@@ -40,7 +40,7 @@
 #' @importFrom dplyr tibble bind_cols
 #' @importFrom purrr partial
 #' @importFrom MASS rlm
-#' @importFrom utils size
+#' @importFrom utils object.size
 
 .model.robust <- function(
     formula = NULL,
