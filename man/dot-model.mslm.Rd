@@ -37,12 +37,12 @@ data <- dplyr::filter(data, Industry == "HiTec")
 data <- dplyr::select(data, -Industry)
 
 # Stand-alone function
-fit <- m("mslm", Return ~ ., data, index_col = "Date", k = 2, sw = rep(TRUE, 8))
+fit <- m("mslm", Return ~ ., data, index_col = "Date", k = 2)
 fit
 
 # Within 'regress' function
 fit <- regress(data, Return ~ .,
-               m("mslm", niter = 100, index_col = "Date", k = 2, sw = rep(TRUE, 8)))
+               m("mslm", index_col = "Date", k = 2))
 tidyr::unnest(coef(fit), model_info)
 
 }

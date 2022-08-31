@@ -25,12 +25,12 @@
 #' data <- dplyr::select(data, -Industry)
 #'
 #' # Stand-alone function
-#' fit <- m("mslm", Return ~ ., data, index_col = "Date", k = 2, sw = rep(TRUE, 8))
+#' fit <- m("mslm", Return ~ ., data, index_col = "Date", k = 2)
 #' fit
 #'
 #' # Within 'regress' function
 #' fit <- regress(data, Return ~ .,
-#'                m("mslm", niter = 100, index_col = "Date", k = 2, sw = rep(TRUE, 8)))
+#'                m("mslm", index_col = "Date", k = 2))
 #' tidyr::unnest(coef(fit), model_info)
 #'
 #' @seealso \code{\link{.model.tvp}} and \code{\link{m}} methods
@@ -65,6 +65,10 @@
     m_raw <- stats::lm(formula, data)
   } else {
     m_raw <- stats::lm(formula, data, weights = wts)
+  }
+
+  if (is.null(control$sw)) {
+    control$sw <- rep(TRUE, length(m_raw$coefficients) + 1)
   }
 
   m <- do.call(MSwM::msmFit, append(list(object = m_raw), control))
@@ -113,12 +117,20 @@
 
   if (.what == "estimates") {
     beta <- data.matrix(object@Coef)
+    beta_var <- data.matrix(object@seCoef^2)
     probs <- data.matrix(object@Fit@smoProb[-1,])
     beta_probs <- probs %*% beta
+    beta_se_probs <- sqrt(probs %*% beta_var)
     estimates <- beta_probs %>%
       dplyr::as_tibble() %>%
       dplyr::mutate(index = index_var) %>%
       tidyr::gather("term", "estimate", -.data$index)
+    estimates_se <- beta_se_probs %>%
+      dplyr::as_tibble() %>%
+      dplyr::mutate(index = index_var) %>%
+      tidyr::gather("term", "std.error", -.data$index)
+    estimates <- estimates %>%
+      dplyr::left_join(estimates_se, by = c("term", "index"))
     colnames(probs) <- paste("Regime", 1:object@k, "Prob")
     probs_df <- dplyr::as_tibble(probs) %>%
       dplyr::mutate(index = index_var)

@@ -44,9 +44,15 @@
 #'
 #' \code{"bayes"} performs a Bayesian generalized regression or classification using \code{arm::bayesglm}. See \code{\link{.model.bayes}} for details.
 #'
+#' \code{"tvp"} performs a Bayesian time-varying parameter regression using \code{shrinkTVP::shrinkTVP}. See \code{\link{.model.tvp}} for details.
+#'
 #' ### Mixed-effects modeling
 #'
 #' \code{"glmm"} performs a mixed-effects GLM using \code{lme4::glmer}. See \code{\link{.model.glmm}} for details.
+#'
+#' ### Specialized time series methods
+#'
+#' \code{"mslm"} performs a Markov-switching regression using \code{MSwM::msmFit}. See \code{\link{.model.mslm}} for details.
 #'
 #' When called without \code{formula} and \code{data} arguments, the function returns a partialised version of itself that can be called with data to fit a model.
 #'

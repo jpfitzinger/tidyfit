@@ -87,14 +87,14 @@ tbl <- data.frame(
   Method = c("OLS", "Generalized least squares", "Robust regression (e.g. Huber loss)", 
              "Quantile regression", "LASSO", "Ridge", "Adaptive LASSO", "ElasticNet",
              "Gradient boosting regression", "Principal components regression", "Partial least squares",
-             "Hierarchical feature regression", "Best subset selection", "Bayesian regression", "Bayesian time-varying parameters regression", "Generalized mixed-effects regression"),
+             "Hierarchical feature regression", "Best subset selection", "Bayesian regression", "Bayesian time-varying parameters regression", "Generalized mixed-effects regression", "Markov-switching regression"),
   Name = c("lm", "glm", "robust", "quantile", "lasso", "ridge", "adalasso", "enet", "boost", "pcr", "plsr", 
-           "hfr", "subset", "bayes", "tvp", "glmm"),
+           "hfr", "subset", "bayes", "tvp", "glmm", "mslm"),
   Package = c("`stats::lm`", "`stats::glm`", "`MASS::rlm`", "`quantreg`", "`glmnet`", "`glmnet`", "`glmnet`", "`glmnet`",
-              "`mboost`", "`pls`", "`pls`", "`hfr`", "`bestglm`", "`arm`", "`shrinkTVP`", "`lme4::glmer`"),
-  Regression = c("yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes"),
-  Classification = c("no", "yes", "no", "no", "yes", "yes", "yes", "yes", "yes", "no", "no", "no", "yes", "yes", "no", "yes"),
-  group = c("Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Gradient boosting", "Factor regressions", "Factor regressions", "Factor regressions", "Best subset selection", "Bayesian regression", "Bayesian regression", "Mixed-effects modeling")
+              "`mboost`", "`pls`", "`pls`", "`hfr`", "`bestglm`", "`arm`", "`shrinkTVP`", "`lme4::glmer`", "`MSwM::msmFit`"),
+  Regression = c("yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes"),
+  Classification = c("no", "yes", "no", "no", "yes", "yes", "yes", "yes", "yes", "no", "no", "no", "yes", "yes", "no", "yes", "no"),
+  group = c("Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Gradient boosting", "Factor regressions", "Factor regressions", "Factor regressions", "Best subset selection", "Bayesian regression", "Bayesian regression", "Mixed-effects modeling", "Specialized time series methods")
 )
 
 kbl(tbl[,1:5], align = "lcccc") %>% 

@@ -416,6 +416,28 @@ yes
 yes
 </td>
 </tr>
+<tr grouplength="1">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>Specialized time series methods</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Markov-switching regression
+</td>
+<td style="text-align:center;">
+mslm
+</td>
+<td style="text-align:center;">
+`MSwM::msmFit`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -579,20 +601,20 @@ in the resulting object:
 
 ``` r
 predict(subset_mod_frame, data)
-#> # A tibble: 2,832 × 5
+#> # A tibble: 2,832 × 4
 #> # Groups:   Industry, model [4]
-#>    Industry model prediction truth size         
-#>    <chr>    <chr>      <dbl> <dbl> <objct_sz>   
-#>  1 Durbl    enet      -0.897 -0.22 1208536 bytes
-#>  2 Durbl    enet       5.11   6.55 1208536 bytes
-#>  3 Durbl    enet      -1.85  -0.24 1208536 bytes
-#>  4 Durbl    enet       2.16   9.72 1208536 bytes
-#>  5 Durbl    enet      -0.739 -4.84 1208536 bytes
-#>  6 Durbl    enet       1.48   0.27 1208536 bytes
-#>  7 Durbl    enet       2.26   1.19 1208536 bytes
-#>  8 Durbl    enet       1.86   2.14 1208536 bytes
-#>  9 Durbl    enet       1.88   0.93 1208536 bytes
-#> 10 Durbl    enet      -0.351  1.93 1208536 bytes
+#>    Industry model prediction truth
+#>    <chr>    <chr>      <dbl> <dbl>
+#>  1 Durbl    enet      -0.897 -0.22
+#>  2 Durbl    enet       5.11   6.55
+#>  3 Durbl    enet      -1.85  -0.24
+#>  4 Durbl    enet       2.16   9.72
+#>  5 Durbl    enet      -0.739 -4.84
+#>  6 Durbl    enet       1.48   0.27
+#>  7 Durbl    enet       2.26   1.19
+#>  8 Durbl    enet       1.86   2.14
+#>  9 Durbl    enet       1.88   0.93
+#> 10 Durbl    enet      -0.351  1.93
 #> # … with 2,822 more rows
 ```
 
@@ -606,16 +628,16 @@ estimates
 #> # Groups:   Industry, model [4]
 #>    Industry model term        estimate model_info      
 #>    <chr>    <chr> <chr>          <dbl> <list>          
-#>  1 Durbl    enet  (Intercept) -0.302   <tibble [1 × 5]>
-#>  2 Durbl    enet  `Mkt-RF`     0.992   <tibble [1 × 5]>
-#>  3 Durbl    enet  SMB          0.00978 <tibble [1 × 5]>
-#>  4 Durbl    enet  HML          0.229   <tibble [1 × 5]>
-#>  5 Enrgy    enet  (Intercept)  1.47    <tibble [1 × 5]>
-#>  6 Enrgy    enet  `Mkt-RF`     1.13    <tibble [1 × 5]>
-#>  7 Enrgy    enet  SMB          0.649   <tibble [1 × 5]>
-#>  8 Enrgy    enet  HML          0.0703  <tibble [1 × 5]>
-#>  9 Enrgy    enet  RMW         -0.552   <tibble [1 × 5]>
-#> 10 Enrgy    enet  CMA          1.16    <tibble [1 × 5]>
+#>  1 Durbl    enet  (Intercept) -0.302   <tibble [1 × 4]>
+#>  2 Durbl    enet  `Mkt-RF`     0.992   <tibble [1 × 4]>
+#>  3 Durbl    enet  SMB          0.00978 <tibble [1 × 4]>
+#>  4 Durbl    enet  HML          0.229   <tibble [1 × 4]>
+#>  5 Enrgy    enet  (Intercept)  1.47    <tibble [1 × 4]>
+#>  6 Enrgy    enet  `Mkt-RF`     1.13    <tibble [1 × 4]>
+#>  7 Enrgy    enet  SMB          0.649   <tibble [1 × 4]>
+#>  8 Enrgy    enet  HML          0.0703  <tibble [1 × 4]>
+#>  9 Enrgy    enet  RMW         -0.552   <tibble [1 × 4]>
+#> 10 Enrgy    enet  CMA          1.16    <tibble [1 × 4]>
 #> # … with 15 more rows
 ```
 
@@ -625,22 +647,21 @@ similar information:
 
 ``` r
 tidyr::unnest(estimates, model_info)
-#> # A tibble: 25 × 9
+#> # A tibble: 25 × 8
 #> # Groups:   Industry, model [4]
-#>    Industry model term        estimate size       lambda dev.r…¹ std.e…² stati…³
-#>    <chr>    <chr> <chr>          <dbl> <objct_sz>  <dbl>   <dbl>   <dbl>   <dbl>
-#>  1 Durbl    enet  (Intercept) -0.302   1208536 b…  0.792   0.735      NA      NA
-#>  2 Durbl    enet  `Mkt-RF`     0.992   1208536 b…  0.792   0.735      NA      NA
-#>  3 Durbl    enet  SMB          0.00978 1208536 b…  0.792   0.735      NA      NA
-#>  4 Durbl    enet  HML          0.229   1208536 b…  0.792   0.735      NA      NA
-#>  5 Enrgy    enet  (Intercept)  1.47    1208872 b…  0.792   0.807      NA      NA
-#>  6 Enrgy    enet  `Mkt-RF`     1.13    1208872 b…  0.792   0.807      NA      NA
-#>  7 Enrgy    enet  SMB          0.649   1208872 b…  0.792   0.807      NA      NA
-#>  8 Enrgy    enet  HML          0.0703  1208872 b…  0.792   0.807      NA      NA
-#>  9 Enrgy    enet  RMW         -0.552   1208872 b…  0.792   0.807      NA      NA
-#> 10 Enrgy    enet  CMA          1.16    1208872 b…  0.792   0.807      NA      NA
-#> # … with 15 more rows, and abbreviated variable names ¹​dev.ratio, ²​std.error,
-#> #   ³​statistic
+#>    Industry model term        estimate lambda dev.ratio std.error statistic
+#>    <chr>    <chr> <chr>          <dbl>  <dbl>     <dbl>     <dbl>     <dbl>
+#>  1 Durbl    enet  (Intercept) -0.302    0.792     0.735        NA        NA
+#>  2 Durbl    enet  `Mkt-RF`     0.992    0.792     0.735        NA        NA
+#>  3 Durbl    enet  SMB          0.00978  0.792     0.735        NA        NA
+#>  4 Durbl    enet  HML          0.229    0.792     0.735        NA        NA
+#>  5 Enrgy    enet  (Intercept)  1.47     0.792     0.807        NA        NA
+#>  6 Enrgy    enet  `Mkt-RF`     1.13     0.792     0.807        NA        NA
+#>  7 Enrgy    enet  SMB          0.649    0.792     0.807        NA        NA
+#>  8 Enrgy    enet  HML          0.0703   0.792     0.807        NA        NA
+#>  9 Enrgy    enet  RMW         -0.552    0.792     0.807        NA        NA
+#> 10 Enrgy    enet  CMA          1.16     0.792     0.807        NA        NA
+#> # … with 15 more rows
 ```
 
 Suppose we would like to evaluate the relative performance of the two
