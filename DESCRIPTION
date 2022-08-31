@@ -38,6 +38,7 @@ Suggests:
   lmtest,
   lubridate,
   mboost,
+  MSwM,
   pls,
   quantreg,
   sandwich,
