@@ -47,12 +47,7 @@
   model_handler <- purrr::partial(.handler.stats, object = m, formula = formula)
 
   control <- control[!names(control) %in% c("weights")]
-  if (length(control) > 0) {
-    settings <- dplyr::as_tibble(.func_to_list(control))
-    settings <- tidyr::nest(settings, settings = dplyr::everything())
-  } else {
-    settings <- NULL
-  }
+  settings <- .control_to_settings(control)
 
   out <- tibble(
     estimator = "stats::glm",

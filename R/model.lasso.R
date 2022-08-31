@@ -93,13 +93,7 @@
                                   formula = formula, family = control$family)
 
   control <- control[!names(control) %in% c("weights")]
-  if (length(control) > 0) {
-    settings <- dplyr::as_tibble(.func_to_list(control)) %>%
-      dplyr::mutate(grid_id = grid_ids)
-  } else {
-    settings <- NULL
-  }
-  settings <- tidyr::nest(settings, settings = dplyr::everything())
+  settings <- .control_to_settings(control, "lambda", grid_ids)
 
   out <- tibble(
     estimator = "glmnet::glmnet",

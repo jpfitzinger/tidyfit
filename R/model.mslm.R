@@ -24,13 +24,15 @@
 #' data <- dplyr::filter(data, Industry == "HiTec")
 #' data <- dplyr::select(data, -Industry)
 #'
+#' ctr <- list(maxiter = 10, parallelization = FALSE)
+#'
 #' # Stand-alone function
-#' fit <- m("mslm", Return ~ ., data, index_col = "Date", k = 2)
+#' fit <- m("mslm", Return ~ ., data, index_col = "Date", k = 2, control = ctr)
 #' fit
 #'
 #' # Within 'regress' function
 #' fit <- regress(data, Return ~ .,
-#'                m("mslm", index_col = "Date", k = 2))
+#'                m("mslm", index_col = "Date", k = 2, control = ctr))
 #' tidyr::unnest(coef(fit), model_info)
 #'
 #' @seealso \code{\link{.model.tvp}} and \code{\link{m}} methods
@@ -76,12 +78,7 @@
   model_handler <- purrr::partial(.handler.MSwM, object = m, formula = formula, index_var = idx_var)
 
   control <- control[!names(control) %in% c("weights")]
-  if (length(control) > 0) {
-    settings <- dplyr::as_tibble(.func_to_list(control))
-    settings <- tidyr::nest(settings, settings = dplyr::everything())
-  } else {
-    settings <- NULL
-  }
+  settings <- .control_to_settings(control)
 
   out <- tibble(
     estimator = "MSwM::msmFit",

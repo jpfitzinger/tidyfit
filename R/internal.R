@@ -1,8 +1,9 @@
 # Internal helper functions
 
 #' @importFrom purrr cross safely quietly
-#' @importFrom dplyr rename mutate select relocate any_of
-#' @importFrom tidyr unnest nest
+#' @importFrom dplyr rename mutate select relocate any_of summarise
+#' @importFrom tibble enframe
+#' @importFrom tidyr unnest nest pivot_wider
 #' @importFrom stats model.frame model.matrix model.response
 #' @importFrom rlang .data
 
@@ -24,6 +25,9 @@
   }
   if (!is.null(control$sw) & model_method == "mslm") {
     control$sw <- list(control$sw)
+  }
+  if (!is.null(control$control) & model_method == "mslm") {
+    control$control <- list(control$control)
   }
 
   control <- .func_to_list(control)
@@ -77,4 +81,20 @@
   names(names_vec) <- names_chk
   names_vec["(Intercept)"] <- "(Intercept)"
   return(names_vec)
+}
+
+.control_to_settings <- function(control, grid_col = NULL, grid_ids = NULL) {
+  if (length(control) > 0) {
+    control <- .func_to_list(control)
+    settings <- tibble::enframe(control) %>%
+      tidyr::pivot_wider() %>%
+      tidyr::unnest(!!grid_col)
+    if (!is.null(grid_ids)) settings <- dplyr::mutate(settings, grid_id = grid_ids)
+    settings <- settings %>%
+      dplyr::summarise(across(.fns = ~ if(length(unlist(.)) == 1) unlist(.) else .)) %>%
+      tidyr::nest(settings = dplyr::everything())
+  } else {
+    settings <- NULL
+  }
+  return(settings)
 }

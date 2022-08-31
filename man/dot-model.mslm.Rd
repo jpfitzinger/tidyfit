@@ -36,13 +36,15 @@ data <- tidyfit::Factor_Industry_Returns
 data <- dplyr::filter(data, Industry == "HiTec")
 data <- dplyr::select(data, -Industry)
 
+ctr <- list(maxiter = 10, parallelization = FALSE)
+
 # Stand-alone function
-fit <- m("mslm", Return ~ ., data, index_col = "Date", k = 2)
+fit <- m("mslm", Return ~ ., data, index_col = "Date", k = 2, control = ctr)
 fit
 
 # Within 'regress' function
 fit <- regress(data, Return ~ .,
-               m("mslm", index_col = "Date", k = 2))
+               m("mslm", index_col = "Date", k = 2, control = ctr))
 tidyr::unnest(coef(fit), model_info)
 
 }
