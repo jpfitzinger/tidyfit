@@ -22,6 +22,9 @@
   if (!is.null(control$kappa) & model_method == "hfr") {
     control$kappa <- list(control$kappa)
   }
+  if (!is.null(control$sw) & model_method == "mslm") {
+    control$sw <- list(control$sw)
+  }
 
   control <- .func_to_list(control)
   grid <- purrr::cross(control)

@@ -45,7 +45,7 @@ predict.tidyfit.models <- function(object, newdata, ..., .keep_grid_id = FALSE) 
     func(.what = "predict", selected_id = id, data = as.data.frame(data))
   }
 
-  sel_cols <- c("settings", "estimator")
+  sel_cols <- c("settings", "estimator", "size")
   out <- object %>%
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
     dplyr::rename(grid_id_ = .data$grid_id) %>%
