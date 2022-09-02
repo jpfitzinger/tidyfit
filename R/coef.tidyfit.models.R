@@ -86,6 +86,10 @@ coef.tidyfit.models <- function(
     tidyr::nest(model_info = -dplyr::any_of(col_ord)) %>%
     dplyr::relocate(any_of(col_ord))
 
+  # Remove backticks from names
+  out <- out %>%
+    mutate(term = gsub("`", "", term))
+
   return(out)
 
 }
