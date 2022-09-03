@@ -104,7 +104,7 @@ Now, with all the pieces in place, we can plot the results. Let's begin by exami
 ```{r, fig.width=7, fig.height=5, fig.align="center"}
 df_beta %>% 
   mutate(slice_id = as.Date(slice_id)) %>% 
-  filter(term == "`Mkt-RF`") %>% 
+  filter(term == "Mkt-RF") %>% 
   ggplot(aes(slice_id)) +
   geom_hline(yintercept = 1) +
   facet_wrap("Industry", scales = "free") +

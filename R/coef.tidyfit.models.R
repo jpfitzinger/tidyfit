@@ -88,7 +88,7 @@ coef.tidyfit.models <- function(
 
   # Remove backticks from names
   out <- out %>%
-    mutate(term = gsub("`", "", term))
+    mutate(term = gsub("`", "", .data$term))
 
   return(out)
 
