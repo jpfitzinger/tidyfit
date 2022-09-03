@@ -102,8 +102,8 @@
     estimates <- map_dfr(beta, function(bet) {
       tibble(
         estimate = apply(bet, 2, mean)[-1],
-        upper = apply(bet, 2, stats::quantile, 0.925)[-1],
-        lower = apply(bet, 2, stats::quantile, 0.025)[-1],
+        upper = apply(bet, 2, stats::quantile, 0.95)[-1],
+        lower = apply(bet, 2, stats::quantile, 0.05)[-1],
         posterior.sd = apply(bet, 2, sd)[-1],
         index = index_var
       )
