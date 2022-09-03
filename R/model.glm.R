@@ -46,7 +46,7 @@
 
   model_handler <- purrr::partial(.handler.stats, object = m, formula = formula)
 
-  control <- control[!names(control) %in% c("weights")]
+  control <- control[!names(control) %in% c("weights", "model", "x", "y")]
   settings <- .control_to_settings(control)
 
   out <- tibble(
