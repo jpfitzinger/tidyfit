@@ -173,7 +173,7 @@ Quantile regression
 quantile
 </td>
 <td style="text-align:center;">
-`quantreg`
+`quantreg::rq`
 </td>
 <td style="text-align:center;">
 yes
@@ -195,7 +195,7 @@ LASSO
 lasso
 </td>
 <td style="text-align:center;">
-`glmnet`
+`glmnet::glmnet`
 </td>
 <td style="text-align:center;">
 yes
@@ -212,7 +212,7 @@ Ridge
 ridge
 </td>
 <td style="text-align:center;">
-`glmnet`
+`glmnet::glmnet`
 </td>
 <td style="text-align:center;">
 yes
@@ -229,7 +229,7 @@ Adaptive LASSO
 adalasso
 </td>
 <td style="text-align:center;">
-`glmnet`
+`glmnet::glmnet`
 </td>
 <td style="text-align:center;">
 yes
@@ -246,7 +246,7 @@ ElasticNet
 enet
 </td>
 <td style="text-align:center;">
-`glmnet`
+`glmnet::glmnet`
 </td>
 <td style="text-align:center;">
 yes
@@ -268,7 +268,7 @@ Gradient boosting regression
 boost
 </td>
 <td style="text-align:center;">
-`mboost`
+`mboost::glmboost`
 </td>
 <td style="text-align:center;">
 yes
@@ -290,7 +290,7 @@ Principal components regression
 pcr
 </td>
 <td style="text-align:center;">
-`pls`
+`pls::plsr`
 </td>
 <td style="text-align:center;">
 yes
@@ -307,7 +307,7 @@ Partial least squares
 plsr
 </td>
 <td style="text-align:center;">
-`pls`
+`pls::pcr`
 </td>
 <td style="text-align:center;">
 yes
@@ -324,7 +324,7 @@ Hierarchical feature regression
 hfr
 </td>
 <td style="text-align:center;">
-`hfr`
+`hfr::hfr`
 </td>
 <td style="text-align:center;">
 yes
@@ -346,7 +346,7 @@ Best subset selection
 subset
 </td>
 <td style="text-align:center;">
-`bestglm`
+`bestglm::bestglm`
 </td>
 <td style="text-align:center;">
 yes
@@ -368,7 +368,7 @@ Bayesian regression
 bayes
 </td>
 <td style="text-align:center;">
-`arm`
+`arm::bayesglm`
 </td>
 <td style="text-align:center;">
 yes
@@ -385,7 +385,7 @@ Bayesian time-varying parameters regression
 tvp
 </td>
 <td style="text-align:center;">
-`shrinkTVP`
+`shrinkTVP::shrinkTVP`
 </td>
 <td style="text-align:center;">
 yes
@@ -560,12 +560,12 @@ Let’s unnest the settings columns:
 subset_mod_frame %>% 
   tidyr::unnest(settings, keep_empty = TRUE)
 #> # A tibble: 4 × 11
-#>   Industry model  estimator  size  grid_id handler    family lambda alpha method
-#>   <chr>    <chr>  <chr>      <obj> <chr>   <list>     <chr>   <dbl> <dbl> <chr> 
-#> 1 Durbl    enet   glmnet::g… 1208… #005.0… <prrr_fn_> gauss…  0.792     1 <NA>  
-#> 2 Enrgy    enet   glmnet::g… 1208… #001.0… <prrr_fn_> gauss…  0.792     0 <NA>  
-#> 3 Durbl    robust MASS::rlm  6472… #00100… <prrr_fn_> <NA>   NA        NA MM    
-#> 4 Enrgy    robust MASS::rlm  6481… #00100… <prrr_fn_> <NA>   NA        NA MM    
+#>   Industry model  estimator size  grid_id handler    family lambda alpha  method
+#>   <chr>    <chr>  <chr>     <obj> <chr>   <list>     <list>  <dbl> <list> <chr> 
+#> 1 Durbl    enet   glmnet::… 1208… #005.0… <prrr_fn_> <chr>   0.792 <dbl>  <NA>  
+#> 2 Enrgy    enet   glmnet::… 1208… #001.0… <prrr_fn_> <chr>   0.792 <dbl>  <NA>  
+#> 3 Durbl    robust MASS::rlm 6472… #00100… <prrr_fn_> <NULL> NA     <NULL> MM    
+#> 4 Enrgy    robust MASS::rlm 6481… #00100… <prrr_fn_> <NULL> NA     <NULL> MM    
 #> # … with 1 more variable: psi <list>
 ```
 
@@ -629,11 +629,11 @@ estimates
 #>    Industry model term        estimate model_info      
 #>    <chr>    <chr> <chr>          <dbl> <list>          
 #>  1 Durbl    enet  (Intercept) -0.302   <tibble [1 × 4]>
-#>  2 Durbl    enet  `Mkt-RF`     0.992   <tibble [1 × 4]>
+#>  2 Durbl    enet  Mkt-RF       0.992   <tibble [1 × 4]>
 #>  3 Durbl    enet  SMB          0.00978 <tibble [1 × 4]>
 #>  4 Durbl    enet  HML          0.229   <tibble [1 × 4]>
 #>  5 Enrgy    enet  (Intercept)  1.47    <tibble [1 × 4]>
-#>  6 Enrgy    enet  `Mkt-RF`     1.13    <tibble [1 × 4]>
+#>  6 Enrgy    enet  Mkt-RF       1.13    <tibble [1 × 4]>
 #>  7 Enrgy    enet  SMB          0.649   <tibble [1 × 4]>
 #>  8 Enrgy    enet  HML          0.0703  <tibble [1 × 4]>
 #>  9 Enrgy    enet  RMW         -0.552   <tibble [1 × 4]>
@@ -652,11 +652,11 @@ tidyr::unnest(estimates, model_info)
 #>    Industry model term        estimate lambda dev.ratio std.error statistic
 #>    <chr>    <chr> <chr>          <dbl>  <dbl>     <dbl>     <dbl>     <dbl>
 #>  1 Durbl    enet  (Intercept) -0.302    0.792     0.735        NA        NA
-#>  2 Durbl    enet  `Mkt-RF`     0.992    0.792     0.735        NA        NA
+#>  2 Durbl    enet  Mkt-RF       0.992    0.792     0.735        NA        NA
 #>  3 Durbl    enet  SMB          0.00978  0.792     0.735        NA        NA
 #>  4 Durbl    enet  HML          0.229    0.792     0.735        NA        NA
 #>  5 Enrgy    enet  (Intercept)  1.47     0.792     0.807        NA        NA
-#>  6 Enrgy    enet  `Mkt-RF`     1.13     0.792     0.807        NA        NA
+#>  6 Enrgy    enet  Mkt-RF       1.13     0.792     0.807        NA        NA
 #>  7 Enrgy    enet  SMB          0.649    0.792     0.807        NA        NA
 #>  8 Enrgy    enet  HML          0.0703   0.792     0.807        NA        NA
 #>  9 Enrgy    enet  RMW         -0.552    0.792     0.807        NA        NA
