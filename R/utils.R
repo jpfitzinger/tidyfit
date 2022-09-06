@@ -32,6 +32,7 @@
 
   control <- .func_to_list(control)
   grid <- purrr::cross(control)
+  if (length(grid)==0) grid <- list(grid)
   return(grid)
 
 }
@@ -40,7 +41,7 @@
 .func_to_list <- function(control) {
 
   control <- lapply(control, function(arg) {
-    if (inherits(arg, c("function", "family"))) {
+    if (inherits(arg, c("function", "family", "R6"))) {
       list(arg)
     } else {
       arg
@@ -76,25 +77,48 @@
 
 }
 
-.names_map <- function(names_vec) {
-  names_chk <- make.names(names_vec)
-  names(names_vec) <- names_chk
-  names_vec["(Intercept)"] <- "(Intercept)"
-  return(names_vec)
-}
-
-.control_to_settings <- function(control, grid_col = NULL, grid_ids = NULL) {
-  if (length(control) > 0) {
-    control <- .func_to_list(control)
-    settings <- tibble::enframe(control) %>%
+.control_to_settings <- function(mod) {
+  if (length(mod$args) > 0) {
+    args <- .func_to_list(mod$args)
+    settings <- tibble::enframe(args) %>%
       tidyr::pivot_wider() %>%
-      tidyr::unnest(!!grid_col)
-    if (!is.null(grid_ids)) settings <- dplyr::mutate(settings, grid_id = grid_ids)
+      dplyr::summarise(across(.fns = ~ if(length(unlist(.)) == 1) unlist(.) else .))
+    if (!is.null(mod$inner_grid)) {
+      settings <- settings %>%
+        dplyr::select(-any_of(colnames(mod$inner_grid))) %>%
+        dplyr::bind_cols(mod$inner_grid)
+    }
     settings <- settings %>%
-      dplyr::summarise(across(.fns = ~ if(length(unlist(.)) == 1) unlist(.) else .)) %>%
       tidyr::nest(settings = dplyr::everything())
   } else {
     settings <- NULL
   }
   return(settings)
+}
+
+.make_model_cols <- function(df) {
+  df <- df %>%
+    dplyr::mutate(estimator = unlist(purrr::map(.data$model_object, function(mod) mod$estimator))) %>%
+    dplyr::mutate(`size (MB)` = unlist(purrr::map(.data$model_object, function(mod) object.size(mod$object)))/1e6) %>%
+    dplyr::mutate(errors = unlist(purrr::map(.data$model_object, function(mod) mod$error))) %>%
+    dplyr::mutate(warnings = unlist(purrr::map(.data$model_object, function(mod) mod$warnings))) %>%
+    dplyr::mutate(messages = unlist(purrr::map(.data$model_object, function(mod) mod$messages)))
+  df
+}
+
+.reassign_model_info <- function(df) {
+  df %>%
+    dplyr::ungroup() %>%
+    group_nest(row_number()) %>%
+    pull(data) %>%
+    purrr::map_dfr(function(row) {
+      row$model_object[[1]] <- row$model_object[[1]]$clone()
+      row$model_object[[1]]$grid_id <- row$grid_id
+      row$model_object[[1]]$args <- unlist(purrr::transpose(row$settings), recursive = FALSE)
+      row
+    })
+}
+
+appr_in <- function(a, b) {
+  round(a, 12) %in% round(b, 12)
 }
