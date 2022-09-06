@@ -87,66 +87,101 @@
 #' @importFrom rlang .data
 #' @importFrom dplyr mutate arrange relocate bind_rows bind_cols
 
-m <- function(model_method,
-              formula = NULL,
-              data = NULL,
-              ...,
-              .return_method_name = FALSE,
-              .check_family = FALSE
-              ) {
-
-  # Checks
-  .check_method(model_method, "exists")
-  additional_args <- list(...)
-  if (.return_method_name) return(model_method)
-  if (.check_family) return("family" %in% names(additional_args))
-
-  # Partialised function when no data is passed
-  if (is.null(formula) & is.null(data)) {
-    args <- c(list(model_method = model_method), additional_args)
-    args <- args[!names(args) %in% c("formula", "data")]
-    args <- append(args, list(.f = m))
-    return(do.call(purrr::partial, args))
-  }
-
-  # Set default hyperparameter grids
+m <- function(
+    model_method,
+    formula = NULL,
+    data = NULL,
+    ...
+) {
+  if (!is.null(data) & is.null(formula))
+    stop("'formula' cannot be missing when 'data' is provided")
+  args <- list(...)
   default_grids <- .default_hp_grid(model_method,
-                                    additional_args,
+                                    args,
                                     formula,
                                     data)
-  additional_args <- append(additional_args, default_grids)
+  args <- append(args, default_grids)
+  args_grid <- .args_to_grid(model_method, args)
+  grd_ids <- paste0("#", formatC(1:length(args_grid), 2, flag = "0"), "0000")
+  mods <- purrr::map2_dfr(args_grid, grd_ids, function(args_vec, grd_id) {
+    tidyr::tibble(
+      grid_id = grd_id,
+      model_object = c(model_definition$new(model_method, formula, args_vec, grid_id = grd_id))
+    )
+  })
 
-  # Used to define the class
-  tmp_ <- structure("", class = model_method)
-  qmodel <- purrr::quietly(function(args) do.call(.model, args))
-
-  if (length(additional_args)==0) {
-    args <- list(formula = formula, data = data, control = additional_args, identifier = tmp_)
-    mod_list <- qmodel(args)
-    mod <- mod_list$result
-    mod <- dplyr::bind_cols(mod, purrr::compact(mod_list[-c(1:2)]))
-    mod <- mod %>%
-      dplyr::mutate(grid_id = "#0010000")
-  } else {
-    args_grid <- .args_to_grid(model_method, additional_args)
-    names(args_grid) <- paste0("#", formatC(1:length(args_grid), 2, flag = "0"), "0000")
-    mod <- args_grid %>%
-      purrr::map_dfr(function(additional_args) {
-        args <- list(formula = formula, data = data, control = additional_args, identifier = tmp_)
-        mod_list <- qmodel(args)
-        mod <- mod_list$result
-        mod <- dplyr::bind_cols(mod, purrr::compact(mod_list[-c(1:2)]))
-        return(mod)
-      }, .id = "grid_id")
+  if (!is.null(data)) {
+    mods$model_object <- purrr::map(mods$model_object, function(mod) mod$fit(data))
   }
 
-  # Arrange output
-  mod <- mod %>%
-    dplyr::arrange(.data$grid_id) %>%
-    dplyr::relocate(.data$grid_id)
-
-  mod <- tibble::new_tibble(mod, class = "tidyfit.models")
-
-  return(mod)
-
+  mods <- .make_model_cols(mods)
+  col_ord <- c("estimator", "size (MB)", "grid_id", "model_object", "settings", "errors", "warnings", "messages")
+  mods <- dplyr::relocate(mods, any_of(col_ord)) %>%
+    dplyr::arrange(.data$grid_id)
+  mods <- tibble::new_tibble(mods, class = "tidyfit.models")
+  return(mods)
 }
+
+# m <- function(model_method,
+#               formula = NULL,
+#               data = NULL,
+#               ...,
+#               .return_method_name = FALSE,
+#               .check_family = FALSE
+#               ) {
+#
+#   # Checks
+#   .check_method(model_method, "exists")
+#   additional_args <- list(...)
+#   if (.return_method_name) return(model_method)
+#   if (.check_family) return("family" %in% names(additional_args))
+#
+#   # Partialised function when no data is passed
+#   if (is.null(formula) & is.null(data)) {
+#     args <- c(list(model_method = model_method), additional_args)
+#     args <- args[!names(args) %in% c("formula", "data")]
+#     args <- append(args, list(.f = m))
+#     return(do.call(purrr::partial, args))
+#   }
+#
+#   # Set default hyperparameter grids
+#   default_grids <- .default_hp_grid(model_method,
+#                                     additional_args,
+#                                     formula,
+#                                     data)
+#   additional_args <- append(additional_args, default_grids)
+#
+#   # Used to define the class
+#   tmp_ <- structure("", class = model_method)
+#   qmodel <- purrr::quietly(function(args) do.call(.model, args))
+#
+#   if (length(additional_args)==0) {
+#     args <- list(formula = formula, data = data, control = additional_args, identifier = tmp_)
+#     mod_list <- qmodel(args)
+#     mod <- mod_list$result
+#     mod <- dplyr::bind_cols(mod, purrr::compact(mod_list[-c(1:2)]))
+#     mod <- mod %>%
+#       dplyr::mutate(grid_id = "#0010000")
+#   } else {
+#     args_grid <- .args_to_grid(model_method, additional_args)
+#     names(args_grid) <- paste0("#", formatC(1:length(args_grid), 2, flag = "0"), "0000")
+#     mod <- args_grid %>%
+#       purrr::map_dfr(function(additional_args) {
+#         args <- list(formula = formula, data = data, control = additional_args, identifier = tmp_)
+#         mod_list <- qmodel(args)
+#         mod <- mod_list$result
+#         mod <- dplyr::bind_cols(mod, purrr::compact(mod_list[-c(1:2)]))
+#         return(mod)
+#       }, .id = "grid_id")
+#   }
+#
+#   # Arrange output
+#   mod <- mod %>%
+#     dplyr::arrange(.data$grid_id) %>%
+#     dplyr::relocate(.data$grid_id)
+#
+#   mod <- tibble::new_tibble(mod, class = "tidyfit.models")
+#
+#   return(mod)
+#
+# }

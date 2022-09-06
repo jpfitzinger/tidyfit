@@ -72,31 +72,29 @@ classify <- function(
     .cv_args = NULL,
     .weights = NULL,
     .mask = NULL,
-    .remove_dependent_features = FALSE,
     .return_slices = FALSE,
     .tune_each_group = TRUE,
     .force_cv = FALSE
 ) {
 
   model_list <- list(...)
+  .cv <- match.arg(.cv)
+  if (is.null(.cv_args)) .cv_args <- list()
+  if (!inherits(.cv_args, "list")) stop("'.cv_args' must be a 'list'.")
 
   # Checks
   if (length(model_list)==0)
     stop("provide at least one method.")
 
+  # Prepare model names
   model_names <- names(model_list)
   if (is.null(model_names)) model_names <- rep(NA, length(model_list))
   model_names <- sapply(model_names, function(nam) ifelse(nam == "", NA, nam))
-  method_names <- sapply(model_list, function(m) m(.return_method_name = TRUE))
+  method_names <- sapply(model_list, function(mod) mod$model_object[[1]]$method)
   model_names <- dplyr::coalesce(model_names, method_names)
   names(model_list) <- model_names
 
-  if (.force_cv) {
-    model_cv <- rep(T, length(model_list))
-  } else {
-    model_cv <- sapply(method_names, .check_method, "cv")
-  }
-
+  # TODO: fold into R6class
   sapply(method_names, .check_method, "classify", message = TRUE)
 
   # Multinomial classification
@@ -113,73 +111,31 @@ classify <- function(
     .data[[response_var]] <- as.factor(.data[[response_var]])
   }
 
-  .cv <- match.arg(.cv)
-  if (is.null(.cv_args)) .cv_args <- list()
-  if (!inherits(.cv_args, "list")) stop("'.cv_args' must be a 'list'.")
-
+  model_df <- purrr::map_dfr(model_list, ~., .id = "model")
+  model_df$model_object <- purrr::map(model_df$model_object, function(mod) {
+    mod$formula <- formula
+    mod$mode <- "classification"
+    if (.force_cv) mod$cv <- TRUE
+    mod
+  })
   gr_vars <- dplyr::group_vars(.data)
+  df_list <- dplyr::group_split(.data)
+  df_list <- purrr::map(df_list, ~.make_cross_val(., .cv, .cv_args, gr_vars, .mask, .weights))
+  eval_df <- tidyr::expand_grid(model_df, data = df_list)
 
-  # Fit models
-  df <- .data %>%
-    do(result = .fit(., formula, model_list, .cv, .cv_args,
-                     .weights, gr_vars, .mask, binomial(), .force_cv,
-                     .remove_dependent_features)) %>%
-    tidyr::unnest(.data$result)
-
-  if (!.return_slices & .cv == "none") {
-    df <- df %>%
-      dplyr::select(-.data$slice_id)
+  p <- progressr::progressor(nrow(eval_df))
+  fit_progress <- function(row, ...) {
+    out <- .fit_groups(row, ...)
+    p()
+    out
   }
 
-  if (.cv != "none") {
-    # Select optimal hyperparameter setting
-    df_no_cv <- df %>%
-      dplyr::filter(.data$model %in% model_names[!model_cv]) %>%
-      dplyr::select(-.data$slice_id)
+  df <- eval_df %>%
+    purrr::transpose() %>%
+    map_dfr(function(row) fit_progress(row))
 
-    df <- df %>%
-      dplyr::filter(.data$model %in% model_names[model_cv])
-
-    if (nrow(df) == 0) {
-      df <- df_no_cv
-    } else {
-      if (.tune_each_group) {
-        df <- df %>%
-          dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))
-      }
-
-      df_slices <- df %>%
-        dplyr::filter(.data$slice_id != "FULL") %>%
-        dplyr::group_by(.data$model, .data$grid_id, .add = TRUE) %>%
-        dplyr::mutate(metric = mean(.data$metric)) %>%
-        dplyr::ungroup(.data$grid_id) %>%
-        dplyr::filter(.data$metric == min(.data$metric)) %>%
-        dplyr::filter(.data$grid_id == unique(.data$grid_id)[1])
-
-      if (.return_slices) {
-        df <- df_slices %>%
-          dplyr::bind_rows(df_no_cv) %>%
-          dplyr::select(-.data$metric)
-      } else {
-        df <- df_slices %>%
-          dplyr::ungroup() %>%
-          dplyr::select(!!gr_vars, .data$grid_id, .data$model) %>%
-          dplyr::distinct() %>%
-          dplyr::left_join(df %>% dplyr::ungroup() %>% dplyr::filter(.data$slice_id == "FULL"), by = c(gr_vars, "grid_id", "model")) %>%
-          dplyr::bind_rows(df_no_cv) %>%
-          dplyr::select(-.data$metric, -.data$slice_id)
-      }
-    }
-  }
-
-  col_ord <- c(gr_vars, "model", "estimator", "size", "grid_id", "handler", "settings", "warnings", "messages")
-  df <- dplyr::relocate(df, any_of(col_ord))
-
-  df <- tibble::new_tibble(df, class = "tidyfit.models",
-                           structure = list(groups = gr_vars,
-                                            mask = .mask,
-                                            weights = .weights))
-
+  df <- .post_process(df, .return_slices, .cv, .tune_each_group,
+                      .mask, .weights, gr_vars)
   return(df)
 
 }
