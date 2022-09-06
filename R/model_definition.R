@@ -1,0 +1,73 @@
+
+
+model_definition <- R6::R6Class(
+  "tidyFit",
+  public = list(
+    method = NULL,
+    formula = NULL,
+    args = NULL,
+    cv = NULL,
+    object = NULL,
+    estimator = NULL,
+    fit_info = NULL,
+    error = NULL,
+    warnings = NULL,
+    messages = NULL,
+    grid_id = NULL,
+    inner_grid = NULL,
+    mode = NULL,
+
+    initialize = function(method, formula, settings, grid_id) {
+      .check_method(method, "exists", TRUE)
+      self$method <- method
+      self$formula <- formula
+      self$args <- settings
+      self$grid_id <- grid_id
+      fitter <- get(paste0(".model.", method))
+      private$fit_ <- fitter
+      self$cv <- .check_method(method, "cv")
+    },
+    fit = function(...) {private$fit_(self, ...)},
+    predict = function(data) {
+      all_args <- append(
+        list(object = self$object, data = data, formula = self$formula, inner_grid = self$inner_grid),
+        self$args
+      )
+      do.call(.predict, all_args)
+    },
+    coef = function(...) {
+      all_args <- append(
+        list(object = self$object, formula = self$formula, inner_grid = self$inner_grid),
+        self$args
+      )
+      do.call(.coef, all_args)
+    },
+    print = function(...) print(paste0("<", self$method, "> object (", ifelse(is.null(self$object), "not fitted", "fitted"), ")")),
+    set_args = function(..., overwrite = TRUE) {
+      new_args <- lapply(list(...), unlist)
+      if (overwrite) {
+        self$args <- append(
+          self$args[!names(self$args) %in% names(new_args)],
+          new_args
+        )
+      } else {
+        self$args <- append(
+          self$args,
+          new_args[!names(new_args) %in% names(self$args)]
+        )
+      }
+      invisible(self)
+    }
+  ),
+  private = list(
+    fit_ = NULL
+  )
+)
+
+.store_on_self <- function(self, model) {
+  self$object <- model$result$result
+  self$error <- model$error[[1]]
+  if (length(model$result$messages)>0) self$messages <- model$result$messages
+  if (length(model$result$warnings)>0) self$warnings <- model$result$warnings
+  invisible(self)
+}
