@@ -12,11 +12,10 @@
 #'
 #' If no hyperparameter grid is passed (\code{is.null(control$lambda)}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100. Note that the grid selection tools provided by \code{glmnet::glmnet} cannot be used (e.g. \code{dfmax}). This is to guarantee identical grids across groups in the tibble.
 #'
-#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param self a tidyFit R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @param control  Additional arguments passed to \code{glmnet::glmnet}.
-#' @param ... Not used.
-#' @return A 'tibble'.
+#' @return A fitted tidyFit class model.
+#'
 #' @author Johann Pfitzinger
 #' @references
 #' Zou, H. (2006).
@@ -41,82 +40,68 @@
 #'
 #' @seealso \code{\link{.model.lasso}}, \code{\link{.model.enet}}, \code{\link{.model.ridge}} and \code{\link{m}} methods
 #'
-#' @importFrom dplyr mutate as_tibble bind_cols select
-#' @importFrom tidyr gather
+#' @importFrom purrr safely quietly
 #' @importFrom stats coef
 #' @importFrom rlang .data
 #' @importFrom methods formalArgs
-#' @importFrom utils object.size
 
 .model.adalasso <- function(
-    formula = NULL,
-    data = NULL,
-    control = NULL,
-    ...
+    self,
+    data = NULL
 ) {
 
-  control <- control[names(control) %in% methods::formalArgs(glmnet::glmnet)]
-  control <- control[names(control) != "alpha"]
-  control$lambda <- sort(control$lambda, TRUE)
-
-  mf <- stats::model.frame(formula, data)
-  x <- stats::model.matrix(formula, mf)
+  mf <- stats::model.frame(self$formula, data)
+  x <- stats::model.matrix(self$formula, mf)
   y <- stats::model.response(mf)
 
+  self$set_args(alpha = 1, lambda = sort(self$args$lambda, TRUE))
   # Prepare 'family' arg
-  if (is.null(control$family)) {
-    control$family <- gaussian()
+  if (self$mode == "regression") {
+    self$set_args(family = "gaussian", overwrite = FALSE)
   }
-  if (inherits(control$family, "character")) {
-    f_name <- control$family
-  } else {
-    f_name <- control$family$family
-  }
-  if (!f_name %in% c("gaussian", "binomial", "multinomial"))
-    stop("invalid 'family' argument")
-  if (f_name == "gaussian") {
-    control$family <- "gaussian"
-    f <- gaussian()
-  } else {
-    control$family <- "multinomial"
-    f <- binomial()
+  if (self$mode == "classification") {
+    self$set_args(family = "multinomial", overwrite = FALSE)
     y <- as.factor(y)
   }
+  ctr <- self$args[names(self$args) %in% methods::formalArgs(glmnet::glmnet)]
 
   incl_intercept <- "(Intercept)" %in% colnames(x)
   if (incl_intercept) x <- x[, -1]
 
-  control_ <- control[names(control) != "lambda"]
-  penalty_mod <- do.call(glmnet::glmnet, append(list(x = x, y = y, alpha = 0,
-                                                     lambda = 0.01, intercept = incl_intercept), control_))
-  coefs <- stats::coef(penalty_mod)
-  if (!inherits(coefs, "list")) coefs <- list(coefs)
-  penalty_factor <- sapply(coefs, function(cf) {
-    cf <- cf[-1]
-    cf <- abs(cf)^(-1)
-    cf[is.infinite(cf) | is.na(cf)] <- 0
-    return(cf)
-  })
-  penalty_factor <- rowMeans(penalty_factor)
+  eval_fun_ <- function(...) {
+    args <- list(...)
+    do.call(glmnet::glmnet, args)
+  }
+  eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
 
-  m <- do.call(glmnet::glmnet, append(list(x = x, y = y, alpha = 1, intercept = incl_intercept, penalty.factor = penalty_factor), control))
+  control_ <- within(ctr, rm(lambda, alpha))
+  penalty_mod <- do.call(eval_fun, append(list(x = x, y = y, alpha = 0,
+                                               lambda = 0.01, intercept = incl_intercept), control_))
+  if (is.null(penalty_mod$error)) {
+    coefs <- stats::coef(penalty_mod$result$result)
+    if (!inherits(coefs, "list")) coefs <- list(coefs)
+    penalty_factor <- sapply(coefs, function(cf) {
+      cf <- cf[-1]
+      cf <- abs(cf)^(-1)
+      cf[is.infinite(cf) | is.na(cf)] <- 0
+      return(cf)
+    })
+    penalty_factor <- rowMeans(penalty_factor)
 
-  control$lambda <- m$lambda
-  grid_ids <- formatC(1:length(control$lambda), 2, flag = "0")
+    res <- do.call(eval_fun,
+                   append(list(x = x, y = y, intercept = incl_intercept,
+                               penalty.factor = penalty_factor), ctr))
+  } else {
+    res <- penalty_mod
+  }
 
-  model_handler <- purrr::partial(.handler.glmnet, object = m, grid_ids = grid_ids,
-                                  formula = formula, family = control$family)
-
-  control <- control[!names(control) %in% c("weights")]
-  settings <- .control_to_settings(control, "lambda", grid_ids)
-
-  out <- tibble(
-    estimator = "glmnet::glmnet",
-    size = utils::object.size(m),
-    handler = list(model_handler),
-    settings
+  .store_on_self(self, res)
+  self$set_args(lambda = res$result$result$lambda)
+  self$estimator <- "glmnet::glmnet"
+  self$inner_grid <- data.frame(
+    grid_id = paste(substring(self$grid_id, 1, 4), formatC(1:length(self$args$lambda), 2, flag = "0"), sep = "|"),
+    lambda = self$args$lambda
   )
-
-  return(out)
+  invisible(self)
 
 }
