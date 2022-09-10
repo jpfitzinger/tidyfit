@@ -1,3 +1,4 @@
+# Internal function to check valid usage of methods
 .check_method <- function(
     method,
     what = c("exists", "cv", "uses_index", "regress", "classify", "multinomial"),
@@ -5,10 +6,12 @@
     ) {
 
   what <- match.arg(what)
-  chk <- method %in% .checks[[what]]$methods
-  if (message & !chk)
-    stop(sprintf(.checks[[what]]$message, method))
-  if (!message) return(chk)
+  for (meth in method) {
+    chk <- meth %in% .checks[[what]]$methods
+    if (message & !chk)
+      stop(sprintf(.checks[[what]]$message, meth))
+    if (!message) return(chk)
+  }
 
 }
 
