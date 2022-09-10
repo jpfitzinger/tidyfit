@@ -2,11 +2,9 @@
 #' @title Robust regression for \code{tidyfit}
 #' @description Fits a robust linear regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
 #'
-#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param self a tidyFit R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @param control  Additional arguments passed to \code{MASS::rlm}.
-#' @param ... Not used.
-#' @return A 'tibble'.
+#' @return A fitted tidyFit class model.
 #'
 #' @details  **Hyperparameters:**
 #'
@@ -36,89 +34,31 @@
 #'
 #' @seealso \code{\link{.model.lm}} and \code{\link{m}} methods
 #'
-#' @importFrom stats coef
-#' @importFrom dplyr tibble bind_cols
-#' @importFrom purrr partial
+#' @importFrom stats model.frame model.matrix model.response
 #' @importFrom MASS rlm
-#' @importFrom utils object.size
 
 .model.robust <- function(
-    formula = NULL,
-    data = NULL,
-    control = NULL,
-    ...
+    self,
+    data = NULL
 ) {
 
-  vcov. <- control$vcov.
-  f <- control$family
   # Available args are not accessible using formalArgs without importing MASS:::rlm.formula
   rlm_args <- c("x", "y", "weights", "w", "init", "psi", "scale.est", "k2", "method",
-                        "wt.method", "maxit", "acc", "test.vec", "lqs.control")
-  control <- control[names(control) %in% rlm_args]
-
-  mf <- stats::model.frame(formula, data)
-  x <- stats::model.matrix(formula, data)
+                "wt.method", "maxit", "acc", "test.vec", "lqs.control")
+  ctr <- self$args[names(self$args) %in% rlm_args]
+  if (is.null(ctr$weights)) ctr <- with(ctr, rm(weights))
+  mf <- stats::model.frame(self$formula, data)
+  x <- stats::model.matrix(self$formula, data)
   y <- stats::model.response(mf)
-  #var_names_map <- .names_map(colnames(model_mat))
-
-  m <- do.call(MASS::rlm, append(list(x = x, y = y), control))
-
-  model_handler <- purrr::partial(.handler.MASS, object = m, formula = formula, vcov. = vcov.)
-
-  control <- control[!names(control) %in% c("weights")]
-  control$vcov. <- vcov.
-  settings <- .control_to_settings(control)
-
-  out <- tibble(
-    estimator = "MASS::rlm",
-    size = utils::object.size(m),
-    handler = list(model_handler),
-    settings
-  )
-
-  return(out)
-
-}
-
-.handler.MASS <- function(object, data, formula = NULL, names_map = NULL, vcov. = NULL, ..., .what = "model") {
-
-  if (.what == "model") {
-    return(object)
+  eval_fun_ <- function(...) {
+    args <- list(...)
+    do.call(MASS::rlm, args)
   }
-
-  if (.what == "predict") {
-    response_var <- all.vars(formula)[1]
-    if (response_var %in% colnames(data)) {
-      truth <- data[, response_var]
-    } else {
-      data[, response_var] <- 1
-      truth <- NULL
-    }
-    mf <- stats::model.frame(formula, data)
-    x <- stats::model.matrix(formula, data)
-    y <- stats::model.response(mf)
-    pred <- dplyr::tibble(
-      prediction = drop(crossprod(t(x), object$coefficients)),
-      truth = truth
-    )
-    return(pred)
-  }
-
-  if (.what == "estimates") {
-    if (is.null(vcov.)) {
-      adj_obj <- object
-    } else if (vcov. == "BS") {
-      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovBS(object))
-    } else if (vcov. == "HAC") {
-      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovHAC(object))
-    } else if (vcov. == "HC") {
-      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovHC(object))
-    } else if (vcov. == "OPG") {
-      adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovOPG(object))
-    }
-    estimates <- broom::tidy(adj_obj)
-    if (!is.null(names_map)) estimates$term <- names_map[estimates$term]
-    return(estimates)
-  }
+  eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
+  res <- do.call(eval_fun,
+                 append(list(x = x, y = y), ctr))
+  .store_on_self(self, res)
+  self$estimator <- "MASS::rlm"
+  invisible(self)
 
 }
