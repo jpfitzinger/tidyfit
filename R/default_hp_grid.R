@@ -18,14 +18,14 @@
     }
   }
   if (model_method %in% c("pcr", "plsr")) {
-    nvars <- length(labels(stats::terms(formula, data = data)))
-    if (!"ncomp" %in% args) {
-      grid$ncomp <- unique(round(seq(1, nvars, length.out = 20)))
+    #nvars <- length(labels(stats::terms(formula, data = data)))
+    if (!any(c("ncomp_pct", "ncomp") %in% args)) {
+      grid$ncomp_pct <- seq(0, 1, length.out = 20)
     }
   }
   if (model_method == "hfr") {
-    if (!"kappa" %in% args) {
-      grid$kappa <- seq(0, 1, by = 0.05)
+    if (!"kappa_grid" %in% args) {
+      grid$kappa_grid <- seq(0, 1, by = 0.05)
     }
   }
   if (model_method == "boost") {

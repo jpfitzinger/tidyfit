@@ -26,19 +26,20 @@ model_definition <- R6::R6Class(
       fitter <- get(paste0(".model.", method))
       private$fit_ <- fitter
       self$cv <- .check_method(method, "cv")
+      self$mode <- "regression"
     },
     fit = function(...) {private$fit_(self, ...)},
     predict = function(data) {
-      all_args <- append(
-        list(object = self$object, data = data, formula = self$formula, inner_grid = self$inner_grid),
-        self$args
+      all_args <- append(append(
+        list(object = self$object, data = data, formula = self$formula, inner_grid = self$inner_grid, mode = self$mode),
+        self$args), self$fit_info
       )
       do.call(.predict, all_args)
     },
     coef = function(...) {
-      all_args <- append(
-        list(object = self$object, formula = self$formula, inner_grid = self$inner_grid),
-        self$args
+      all_args <- append(append(
+        list(object = self$object, formula = self$formula, inner_grid = self$inner_grid, mode = self$mode),
+        self$args), self$fit_info
       )
       do.call(.coef, all_args)
     },

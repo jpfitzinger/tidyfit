@@ -34,7 +34,7 @@
   out_row <- dplyr::tibble(
     model = row$model,
     grid_id = row$grid_id,
-    model_object = list(mod$set_args(weights = wts)$fit(data))
+    model_object = list(mod$clone()$set_args(weights = wts)$fit(data))
   )
   out_row <- .unnest_args(out_row)
   out_row <- out_row %>%

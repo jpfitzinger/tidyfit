@@ -3,15 +3,15 @@
 #' @importFrom rlang .data
 #' @importFrom yardstick rmse mn_log_loss
 
-.eval_metrics <- function(pred, family) {
+.eval_metrics <- function(pred, mode, weights = NULL) {
 
-  if ("grid_id" %in% colnames(pred)) {
-    pred <- dplyr::group_by(pred, .data$grid_id)
-  }
-  if(!"weights" %in% colnames(pred)) {
+  pred <- dplyr::group_by(pred, across(any_of(c("grid_id", "class"))))
+  if(is.null(weights)) {
     pred <- dplyr::mutate(pred, weights = 1)
+  } else {
+    pred <- dplyr::mutate(pred, weights = weights)
   }
-  if (family$family == "gaussian") {
+  if (mode == "regression") {
     metrics <- pred %>%
       yardstick::rmse(.data$truth, .data$prediction, case_weights = .data$weights) %>%
       dplyr::mutate(metric = .data$.estimate^2)
@@ -20,7 +20,6 @@
     if (is_multinomial) {
       level_names <- levels(pred$truth)
       metrics <- pred %>%
-        dplyr::group_by(.data$class, .add = TRUE) %>%
         dplyr::mutate(row_n = dplyr::row_number()) %>%
         tidyr::spread(.data$class, .data$prediction) %>%
         yardstick::mn_log_loss(truth = .data$truth, any_of(level_names), case_weights = .data$weights) %>%

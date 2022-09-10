@@ -20,8 +20,8 @@
   if (!is.null(control$lambda) & model_method %in% c("lasso", "enet", "ridge", "adalasso")) {
     control$lambda <- list(control$lambda)
   }
-  if (!is.null(control$kappa) & model_method == "hfr") {
-    control$kappa <- list(control$kappa)
+  if (!is.null(control$kappa_grid) & model_method == "hfr") {
+    control$kappa_grid <- list(control$kappa_grid)
   }
   if (!is.null(control$sw) & model_method == "mslm") {
     control$sw <- list(control$sw)
@@ -96,13 +96,25 @@
   return(settings)
 }
 
+.names_map <- function(names_vec) {
+  names_chk <- make.names(names_vec)
+  names(names_vec) <- names_chk
+  names_vec["(Intercept)"] <- "(Intercept)"
+  return(names_vec)
+}
+
 .make_model_cols <- function(df) {
+  make_vector <- function(lst) {
+    lst[sapply(lst, is.null)] <- NA
+    if (all(is.na(lst))) return(NULL)
+    unlist(lst)
+  }
   df <- df %>%
-    dplyr::mutate(estimator = unlist(purrr::map(.data$model_object, function(mod) mod$estimator))) %>%
-    dplyr::mutate(`size (MB)` = unlist(purrr::map(.data$model_object, function(mod) object.size(mod$object)))/1e6) %>%
-    dplyr::mutate(errors = unlist(purrr::map(.data$model_object, function(mod) mod$error))) %>%
-    dplyr::mutate(warnings = unlist(purrr::map(.data$model_object, function(mod) mod$warnings))) %>%
-    dplyr::mutate(messages = unlist(purrr::map(.data$model_object, function(mod) mod$messages)))
+    dplyr::mutate(estimator = make_vector(purrr::map(.data$model_object, function(mod) mod$estimator))) %>%
+    dplyr::mutate(`size (MB)` = make_vector(purrr::map(.data$model_object, function(mod) object.size(mod$object)))/1e6) %>%
+    dplyr::mutate(errors = make_vector(purrr::map(.data$model_object, function(mod) mod$error))) %>%
+    dplyr::mutate(warnings = make_vector(purrr::map(.data$model_object, function(mod) mod$warnings))) %>%
+    dplyr::mutate(messages = make_vector(purrr::map(.data$model_object, function(mod) mod$messages)))
   df
 }
 
