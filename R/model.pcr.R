@@ -36,7 +36,7 @@
 #'
 #' @seealso \code{\link{.model.plsr}} and \code{\link{m}} methods
 #'
-#' @importFrom stats coefs
+#' @importFrom stats coef sd
 #' @importFrom methods formalArgs
 
 .model.pcr <- function(
