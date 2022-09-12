@@ -5,18 +5,17 @@
 #' @details **Hyperparameters:**
 #'
 #' - \code{ncomp} *(number of components)*
+#' - \code{ncomp_pct} *(number of components, percentage of features)*
 #'
 #' The partial least squares regression is fitted using \code{pls} package. Covariates are standardized, with coefficients back-transformed to the original scale. An intercept is always included.
 #'
-#' If no hyperparameter grid is passed (\code{is.null(control$ncomp)}), the default is \code{seq(1, nvars)}, where nvars is the number of features.
+#' If no hyperparameter grid is passed (\code{is.null(control$ncomp) & is.null(control$ncomp_pct)}), the default is \code{ncomp_pct = seq(0, 1, length.out = 20)}, where 0 results in one component and 1 results in the number of features.
 #'
 #' Note that at present \code{pls} does not offer weighted implementations or non-gaussian response. The method can therefore only be used with \code{\link{regress}}
 #'
-#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param self a tidyFit R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @param control  Additional arguments passed to \code{pls::plsr}.
-#' @param ... Not used.
-#' @return A 'tibble'.
+#' @return A fitted tidyFit class model.
 #' @author Johann Pfitzinger
 #' @references
 #' Kristian Hovde Liland, Bjørn-Helge Mevik, Ron Wehrens (2022).
@@ -38,82 +37,41 @@
 #' @seealso \code{\link{.model.pcr}} and \code{\link{m}} methods
 #'
 #' @importFrom stats coef sd
-#' @importFrom dplyr as_tibble mutate tibble bind_cols
 #' @importFrom rlang .data
 #' @importFrom methods formalArgs
-#' @importFrom utils object.size
 
 
 .model.plsr <- function(
-    formula = NULL,
-    data = NULL,
-    control = NULL,
-    ...
+    self,
+    data = NULL
     ) {
 
-  if ("weights" %in% names(control)) {
-    warning("pcr cannot handle weights, weights are ignored")
+  if (!is.null(self$args$weights)) {
+    warning("plsr cannot handle weights, weights are ignored")
   }
-  control$model <- FALSE
-  control$x <- FALSE
-  control$y <- FALSE
-  control <- control[names(control) %in% methods::formalArgs(pls::mvr)]
 
-  mf <- stats::model.frame(formula, data)
-  x <- stats::model.matrix(formula, mf)
+  mf <- stats::model.frame(self$formula, data)
+  x <- stats::model.matrix(self$formula, mf)
   if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
-
   standard_sd <- apply(x, 2, stats::sd)
 
-  m <- do.call(pls::plsr, append(list(formula = formula, data = data,
-                                      scale=standard_sd, center=T), control))
+  self$set_args(ncomp = 1 + round((NCOL(x) - 1) * self$args$ncomp_pct),
+                overwrite = FALSE)
+  ctr <- self$args[names(self$args) %in% methods::formalArgs(pls::mvr)]
+  ctr$model <- FALSE
+  ctr$x <- FALSE
+  ctr$y <- FALSE
 
-  model_handler <- purrr::partial(.handler.pls, object = m, formula = formula, standard_sd = standard_sd)
-
-  control <- control[!names(control) %in% c("weights")]
-  settings <- .control_to_settings(control)
-
-  out <- tibble(
-    estimator = "pls::plsr",
-    size = utils::object.size(m),
-    handler = list(model_handler),
-    settings
-  )
-
-  return(out)
-
-}
-
-.handler.pls <- function(object, data, formula = NULL, standard_sd = NULL, ..., .what = "model") {
-
-  if (.what == "model") {
-    return(object)
+  eval_fun_ <- function(...) {
+    args <- list(...)
+    do.call(pls::plsr, args)
   }
-
-  if (.what == "predict") {
-    response_var <- all.vars(formula)[1]
-    if (response_var %in% colnames(data)) {
-      truth <- data[, response_var]
-    } else {
-      truth <- NULL
-    }
-    pred <- dplyr::tibble(
-      prediction = drop(stats::predict(object, data, ncomp = object$ncomp)),
-      truth = truth
-    )
-    return(pred)
-  }
-
-  if (.what == "estimates") {
-    beta <- drop(stats::coef(object, intercept = T))
-    beta[-1] <- beta[-1] / standard_sd
-    var_names <- names(beta)
-
-    estimates <- dplyr::tibble(
-      term = var_names,
-      estimate = beta
-    )
-    return(estimates)
-  }
-
+  eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
+  res <- do.call(eval_fun,
+                 append(list(formula = self$formula, data = data,
+                             scale=standard_sd, center=T), ctr))
+  .store_on_self(self, res)
+  self$fit_info <- list(standard_sd = standard_sd)
+  self$estimator <- "pls::plsr"
+  invisible(self)
 }
