@@ -6,12 +6,11 @@
 #'
 #' *None. Cross validation not applicable.*
 #'
-#' The function provides a wrapper for \code{stats::glm}.
+#' The function provides a wrapper for \code{arm::bayesglm}.
 #'
-#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param self a tidyFit R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @param control  Additional arguments passed to \code{bayesglm}.
-#' @param ... Not used.
+#' @return A fitted tidyFit class model.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
 #'
@@ -30,34 +29,27 @@
 #'
 #' @seealso \code{\link{.model.glm}} and \code{\link{m}} methods
 #'
-#' @importFrom dplyr tibble as_tibble everything
-#' @importFrom tidyr nest
+#' @importFrom purrr safely quietly
 #' @importFrom methods formalArgs
-#' @importFrom purrr partial
-#' @importFrom utils object.size
 
-.model.bayes <- function(formula = NULL, data = NULL, control = NULL, ...) {
+.model.bayes <- function(
+    self,
+    data = NULL
+) {
 
-  f <- control$family
-  control$x <- FALSE
-  control$y <- FALSE
-  control$model <- FALSE
-  control <- control[names(control) %in% methods::formalArgs(arm::bayesglm)]
-
-  m <- do.call(arm::bayesglm, append(list(formula = formula, data = data), control))
-
-  model_handler <- purrr::partial(.handler.stats, object = m, formula = formula)
-
-  control <- control[!names(control) %in% c("weights", "model", "x", "y")]
-  settings <- .control_to_settings(control)
-
-  out <- dplyr::tibble(
-    estimator = "arm::bayesglm",
-    size = utils::object.size(m),
-    handler = list(model_handler),
-    settings
-  )
-
-  return(out)
+  ctr <- self$args[names(self$args) %in% methods::formalArgs(arm::bayesglm)]
+  ctr$model <- FALSE
+  ctr$x <- FALSE
+  ctr$y <- FALSE
+  eval_fun_ <- function(...) {
+    args <- list(...)
+    do.call(arm::bayesglm, args)
+  }
+  eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
+  res <- do.call(eval_fun,
+                 append(list(formula = self$formula, data = data), ctr))
+  .store_on_self(self, res)
+  self$estimator <- "arm::bayesglm"
+  invisible(self)
 
 }
