@@ -8,13 +8,9 @@
 #'
 #' The function provides a wrapper for \code{lme4::glmer}.
 #'
-#' Note that the function should only be used in conjunction with \code{regress} or \code{classify} and not as a stand-alone function. This is because of the reliance on the formula syntax in \code{glmer}, which requires some specialized arguments passed to 'control'.
-#'
-#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param self a tidyFit R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @param control  Additional arguments passed to \code{glmer}.
-#' @param ... Not used.
-#' @return A 'tibble'.
+#' @return A fitted tidyFit class model.
 #' @author Johann Pfitzinger
 #'
 #' @examples
@@ -29,67 +25,22 @@
 #'
 #' @seealso \code{\link{.model.glm}} and \code{\link{m}} methods
 #'
-#' @importFrom dplyr tibble bind_cols mutate all_of
-#' @importFrom tidyr expand_grid pivot_longer
-#' @importFrom purrr map_dfr map2_dfr
-#' @importFrom rlang :=
+#' @importFrom purrr safely quietly
 #' @importFrom methods formalArgs
-#' @importFrom utils object.size
 
-.model.glmm <- function(formula = NULL, data = NULL, control = NULL, ...) {
-
-  control <- control[names(control) %in% methods::formalArgs(lme4::glmer)]
-
-  m <- do.call(lme4::glmer, append(list(formula = formula, data = data), control))
-
-  model_handler <- purrr::partial(.handler.glmm, object = m, formula = formula)
-
-  control <- control[!names(control) %in% c("weights")]
-  settings <- .control_to_settings(control)
-
-  out <- tibble(
-    estimator = "lme4::glmm",
-    size = utils::object.size(m),
-    handler = list(model_handler),
-    settings
-  )
-
-  return(out)
-
-}
-
-.handler.glmm <- function(object, data, formula = NULL, ..., .what = "model") {
-
-  if (.what == "model") {
-    return(object)
+.model.glmm <- function(
+    self,
+    data = NULL
+) {
+  ctr <- self$args[names(self$args) %in% methods::formalArgs(lme4::glmer)]
+  eval_fun_ <- function(...) {
+    args <- list(...)
+    do.call(lme4::glmer, args)
   }
-
-  if (.what == "predict") {
-    response_var <- all.vars(formula)[1]
-    if (response_var %in% colnames(data)) {
-      truth <- data[, response_var]
-    } else {
-      truth <- NULL
-    }
-    pred <- dplyr::tibble(
-      prediction = stats::predict(object, data),
-      truth = truth
-    )
-    return(pred)
-  }
-
-  if (.what == "estimates") {
-    coefs <- stats::coef(object)
-    estimates <- coefs %>%
-      purrr::map2_dfr(names(coefs), function(cf, nam) {
-        coefs_ <- cf %>%
-          dplyr::as_tibble() %>%
-          dplyr::mutate(!! nam := rownames(cf)) %>%
-          tidyr::pivot_longer(-dplyr::all_of(nam),
-                              names_to = "term",
-                              values_to = "estimate")
-      })
-    return(estimates)
-  }
-
+  eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
+  res <- do.call(eval_fun,
+                 append(list(formula = self$formula, data = data), ctr))
+  .store_on_self(self, res)
+  self$estimator <- "lme4::glmer"
+  invisible(self)
 }
