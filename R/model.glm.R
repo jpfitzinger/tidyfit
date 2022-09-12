@@ -8,11 +8,9 @@
 #'
 #' The function provides a wrapper for \code{stats::glm}.
 #'
-#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param self a tidyFit R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @param control  Additional arguments passed to \code{glm}.
-#' @param ... Not used.
-#' @return A 'tibble'.
+#' @return A fitted tidyFit class model.
 #' @author Johann Pfitzinger
 #'
 #' @examples
@@ -31,31 +29,30 @@
 #' @seealso \code{\link{.model.lm}} and \code{\link{m}} methods
 #'
 #' @importFrom stats glm coef
-#' @importFrom dplyr tibble bind_cols
 #' @importFrom methods formalArgs
-#' @importFrom utils object.size
 
-.model.glm <- function(formula = NULL, data = NULL, control = NULL, ...) {
+.model.glm <- function(
+    self,
+    data = NULL
+) {
 
-  control$x <- FALSE
-  control$y <- FALSE
-  control$model <- FALSE
-  control <- control[names(control) %in% methods::formalArgs(stats::glm)]
-
-  m <- do.call(stats::glm, append(list(formula = formula, data = data), control))
-
-  model_handler <- purrr::partial(.handler.stats, object = m, formula = formula)
-
-  control <- control[!names(control) %in% c("weights", "model", "x", "y")]
-  settings <- .control_to_settings(control)
-
-  out <- tibble(
-    estimator = "stats::glm",
-    size = utils::object.size(m),
-    handler = list(model_handler),
-    settings
-  )
-
-  return(out)
+  if (self$mode == "regression")
+    self$set_args(family = gaussian(), overwrite = FALSE)
+  if (self$mode == "classification")
+    self$set_args(family = binomial(), overwrite = FALSE)
+  ctr <- self$args[names(self$args) %in% methods::formalArgs(stats::glm)]
+  ctr$model <- FALSE
+  ctr$x <- FALSE
+  ctr$y <- FALSE
+  eval_fun_ <- function(...) {
+    args <- list(...)
+    do.call(stats::glm, args)
+  }
+  eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
+  res <- do.call(eval_fun,
+                 append(list(formula = self$formula, data = data), ctr))
+  .store_on_self(self, res)
+  self$estimator <- "stats::glm"
+  invisible(self)
 
 }
