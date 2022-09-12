@@ -13,10 +13,9 @@
 #'
 #' If no hyperparameter grid is passed (\code{is.null(control$mstop)} and \code{is.null(control$nu)}), the default grid is used with \code{mstop = c(100, 500, 1000, 5000)} and \code{nu = c(0.01, 0.05, 0.1, 0.15, 0.2, 0.25)}.
 #'
-#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param self a tidyFit R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @param control  Additional arguments passed to \code{mboost::glmboost}.
-#' @param ... Not used.
+#' @return A fitted tidyFit class model.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
 #' @references
@@ -38,117 +37,44 @@
 #' @seealso \code{\link{m}} method
 #'
 #' @importFrom stats coef
-#' @importFrom purrr map_dbl partial quietly
-#' @importFrom dplyr mutate left_join n
-#' @importFrom tidyr gather expand_grid
+#' @importFrom purrr sefely quietly
 #' @importFrom methods formalArgs
-#' @importFrom utils object.size
 
 .model.boost <- function(
-    formula = NULL,
-    data = NULL,
-    control = NULL,
-    ...
-    ) {
-
-  mf <- stats::model.frame(formula, data)
-  x <- stats::model.matrix(formula, mf)
+    self,
+    data = NULL
+) {
+  mf <- stats::model.frame(self$formula, data)
+  x <- stats::model.matrix(self$formula, mf)
   y <- stats::model.response(mf)
   if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
-
-  f <- control$family
-  if (is.null(f)) f <- gaussian()
-  if (f$family == "gaussian") {
-    family <- mboost::Gaussian()
-  } else if (f$family == "binomial") {
-    family <- mboost::Binomial()
+  if (self$mode == "regression") {
+    self$set_args(family = mboost::Gaussian(), overwrite = FALSE)
+  } else if (self$mode == "classification") {
+    self$set_args(family = mboost::Binomial(), overwrite = FALSE)
     y <- as.factor(y)
   }
-
-  mstop <- control$mstop
-  nu <- control$nu
-  # Available args are not accessible using formalArgs without importing mboost:::glmboost.matrix
-  glmboost.matrix_args <- c("x", "y", "weights", "offset", "family", "na.action", "contrasts.arg", "center", "control", "oobweights")
-  control <- control[names(control) %in% glmboost.matrix_args]
-  control <- control[!names(control) %in% c("control", "center", "family", "x", "y")]
-
+  glmboost.matrix_args <- c("weights", "offset", "family", "na.action",
+                            "contrasts.arg", "oobweights",
+                            "nu", "mstop")
+  ctr <- self$args[names(self$args) %in% glmboost.matrix_args]
   standard_mean <- apply(x, 2, mean)
   standard_sd <- apply(x, 2, stats::sd)
   xs <- as.matrix(scale(x, center = standard_mean, scale = standard_sd))
-
   xs <- data.frame(`(Intercept)` = 1, xs, check.names = FALSE)
 
-  ctr <- mboost::boost_control(mstop = mstop, nu = nu)
-  m <- do.call(mboost::glmboost, append(list(x = data.matrix(xs), y = y,
-                                             control = ctr, center = F,
-                                             family = family), control))
-
-  model_handler <- purrr::partial(.handler.mboost, object = m, formula = formula,
-                                  family = f, standard_sd = standard_sd,
-                                  standard_mean = standard_mean,
-                                  var_names = colnames(xs))
-
-  control <- control[!names(control) %in% c("weights")]
-  control$mstop <- mstop
-  control$nu <- nu
-  settings <- .control_to_settings(control)
-
-  out <- tibble(
-    estimator = "mboost::glmboost",
-    size = utils::object.size(m),
-    handler = list(model_handler),
-    settings
-  )
-
-  return(out)
-
-}
-
-.handler.mboost <- function(object, data, formula = NULL, family = NULL,
-                            standard_sd = NULL, standard_mean = NULL, var_names = NULL,
-                            ..., .what = "model") {
-
-  if (.what == "model") {
-    return(object)
+  control <- mboost::boost_control(mstop = ctr$mstop, nu = ctr$nu)
+  ctr <- within(ctr, rm(mstop, nu))
+  eval_fun_ <- function(...) {
+    args <- list(...)
+    do.call(mboost::glmboost, args)
   }
-
-  if (.what == "predict") {
-    response_var <- all.vars(formula)[1]
-    if (response_var %in% colnames(data)) {
-      truth <- data[, response_var]
-    } else {
-      data[, response_var] <- 1
-      truth <- NULL
-    }
-    mf <- stats::model.frame(formula, data)
-    x <- stats::model.matrix(formula, mf)
-    y <- stats::model.response(mf)
-    if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
-    xs <- as.matrix(scale(x, center = standard_mean, scale = standard_sd))
-    xs <- data.frame(`(Intercept)` = 1, xs, check.names = FALSE)
-    pred <- dplyr::tibble(
-      prediction = drop(stats::predict(object, data.matrix(xs), type = "response")),
-      truth = truth
-    )
-    return(pred)
-  }
-
-  if (.what == "estimates") {
-    quiet_coefs <- purrr::quietly(stats::coef)
-    beta <- purrr::map_dbl(var_names, function(x) quiet_coefs(object, which = x, off2int = F)$result[x])
-    beta[1] <- beta[1] + object$offset
-    names(beta) <- var_names
-    if (family$family == "binomial") {
-      beta <- beta * 2
-    }
-    beta[-1] <- beta[-1] / standard_sd
-    beta[1] <- beta[1] - crossprod(beta[-1], standard_mean)
-
-    estimates <- dplyr::tibble(
-      term = var_names,
-      estimate = beta
-    )
-    return(estimates)
-  }
-
+  eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
+  res <- do.call(eval_fun,
+                 append(list(x = data.matrix(xs), y = y, control = control,
+                             center = F), ctr))
+  .store_on_self(self, res)
+  self$fit_info <- list(standard_mean = standard_mean, standard_sd = standard_sd, var_names = colnames(xs))
+  self$estimator <- "mboost::glmboost"
+  invisible(self)
 }
