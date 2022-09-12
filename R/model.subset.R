@@ -12,11 +12,9 @@
 #'
 #' Forward or backward selection can be performed by passing \code{method = "forward"} or \code{method = "backward"} to \code{\link{m}}.
 #'
-#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param self a tidyFit R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @param control  Additional arguments passed to \code{bestglm::bestglm}.
-#' @param ... Not used.
-#' @return A 'tibble'.
+#' @return A fitted tidyFit class model.
 #' @author Johann Pfitzinger
 #' @references
 #' A.I. McLeod, Changjiang Xu and Yuanhao Lai (2020).
@@ -37,88 +35,38 @@
 #'
 #' @seealso \code{\link{m}} method
 #'
-#' @importFrom purrr quietly partial
+#' @importFrom purrr quietly safely partial
 #' @importFrom methods formalArgs
-#' @importFrom utils object.size
 
 .model.subset <- function(
-    formula = NULL,
-    data = NULL,
-    control = NULL,
-    ...
+    self,
+    data = NULL
 ) {
-
-  control <- control[names(control) %in% methods::formalArgs(bestglm::bestglm)]
-  if (is.null(control$family)) {
-    f <- gaussian()
-  } else {
-    f <- control$family
-  }
-
-  control <- control[names(control) != "family"]
-
-  mf <- stats::model.frame(formula, data)
-  x <- stats::model.matrix(formula, mf)
+  if (is.null(self$mode)) self$mode <- "regression"
+  ctr <- self$args[names(self$args) %in% methods::formalArgs(bestglm::bestglm)]
+  mf <- stats::model.frame(self$formula, data)
+  x <- stats::model.matrix(self$formula, mf)
   y <- stats::model.response(mf)
-
   incl_intercept <- "(Intercept)" %in% colnames(x)
   if (incl_intercept) x <- x[, -1]
-
   Xy <- data.frame(x, y, check.names = FALSE)
   var_names_map <- .names_map(colnames(Xy))
-
-  quiet_bestglm <- purrr::quietly(bestglm::bestglm)
-
-  if (f$family == "gaussian") {
-    part_bestglm <- purrr::partial(quiet_bestglm, family = gaussian, intercept = incl_intercept)
-  } else if (f$family == "binomial") {
-    part_bestglm <- purrr::partial(quiet_bestglm, family = binomial, intercept = incl_intercept)
+  eval_fun_ <- function(...) {
+    m <- bestglm::bestglm(...)
+    m$BestModel
   }
-
-  m <- do.call(part_bestglm, append(list(Xy = data.frame(Xy)), control))$result
-  m <- m$BestModel
-
-  model_handler <- purrr::partial(.handler.bestglm, object = m, formula = formula, names_map = var_names_map)
-
-  control <- control[!names(control) %in% c("weights")]
-  settings <- .control_to_settings(control)
-
-  out <- tibble(
-    estimator = "bestglm::bestglm",
-    size = utils::object.size(m),
-    handler = list(model_handler),
-    settings
-  )
-
-  return(out)
-
-}
-
-.handler.bestglm <- function(object, data, formula = NULL, names_map = NULL, ..., .what = "model") {
-
-  if (.what == "model") {
-    return(object)
+  eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
+  if (self$mode == "regression") {
+    eval_fun <- purrr::partial(eval_fun, family = gaussian)
   }
-
-  if (.what == "predict") {
-    response_var <- all.vars(formula)[1]
-    if (response_var %in% colnames(data)) {
-      truth <- data[, response_var]
-    } else {
-      truth <- NULL
-    }
-    data <- data.frame(stats::model.matrix(formula, data))
-    pred <- dplyr::tibble(
-      prediction = stats::predict(object, data, type = "response"),
-      truth = truth
-    )
-    return(pred)
+  if (self$mode == "classification") {
+    eval_fun <- purrr::partial(eval_fun, family = binomial)
   }
-
-  if (.what == "estimates") {
-    estimates <- broom::tidy(object)
-    estimates$term <- names_map[estimates$term]
-    return(estimates)
-  }
-
+  res <- do.call(eval_fun, append(
+    list(Xy = data.frame(Xy), intercept = incl_intercept),
+    ctr))
+  .store_on_self(self, res)
+  self$fit_info <- list(names_map = var_names_map)
+  self$estimator <- "bestglm::bestglm"
+  invisible(self)
 }
