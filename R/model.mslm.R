@@ -2,11 +2,9 @@
 #' @title Markov-Switching Regression for \code{tidyfit}
 #' @description Fits a Markov-Switching regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
 #'
-#' @param formula an object of class "formula": a symbolic description of the model to be fitted.
+#' @param self a tidyFit R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @param control  Additional arguments passed to \code{MSwM::msmFit}.
-#' @param ... Not used.
-#' @return A 'tibble'.
+#' @return A fitted tidyFit class model.
 #'
 #' @details  **Hyperparameters:**
 #'
@@ -14,7 +12,7 @@
 #'
 #' The function provides a wrapper for \code{MSwM::msmFit}. Note that only the regression method with 'lm' is implemented at this stage.
 #'
-#' An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("tvp"))} (e.g. a date index). This only works when the formula is specified as \code{y ~ .} (with a dot on the RHS), since otherwise the index_col is currently removed by \code{\link{regress}}.
+#' An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("mslm"))} (e.g. a date index).
 #'
 #' @author Johann Pfitzinger
 #'
@@ -37,108 +35,44 @@
 #'
 #' @seealso \code{\link{.model.tvp}} and \code{\link{m}} methods
 #'
-#' @importFrom dplyr tibble everything as_tibble
-#' @importFrom tidyr nest
-#' @importFrom purrr partial
+#' @importFrom purrr safely quietly
 #' @importFrom stats lm
 #' @importFrom methods formalArgs
-#' @importFrom utils object.size
 
 .model.mslm <- function(
-    formula = NULL,
-    data = NULL,
-    control = NULL,
-    ...
+    self,
+    data = NULL
 ) {
-
-  idx_col <- control$index_col
-  control$family <- NULL
-  wts <- control$weights
-  control <- control[names(control) %in% methods::formalArgs(MSwM::msmFit)]
-
-  if (is.null(idx_col)) {
+  data <- data.frame(data, check.names = FALSE)
+  idx_col <- self$args$index_col
+  if (is.null(self$args$index_col)) {
     idx_var <- 1:nrow(data)
   } else {
-    idx_var <- data[, idx_col]
-    data <- data[, colnames(data)!=idx_col]
+    idx_var <- data[, self$args$index_col]
+    data <- data[, colnames(data)!=self$args$index_col]
   }
+  wts <- self$args$weights
+  self$set_args(k = 2, overwrite = FALSE)
+  ctr <- self$args[names(self$args) %in% methods::formalArgs(MSwM::msmFit)]
 
   if (is.null(wts)) {
-    m_raw <- stats::lm(formula, data)
+    m_raw <- stats::lm(self$formula, data)
   } else {
-    m_raw <- stats::lm(formula, data, weights = wts)
+    m_raw <- stats::lm(self$formula, data, weights = wts)
+  }
+  if (is.null(ctr$sw)) {
+    ctr$sw <- rep(TRUE, length(m_raw$coefficients) + 1)
   }
 
-  if (is.null(control$sw)) {
-    control$sw <- rep(TRUE, length(m_raw$coefficients) + 1)
+  eval_fun_ <- function(...) {
+    args <- list(...)
+    do.call(MSwM::msmFit, args)
   }
-
-  m <- do.call(MSwM::msmFit, append(list(object = m_raw), control))
-
-  model_handler <- purrr::partial(.handler.MSwM, object = m, formula = formula, index_var = idx_var)
-
-  control <- control[!names(control) %in% c("weights")]
-  settings <- .control_to_settings(control)
-
-  out <- tibble(
-    estimator = "MSwM::msmFit",
-    size = utils::object.size(m),
-    handler = list(model_handler),
-    settings
-  )
-
-  return(out)
-
-}
-
-.handler.MSwM <- function(object, data, formula = NULL, index_var = NULL, ..., .what = "model") {
-
-  if (.what == "model") {
-    return(object)
-  }
-
-  if (.what == "predict") {
-    response_var <- all.vars(formula)[1]
-    if (response_var %in% colnames(data)) {
-      truth <- data[, response_var]
-    } else {
-      truth <- NULL
-    }
-    pred <- object@Fit@CondMean * object@Fit@smoProb[-1,]
-    pred <- dplyr::tibble(
-      prediction = rowSums(pred),
-      truth = truth
-    )
-    return(pred)
-  }
-
-  if (.what == "estimates") {
-    beta <- data.matrix(object@Coef)
-    beta_var <- data.matrix(object@seCoef^2)
-    probs <- data.matrix(object@Fit@smoProb[-1,])
-    beta_probs <- probs %*% beta
-    beta_se_probs <- sqrt(probs %*% beta_var)
-    estimates <- beta_probs %>%
-      dplyr::as_tibble() %>%
-      dplyr::mutate(index = index_var) %>%
-      tidyr::gather("term", "estimate", -.data$index)
-    estimates_se <- beta_se_probs %>%
-      dplyr::as_tibble() %>%
-      dplyr::mutate(index = index_var) %>%
-      tidyr::gather("term", "std.error", -.data$index)
-    estimates <- estimates %>%
-      dplyr::left_join(estimates_se, by = c("term", "index"))
-    colnames(probs) <- paste("Regime", 1:object@k, "Prob")
-    probs_df <- dplyr::as_tibble(probs) %>%
-      dplyr::mutate(index = index_var)
-    beta_df <- t(beta)
-    colnames(beta_df) <- paste("Regime", 1:object@k, "Beta")
-    beta_df <- dplyr::as_tibble(beta_df) %>%
-      dplyr::mutate(term = rownames(beta_df))
-    estimates <- estimates %>%
-      dplyr::left_join(probs_df, by = "index") %>%
-      dplyr::left_join(beta_df, by = "term")
-    return(estimates)
-  }
-
+  eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
+  res <- do.call(eval_fun,
+                 append(list(object = m_raw), ctr))
+  .store_on_self(self, res)
+  self$fit_info <- list(index_var = idx_var)
+  self$estimator <- "MSwM::msmFit"
+  invisible(self)
 }
