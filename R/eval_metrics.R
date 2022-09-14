@@ -5,6 +5,14 @@
 
 .eval_metrics <- function(pred, mode, weights = NULL) {
 
+  if (!"truth" %in% colnames(pred)) {
+    metrics <- tibble(
+      grid_id = unique(pred$grid_id),
+      metric = NA
+    )
+    return(metrics)
+  }
+
   pred <- dplyr::group_by(pred, across(any_of(c("grid_id", "class"))))
   if(is.null(weights)) {
     pred <- dplyr::mutate(pred, weights = 1)

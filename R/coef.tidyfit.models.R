@@ -41,15 +41,14 @@ coef.tidyfit.models <- function(
     .bootstrap_alpha = 0.05,
     .keep_grid_id = FALSE) {
 
-  sel_cols <- c("settings", "estimator", "size")
+  sel_cols <- c("settings", "estimator", "size (MB)", "errors", "warnings", "messages")
   gr_vars <- attr(object, "structure")$groups
   out <- object %>%
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
     dplyr::rename(grid_id_ = .data$grid_id) %>%
-    dplyr::mutate(fit = purrr::map2(.data$handler, .data$grid_id_,
-                                    function(handler, grid_id_) handler(.what = "estimates", selected_id = grid_id_))) %>%
-    dplyr::select(-.data$handler) %>%
-    tidyr::unnest(.data$fit)
+    dplyr::mutate(coefs = purrr::map(.data$model_object, ~.$coef())) %>%
+    dplyr::select(-.data$model_object) %>%
+    tidyr::unnest(.data$coefs)
 
   if ("grid_id" %in% colnames(out)) {
     out <- dplyr::select(out, -.data$grid_id_)

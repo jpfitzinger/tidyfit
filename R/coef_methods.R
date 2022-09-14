@@ -102,6 +102,9 @@
   return(estimates)
 }
 
+#' @importFrom rlang :=
+#' @importFrom dplyr as_tibble mutate all_of
+#' @importFrom tidyr pivot_longer
 .coef.merMod <- function(object, ...) {
   coefs <- stats::coef(object)
   estimates <- coefs %>%

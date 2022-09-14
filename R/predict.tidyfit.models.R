@@ -41,33 +41,18 @@ predict.tidyfit.models <- function(object, newdata, ..., .keep_grid_id = FALSE) 
       dplyr::left_join(newdata, by = gr_vars)
   }
 
-  predict_wrapper <- function(func, id, data, ...) {
-    func(.what = "predict", selected_id = id, data = as.data.frame(data))
-  }
-
-  sel_cols <- c("settings", "estimator", "size")
+  sel_cols <- c("settings", "estimator", "size (MB)", "errors", "warnings", "messages")
   out <- object %>%
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
     dplyr::rename(grid_id_ = .data$grid_id) %>%
-    dplyr::mutate(prediction = purrr::pmap(list(.data$handler, .data$grid_id_, .data$newdata), ~ predict_wrapper(..1, ..2, ..3, ...))) %>%
-    dplyr::select(-.data$handler, -.data$newdata) %>%
+    dplyr::mutate(prediction = purrr::pmap(list(.data$model_object, .data$newdata), ~..1$predict(as.data.frame(..2, check.names = FALSE)))) %>%
+    dplyr::select(-.data$model_object, -.data$newdata) %>%
     tidyr::unnest(.data$prediction)
 
   if ("grid_id" %in% colnames(out)) {
     out <- dplyr::select(out, -.data$grid_id_)
   } else {
     out <- dplyr::rename(out, grid_id = .data$grid_id_)
-  }
-
-  # Add weights
-  additional_args <- list(...)
-  if (!is.null(additional_args$weights)) {
-    out <- out %>%
-      dplyr::group_by(.data$grid_id)
-    if ("class" %in% colnames(out)) out <- dplyr::group_by(out, .data$class, .add = TRUE)
-    out <- out %>%
-      dplyr::mutate(weights = additional_args$weights) %>%
-      dplyr::ungroup()
   }
 
   col_ord <- c(gr_vars, "model", "grid_id", "slice_id", "class", "prediction", "truth")
