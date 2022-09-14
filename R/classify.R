@@ -27,11 +27,12 @@
 #' @param .force_cv boolean. Should models be evaluated across all cv slices, even if no hyperparameters are tuned. Default is \code{.force_cv=TRUE}.
 #' @return A \code{tidyfit.models} frame containing model details for each group.
 #'
-#' The **models frame** consists of 3 different components:
+#' The **models frame** consists of 4 different components:
 #'
 #'  1. A group of identifying columns (e.g. model name, data groups, grid IDs)
-#'  2. A 'handler' column, which consists of partialized functions that contain all the necessary information to return (a) the model object itself with, (b) model coefficients or (c) predictions.
+#'  2. A 'model_object' column, which contains the fitted model.
 #'  3. A nested 'settings' column containing model arguments and hyperparameters
+#'  4. Columns showing errors, warnings and messages (if applicable)
 #'
 #' Coefficients or predictions can be accessed using the built-in \code{coef} and \code{predict} methods. Note that all coefficients are transformed to ensure comparability across methods.
 #'
@@ -53,10 +54,10 @@
 #' @seealso \code{\link{regress}}, \code{\link{coef.tidyfit.models}} and \code{\link{predict.tidyfit.models}} method
 #'
 #' @importFrom magrittr %>%
-#' @importFrom tidyr unnest nest any_of
-#' @importFrom tibble new_tibble
-#' @importFrom purrr map_dfr
-#' @importFrom dplyr group_vars group_by across all_of filter mutate ungroup select distinct left_join do select_if bind_rows coalesce
+#' @importFrom tidyr expand_grid
+#' @importFrom purrr map_dfr map transpose
+#' @importFrom dplyr coalesce group_vars group_split
+#' @importFrom progressr progressor
 #' @importFrom rlang .data
 #' @importFrom utils globalVariables
 
@@ -80,7 +81,8 @@ classify <- function(
   model_list <- list(...)
   .cv <- match.arg(.cv)
   if (is.null(.cv_args)) .cv_args <- list()
-  if (!inherits(.cv_args, "list")) stop("'.cv_args' must be a 'list'.")
+  if (!inherits(.cv_args, "list"))
+    stop("'.cv_args' must be a 'list'.")
 
   # Checks
   if (length(model_list)==0)
@@ -89,13 +91,12 @@ classify <- function(
   # Prepare model names
   model_names <- names(model_list)
   if (is.null(model_names)) model_names <- rep(NA, length(model_list))
-  model_names <- sapply(model_names, function(nam) ifelse(nam == "", NA, nam))
+  model_names[model_names == ""] <- NA
   method_names <- sapply(model_list, function(mod) mod$model_object[[1]]$method)
   model_names <- dplyr::coalesce(model_names, method_names)
   names(model_list) <- model_names
 
-  # TODO: fold into R6class
-  sapply(method_names, .check_method, "classify", message = TRUE)
+  .check_method(method_names, "classify", message = TRUE)
 
   # Multinomial classification
   # Check if formula specified as two-column response
@@ -106,7 +107,7 @@ classify <- function(
     if (length(response_lvls) < 2)
       stop("response must contain at least 2 classes")
     if (length(response_lvls) > 2) {
-      sapply(method_names, .check_method, "multinomial", message = TRUE)
+      .check_method(method_names, "multinomial", message = TRUE)
     }
     .data[[response_var]] <- as.factor(.data[[response_var]])
   }
@@ -118,9 +119,14 @@ classify <- function(
     if (.force_cv) mod$cv <- TRUE
     mod
   })
+
   gr_vars <- dplyr::group_vars(.data)
   df_list <- dplyr::group_split(.data)
-  df_list <- purrr::map(df_list, ~.make_cross_val(., .cv, .cv_args, gr_vars, .mask, .weights))
+  df_list <- purrr::map(df_list,
+                        ~.make_cross_val(
+                          ., .cv, .cv_args,
+                          gr_vars, .mask, .weights
+                          ))
   eval_df <- tidyr::expand_grid(model_df, data = df_list)
 
   p <- progressr::progressor(nrow(eval_df))
