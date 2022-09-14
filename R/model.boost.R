@@ -37,7 +37,7 @@
 #' @seealso \code{\link{m}} method
 #'
 #' @importFrom stats coef
-#' @importFrom purrr sefely quietly
+#' @importFrom purrr safely quietly
 #' @importFrom methods formalArgs
 
 .model.boost <- function(
