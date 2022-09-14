@@ -40,7 +40,7 @@ coef(fit)
 
 # With robust standard errors
 fit <- m("robust", Return ~ `Mkt-RF` + HML + SMB, data, vcov. = "HAC")
-tidyr::unnest(fit, settings)
+tidyr::unnest(coef(fit), model_info)
 
 }
 \seealso{

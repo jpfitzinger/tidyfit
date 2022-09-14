@@ -30,7 +30,7 @@
 #'
 #' # With robust standard errors
 #' fit <- m("robust", Return ~ `Mkt-RF` + HML + SMB, data, vcov. = "HAC")
-#' tidyr::unnest(fit, settings)
+#' tidyr::unnest(coef(fit), model_info)
 #'
 #' @seealso \code{\link{.model.lm}} and \code{\link{m}} methods
 #'
@@ -46,7 +46,7 @@
   rlm_args <- c("x", "y", "weights", "w", "init", "psi", "scale.est", "k2", "method",
                 "wt.method", "maxit", "acc", "test.vec", "lqs.control")
   ctr <- self$args[names(self$args) %in% rlm_args]
-  if (is.null(ctr$weights)) ctr <- with(ctr, rm(weights))
+  if (is.null(ctr$weights)) ctr <- ctr[names(ctr)!="weights"]
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, data)
   y <- stats::model.response(mf)
