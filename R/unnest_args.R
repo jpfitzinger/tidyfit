@@ -1,9 +1,10 @@
-
+#' @importFrom dplyr mutate rename any_of select
+#' @importFrom tidyr unnest nest
 .unnest_args <- function(row) {
   unnested_row <- row %>%
     dplyr::mutate(settings = .control_to_settings(row$model_object[[1]])$settings) %>%
-    rename(grid_id_ = .data$grid_id) %>%
-    unnest(settings) %>%
+    dplyr::rename(grid_id_ = .data$grid_id) %>%
+    tidyr::unnest(any_of("settings")) %>%
     dplyr::select(-any_of(c("weights")))
   if ("grid_id" %in% colnames(unnested_row)) {
     unnested_row <- unnested_row %>%

@@ -24,12 +24,16 @@
       }
 
       df_slices <- df %>%
-        dplyr::filter(.data$slice_id != "FULL") %>%
-        dplyr::group_by(.data$model, .data$grid_id, .add = TRUE) %>%
-        dplyr::mutate(metric = mean(.data$metric)) %>%
-        dplyr::ungroup(.data$grid_id) %>%
-        dplyr::filter(.data$metric == min(.data$metric)) %>%
-        dplyr::filter(.data$grid_id == unique(.data$grid_id)[1])
+        dplyr::filter(.data$slice_id != "FULL")
+
+      if (!all(is.na(df_slices$metric))) {
+        df_slices <- df_slices %>%
+          dplyr::group_by(.data$model, .data$grid_id, .add = TRUE) %>%
+          dplyr::mutate(metric = mean(.data$metric)) %>%
+          dplyr::ungroup(.data$grid_id) %>%
+          dplyr::filter(.data$metric == min(.data$metric)) %>%
+          dplyr::filter(.data$grid_id == unique(.data$grid_id)[1])
+      }
 
       if (.return_slices) {
         df <- df_slices %>%

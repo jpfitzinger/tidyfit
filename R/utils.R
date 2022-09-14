@@ -1,7 +1,7 @@
 # Internal helper functions
 
-#' @importFrom purrr cross safely quietly
-#' @importFrom dplyr rename mutate select relocate any_of summarise
+#' @importFrom purrr cross safely quietly map_dfr transpose
+#' @importFrom dplyr rename mutate select relocate any_of summarise ungroup pull group_nest row_number
 #' @importFrom tibble enframe
 #' @importFrom tidyr unnest nest pivot_wider
 #' @importFrom stats model.frame model.matrix model.response
@@ -121,8 +121,8 @@
 .reassign_model_info <- function(df) {
   df %>%
     dplyr::ungroup() %>%
-    group_nest(row_number()) %>%
-    pull(data) %>%
+    dplyr::group_nest(row_number()) %>%
+    dplyr::pull(data) %>%
     purrr::map_dfr(function(row) {
       row$model_object[[1]] <- row$model_object[[1]]$clone()
       row$model_object[[1]]$grid_id <- row$grid_id
