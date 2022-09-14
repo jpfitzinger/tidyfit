@@ -4,18 +4,16 @@
 \alias{.model.boost}
 \title{Gradient boosting regression for \code{tidyfit}}
 \usage{
-\method{.model}{boost}(formula = NULL, data = NULL, control = NULL, ...)
+\method{.model}{boost}(self, data = NULL)
 }
 \arguments{
-\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
+\item{self}{a tidyFit R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
-
-\item{control}{Additional arguments passed to \code{mboost::glmboost}.}
-
-\item{...}{Not used.}
 }
 \value{
+A fitted tidyFit class model.
+
 A 'tibble'.
 }
 \description{

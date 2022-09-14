@@ -4,19 +4,15 @@
 \alias{.model.tvp}
 \title{Bayesian Time-Varying Regression for \code{tidyfit}}
 \usage{
-\method{.model}{tvp}(formula = NULL, data = NULL, control = NULL, ...)
+\method{.model}{tvp}(self, data = NULL)
 }
 \arguments{
-\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
+\item{self}{a tidyFit R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
-
-\item{control}{Additional arguments passed to \code{shrinkTVP::shrinkTVP}.}
-
-\item{...}{Not used.}
 }
 \value{
-A 'tibble'.
+A fitted tidyFit class model.
 }
 \description{
 Fits a Bayesian time-varying regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
@@ -28,7 +24,7 @@ Fits a Bayesian time-varying regression and returns the results as a tibble. The
 
 The function provides a wrapper for \code{shrinkTVP::shrinkTVP}.
 
-An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("tvp"))} (e.g. a date index). This only works when the formula is specified as \code{y ~ .} (with a dot on the RHS), since otherwise the index_col is currently removed by \code{\link{regress}}.
+An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("tvp"))} (e.g. a date index).
 }
 \examples{
 # Load data

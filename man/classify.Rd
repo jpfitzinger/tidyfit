@@ -27,11 +27,12 @@
 \value{
 A \code{tidyfit.models} frame containing model details for each group.
 
-The \strong{models frame} consists of 3 different components:
+The \strong{models frame} consists of 4 different components:
 \enumerate{
 \item A group of identifying columns (e.g. model name, data groups, grid IDs)
-\item A 'handler' column, which consists of partialized functions that contain all the necessary information to return (a) the model object itself with, (b) model coefficients or (c) predictions.
+\item A 'model_object' column, which contains the fitted model.
 \item A nested 'settings' column containing model arguments and hyperparameters
+\item Columns showing errors, warnings and messages (if applicable)
 }
 
 Coefficients or predictions can be accessed using the built-in \code{coef} and \code{predict} methods. Note that all coefficients are transformed to ensure comparability across methods.

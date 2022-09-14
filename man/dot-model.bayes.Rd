@@ -4,18 +4,16 @@
 \alias{.model.bayes}
 \title{Bayesian generalized linear regression for \code{tidyfit}}
 \usage{
-\method{.model}{bayes}(formula = NULL, data = NULL, control = NULL, ...)
+\method{.model}{bayes}(self, data = NULL)
 }
 \arguments{
-\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
+\item{self}{a tidyFit R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
-
-\item{control}{Additional arguments passed to \code{bayesglm}.}
-
-\item{...}{Not used.}
 }
 \value{
+A fitted tidyFit class model.
+
 A 'tibble'.
 }
 \description{
@@ -26,7 +24,7 @@ Fits a Bayesian regression and returns the results as a tibble. The function can
 
 \emph{None. Cross validation not applicable.}
 
-The function provides a wrapper for \code{stats::glm}.
+The function provides a wrapper for \code{arm::bayesglm}.
 }
 \examples{
 # Load data

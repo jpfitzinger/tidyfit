@@ -4,19 +4,15 @@
 \alias{.model.glmm}
 \title{Generalized linear mixed-effects model for \code{tidyfit}}
 \usage{
-\method{.model}{glmm}(formula = NULL, data = NULL, control = NULL, ...)
+\method{.model}{glmm}(self, data = NULL)
 }
 \arguments{
-\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
+\item{self}{a tidyFit R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
-
-\item{control}{Additional arguments passed to \code{glmer}.}
-
-\item{...}{Not used.}
 }
 \value{
-A 'tibble'.
+A fitted tidyFit class model.
 }
 \description{
 Fits a linear or logistic mixed-effects model (GLMM) and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
@@ -27,8 +23,6 @@ Fits a linear or logistic mixed-effects model (GLMM) and returns the results as 
 \emph{None. Cross validation not applicable.}
 
 The function provides a wrapper for \code{lme4::glmer}.
-
-Note that the function should only be used in conjunction with \code{regress} or \code{classify} and not as a stand-alone function. This is because of the reliance on the formula syntax in \code{glmer}, which requires some specialized arguments passed to 'control'.
 }
 \examples{
 # Load data

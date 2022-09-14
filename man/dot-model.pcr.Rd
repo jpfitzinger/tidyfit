@@ -4,19 +4,15 @@
 \alias{.model.pcr}
 \title{Principal Components Regression for \code{tidyfit}}
 \usage{
-\method{.model}{pcr}(formula = NULL, data = NULL, control = NULL, ...)
+\method{.model}{pcr}(self, data = NULL)
 }
 \arguments{
-\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
+\item{self}{a tidyFit R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
-
-\item{control}{Additional arguments passed to \code{pls::pcr}.}
-
-\item{...}{Not used.}
 }
 \value{
-A 'tibble'.
+A fitted tidyFit class model.
 }
 \description{
 Fits a principal components regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
@@ -25,11 +21,12 @@ Fits a principal components regression and returns the results as a tibble. The 
 \strong{Hyperparameters:}
 \itemize{
 \item \code{ncomp} \emph{(number of components)}
+\item \code{ncomp_pct} \emph{(number of components, percentage of features)}
 }
 
 The principal components regression is fitted using \code{pls} package. Covariates are standardized, with coefficients back-transformed to the original scale. An intercept is always included.
 
-If no hyperparameter grid is passed (\code{is.null(control$ncomp)}), the default is \code{seq(1, nvars)}, where nvars is the number of features.
+If no hyperparameter grid is passed (\code{is.null(control$ncomp) & is.null(control$ncomp_pct)}), the default is \code{ncomp_pct = seq(0, 1, length.out = 20)}, where 0 results in one component and 1 results in the number of features.
 
 Note that at present \code{pls} does not offer weighted implementations or non-gaussian response. The method can therefore only be used with \code{\link{regress}}
 }

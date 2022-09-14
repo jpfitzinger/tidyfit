@@ -4,19 +4,15 @@
 \alias{.model.mslm}
 \title{Markov-Switching Regression for \code{tidyfit}}
 \usage{
-\method{.model}{mslm}(formula = NULL, data = NULL, control = NULL, ...)
+\method{.model}{mslm}(self, data = NULL)
 }
 \arguments{
-\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
+\item{self}{a tidyFit R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
-
-\item{control}{Additional arguments passed to \code{MSwM::msmFit}.}
-
-\item{...}{Not used.}
 }
 \value{
-A 'tibble'.
+A fitted tidyFit class model.
 }
 \description{
 Fits a Markov-Switching regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
@@ -28,7 +24,7 @@ Fits a Markov-Switching regression and returns the results as a tibble. The func
 
 The function provides a wrapper for \code{MSwM::msmFit}. Note that only the regression method with 'lm' is implemented at this stage.
 
-An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("tvp"))} (e.g. a date index). This only works when the formula is specified as \code{y ~ .} (with a dot on the RHS), since otherwise the index_col is currently removed by \code{\link{regress}}.
+An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("mslm"))} (e.g. a date index).
 }
 \examples{
 # Load data

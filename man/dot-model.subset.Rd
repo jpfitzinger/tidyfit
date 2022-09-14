@@ -4,19 +4,15 @@
 \alias{.model.subset}
 \title{Best subset regression and classification for \code{tidyfit}}
 \usage{
-\method{.model}{subset}(formula = NULL, data = NULL, control = NULL, ...)
+\method{.model}{subset}(self, data = NULL)
 }
 \arguments{
-\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
+\item{self}{a tidyFit R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
-
-\item{control}{Additional arguments passed to \code{bestglm::bestglm}.}
-
-\item{...}{Not used.}
 }
 \value{
-A 'tibble'.
+A fitted tidyFit class model.
 }
 \description{
 Fits a best subset regression or classification and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.

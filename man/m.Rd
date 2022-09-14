@@ -4,14 +4,7 @@
 \alias{m}
 \title{Generic model wrapper for \code{tidyfit}}
 \usage{
-m(
-  model_method,
-  formula = NULL,
-  data = NULL,
-  ...,
-  .return_method_name = FALSE,
-  .check_family = FALSE
-)
+m(model_method, formula = NULL, data = NULL, ...)
 }
 \arguments{
 \item{model_method}{The name of the method to fit. See Details.}

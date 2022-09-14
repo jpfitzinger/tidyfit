@@ -4,19 +4,15 @@
 \alias{.model.hfr}
 \title{Hierarchical feature regression for \code{tidyfit}}
 \usage{
-\method{.model}{hfr}(formula = NULL, data = NULL, control = NULL, ...)
+\method{.model}{hfr}(self, data = NULL)
 }
 \arguments{
-\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
+\item{self}{a tidyFit R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
-
-\item{control}{Additional arguments passed to \code{hfr::cv.hfr}.}
-
-\item{...}{Not used.}
 }
 \value{
-A 'tibble'.
+A fitted tidyFit class model.
 }
 \description{
 Fits a hierarchical feature regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
@@ -24,23 +20,23 @@ Fits a hierarchical feature regression and returns the results as a tibble. The 
 \details{
 \strong{Hyperparameters:}
 \itemize{
-\item kappa (\emph{proportional size of regression graph})
+\item kappa_grid (\emph{proportional size of regression graph})
 }
 
 The hierarchical feature regression is estimated using the \code{hfr::cv.hfr} function. An intercept is always included and features are standardized with coefficients transformed to the original scale.
 
-If no hyperparameter grid is provided (\code{is.null(control$kappa)}), the default is \code{seq(0, 1, by = 0.1)}.
+If no hyperparameter grid is provided (\code{is.null(control$kappa_grid)}), the default is \code{seq(0, 1, by = 0.1)}.
 }
 \examples{
 # Load data
 data <- tidyfit::Factor_Industry_Returns
 
 # Stand-alone function
-fit <- m("hfr", Return ~ ., data, kappa = 0.5)
+fit <- m("hfr", Return ~ ., data, kappa_grid = 0.5)
 fit
 
 # Within 'regress' function
-fit <- regress(data, Return ~ ., m("hfr", kappa = c(0.1, 0.5)), .mask = c("Date", "Industry"))
+fit <- regress(data, Return ~ ., m("hfr", kappa_grid = c(0.1, 0.5)), .mask = c("Date", "Industry"))
 coef(fit)
 
 }

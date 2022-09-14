@@ -4,19 +4,15 @@
 \alias{.model.lm}
 \title{Linear regression for \code{tidyfit}}
 \usage{
-\method{.model}{lm}(formula = NULL, data = NULL, control = NULL, ...)
+\method{.model}{lm}(self, data = NULL)
 }
 \arguments{
-\item{formula}{an object of class "formula": a symbolic description of the model to be fitted.}
+\item{self}{a tidyFit R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
-
-\item{control}{Additional arguments passed to \code{lm}.}
-
-\item{...}{Not used.}
 }
 \value{
-A 'tibble'.
+A fitted tidyFit class model.
 }
 \description{
 Fits a linear regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
