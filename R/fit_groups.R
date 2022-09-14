@@ -1,4 +1,4 @@
-
+#' @importFrom furrr future_pmap_dfr furrr_options
 
 .fit_groups <- function(row) {
   mod <- row$model_object
@@ -7,7 +7,7 @@
   cv <- row$data$cv
 
   if (!is.null(cv) & row$model_object$cv) {
-    cv_res <- purrr::pmap_dfr(cv, function(splits, id) {
+    cv_res <- furrr::future_pmap_dfr(cv, function(splits, id) {
       res_row <- dplyr::tibble(
         model = row$model,
         grid_id = row$grid_id,
@@ -26,7 +26,7 @@
         dplyr::mutate(slice_id = id) %>%
         dplyr::left_join(metrics, by = "grid_id")
       return(res_row)
-    })
+    }, .options = furrr::furrr_options(seed = TRUE))
   } else {
     cv_res <- NULL
   }
