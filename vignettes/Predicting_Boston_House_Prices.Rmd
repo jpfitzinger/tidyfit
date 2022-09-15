@@ -139,6 +139,7 @@ In the next code chunk, most of the available regression techniques are fitted t
 
 ```{r, eval=F}
 plan(multisession(workers = 12))
+progressr::handlers(global=TRUE)
 model_frame <- data_trn %>% 
   regress(medv ~ .*., 
           OLS = m("lm"),
