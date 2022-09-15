@@ -1,5 +1,6 @@
+#' @importFrom crayon bold italic red green yellow
 
-
+# R6 class for model object
 model_definition <- R6::R6Class(
   "tidyFit",
   public = list(
@@ -43,7 +44,14 @@ model_definition <- R6::R6Class(
       )
       do.call(.coef, all_args)
     },
-    print = function(...) print(paste0("<", self$method, "> object (", ifelse(is.null(self$object), "not fitted", "fitted"), ")")),
+    print = function(...) {
+      cat("<tidyFit> object\n", crayon::italic("method:"),
+          crayon::bold(self$method), "|",
+          crayon::italic("mode:"), crayon::bold(self$mode), "|",
+          crayon::italic("fitted:"), crayon::bold(ifelse(is.null(self$object), "no", "yes")), "\n",
+          ifelse(is.null(self$error), crayon::green("no errors ✔"), crayon::red("check errors ✖")), "|",
+          ifelse(is.null(self$warnings), crayon::green("no warnings ✔"), crayon::yellow("check warnings ✖")))
+    },
     set_args = function(..., overwrite = TRUE) {
       new_args <- lapply(list(...), unlist)
       if (overwrite) {
@@ -65,6 +73,7 @@ model_definition <- R6::R6Class(
   )
 )
 
+# Capture errors, warnings and messages from purrr safely/quietly function
 .store_on_self <- function(self, model) {
   self$object <- model$result$result
   self$error <- model$error[[1]]
