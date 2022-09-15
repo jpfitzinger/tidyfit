@@ -8,7 +8,7 @@
     dplyr::select(-any_of(c("weights")))
   if ("grid_id" %in% colnames(unnested_row)) {
     unnested_row <- unnested_row %>%
-      dplyr::select(-grid_id_)
+      dplyr::select(-.data$grid_id_)
   } else {
     unnested_row <- unnested_row %>%
       dplyr::rename(grid_id = .data$grid_id_)

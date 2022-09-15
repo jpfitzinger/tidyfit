@@ -1,10 +1,11 @@
 # Internal helper functions
 
 #' @importFrom purrr cross safely quietly map_dfr transpose
-#' @importFrom dplyr rename mutate select relocate any_of summarise ungroup pull group_nest row_number
+#' @importFrom dplyr rename mutate select relocate any_of summarise ungroup pull group_nest row_number across
 #' @importFrom tibble enframe
 #' @importFrom tidyr unnest nest pivot_wider
 #' @importFrom stats model.frame model.matrix model.response
+#' @importFrom utils object.size
 #' @importFrom rlang .data
 
 # Wrap vector/array arguments in list and return a grid of settings
@@ -52,30 +53,30 @@
 
 }
 
-# Combine grid_id in settings col and model frame
-.unnest_settings <- function(model_frame) {
-
-  if ("settings" %in% colnames(model_frame)) {
-    model_frame <- model_frame %>%
-      dplyr::rename(grid_id_ = .data$grid_id) %>%
-      tidyr::unnest(.data$settings)
-    if ("grid_id" %in% colnames(model_frame)) {
-      model_frame <- model_frame %>%
-        dplyr::mutate(grid_id = paste(substring(.data$grid_id_,1, 4), .data$grid_id, sep = ".")) %>%
-        dplyr::select(-.data$grid_id_)
-    } else {
-      model_frame <- model_frame %>%
-        dplyr::rename(grid_id = .data$grid_id_)
-    }
-    model_frame <- model_frame %>%
-      dplyr::relocate(.data$grid_id) %>%
-      tidyr::nest(settings = -any_of(c("grid_id", "estimator", "size", "handler", "warnings", "messages"))) %>%
-      dplyr::relocate(any_of(c("warnings", "messages")), .after = .data$settings)
-  }
-
-  return(model_frame)
-
-}
+# # Combine grid_id in settings col and model frame
+# .unnest_settings <- function(model_frame) {
+#
+#   if ("settings" %in% colnames(model_frame)) {
+#     model_frame <- model_frame %>%
+#       dplyr::rename(grid_id_ = .data$grid_id) %>%
+#       tidyr::unnest(.data$settings)
+#     if ("grid_id" %in% colnames(model_frame)) {
+#       model_frame <- model_frame %>%
+#         dplyr::mutate(grid_id = paste(substring(.data$grid_id_,1, 4), .data$grid_id, sep = ".")) %>%
+#         dplyr::select(-.data$grid_id_)
+#     } else {
+#       model_frame <- model_frame %>%
+#         dplyr::rename(grid_id = .data$grid_id_)
+#     }
+#     model_frame <- model_frame %>%
+#       dplyr::relocate(.data$grid_id) %>%
+#       tidyr::nest(settings = -any_of(c("grid_id", "estimator", "size", "handler", "warnings", "messages"))) %>%
+#       dplyr::relocate(any_of(c("warnings", "messages")), .after = .data$settings)
+#   }
+#
+#   return(model_frame)
+#
+# }
 
 .control_to_settings <- function(mod) {
   if (length(mod$args) > 0) {
@@ -111,7 +112,7 @@
   }
   df <- df %>%
     dplyr::mutate(estimator = make_vector(purrr::map(.data$model_object, function(mod) mod$estimator))) %>%
-    dplyr::mutate(`size (MB)` = make_vector(purrr::map(.data$model_object, function(mod) object.size(mod$object)))/1e6) %>%
+    dplyr::mutate(`size (MB)` = make_vector(purrr::map(.data$model_object, function(mod) utils::object.size(mod$object)))/1e6) %>%
     dplyr::mutate(errors = make_vector(purrr::map(.data$model_object, function(mod) mod$error))) %>%
     dplyr::mutate(warnings = make_vector(purrr::map(.data$model_object, function(mod) mod$warnings))) %>%
     dplyr::mutate(messages = make_vector(purrr::map(.data$model_object, function(mod) mod$messages)))
@@ -122,7 +123,7 @@
   df %>%
     dplyr::ungroup() %>%
     dplyr::group_nest(row_number()) %>%
-    dplyr::pull(data) %>%
+    dplyr::pull(.data$data) %>%
     purrr::map_dfr(function(row) {
       row$model_object[[1]] <- row$model_object[[1]]$clone()
       row$model_object[[1]]$grid_id <- row$grid_id

@@ -1,4 +1,4 @@
-#' @importFrom dplyr mutate select tibble group_by row_number any_of
+#' @importFrom dplyr mutate select tibble group_by row_number any_of across
 #' @importFrom tidyr spread
 #' @importFrom rlang .data
 #' @importFrom yardstick rmse mn_log_loss

@@ -74,7 +74,7 @@
   }
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
 
-  control_ <- within(ctr, rm(lambda, alpha))
+  control_ <- within(ctr, rm("lambda", "alpha"))
   penalty_mod <- do.call(eval_fun, append(list(x = x, y = y, alpha = 0,
                                                lambda = 0.01, intercept = incl_intercept), control_))
   if (is.null(penalty_mod$error)) {

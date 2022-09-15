@@ -14,10 +14,6 @@ m(model_method, formula = NULL, data = NULL, ...)
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 
 \item{...}{Additional arguments passed to the underlying method function (e.g. \code{lm} or \code{glm}).}
-
-\item{.return_method_name}{When \code{TRUE}, the function simply returns the 'method' argument.}
-
-\item{.check_family}{When \code{TRUE}, the function returns a flag indicating whether a custom 'family' object has been passed to \code{...}.}
 }
 \value{
 A 'tibble'.

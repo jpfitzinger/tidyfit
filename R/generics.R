@@ -14,8 +14,8 @@ predict.tidyFit <- function(object, ...) {
 }
 
 #' @export
-plot.tidyFit <- function(object, ...) {
-  plot(object$object, ...)
+plot.tidyFit <- function(x, ...) {
+  plot(x$object, ...)
 }
 
 #' @export

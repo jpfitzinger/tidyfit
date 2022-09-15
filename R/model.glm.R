@@ -28,7 +28,7 @@
 #'
 #' @seealso \code{\link{.model.lm}} and \code{\link{m}} methods
 #'
-#' @importFrom stats glm coef
+#' @importFrom stats glm coef gaussian binomial
 #' @importFrom methods formalArgs
 
 .model.glm <- function(

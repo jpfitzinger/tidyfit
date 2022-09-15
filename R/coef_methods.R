@@ -5,8 +5,6 @@
 #' @importFrom tidyr pivot_longer
 #' @importFrom broom tidy
 #' @importFrom purrr quietly map_dbl
-#' @importFrom lmtest coeftest
-#' @importFrom sandwich vcovBS vcovHAC vcovHC vcovOPG
 
 .coef.glmnet <- function(object, lambda = NULL, inner_grid = NULL, ...) {
   estimates <- broom::tidy(object)

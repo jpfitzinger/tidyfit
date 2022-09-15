@@ -64,7 +64,7 @@
   xs <- data.frame(`(Intercept)` = 1, xs, check.names = FALSE)
 
   control <- mboost::boost_control(mstop = ctr$mstop, nu = ctr$nu)
-  ctr <- within(ctr, rm(mstop, nu))
+  ctr <- within(ctr, rm("mstop", "nu"))
   eval_fun_ <- function(...) {
     args <- list(...)
     do.call(mboost::glmboost, args)

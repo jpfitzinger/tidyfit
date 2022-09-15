@@ -60,8 +60,6 @@
 #' @param formula an object of class "formula": a symbolic description of the model to be fitted.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
 #' @param ...  Additional arguments passed to the underlying method function (e.g. \code{lm} or \code{glm}).
-#' @param .return_method_name When \code{TRUE}, the function simply returns the 'method' argument.
-#' @param .check_family When \code{TRUE}, the function returns a flag indicating whether a custom 'family' object has been passed to \code{...}.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
 #'
