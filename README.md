@@ -509,6 +509,15 @@ df_test <- data %>%
   filter(Date >= 202000)
 ```
 
+Before beginning with the estimation, we activate the progress bar
+visualization. This allows us to gauge estimation progress along the
+way. `tidyfit` uses the `progressr`-package internally to generate a
+progress bar:
+
+``` r
+progressr::handlers(global=TRUE)
+```
+
 For purposes of this demonstration, the objective will be to fit an
 ElasticNet regression for each industry group, and compare results to a
 robust least squares regression. This can be done with `regress` after
@@ -546,12 +555,12 @@ subset_mod_frame <- model_frame %>%
   filter(Industry %in% unique(Industry)[1:2])
 subset_mod_frame
 #> # A tibble: 4 × 7
-#>   Industry model  estimator      size          grid_id  handler    settings
-#>   <chr>    <chr>  <chr>          <objct_sz>    <chr>    <list>     <list>  
-#> 1 Durbl    enet   glmnet::glmnet 1208536 bytes #005.002 <prrr_fn_> <tibble>
-#> 2 Enrgy    enet   glmnet::glmnet 1208872 bytes #001.002 <prrr_fn_> <tibble>
-#> 3 Durbl    robust MASS::rlm      64728 bytes   #0010000 <prrr_fn_> <tibble>
-#> 4 Enrgy    robust MASS::rlm      64816 bytes   #0010000 <prrr_fn_> <tibble>
+#>   Industry model  estimator      `size (MB)` grid_id  model_object settings
+#>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>       <list>  
+#> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|002 <tidyFit>    <tibble>
+#> 2 Utils    enet   glmnet::glmnet      1.21   #001|001 <tidyFit>    <tibble>
+#> 3 Enrgy    robust MASS::rlm           0.0648 #0010000 <tidyFit>    <tibble>
+#> 4 Utils    robust MASS::rlm           0.0648 #0010000 <tidyFit>    <tibble>
 ```
 
 Let’s unnest the settings columns:
@@ -560,13 +569,14 @@ Let’s unnest the settings columns:
 subset_mod_frame %>% 
   tidyr::unnest(settings, keep_empty = TRUE)
 #> # A tibble: 4 × 11
-#>   Industry model  estimator size  grid_id handler    family lambda alpha  method
-#>   <chr>    <chr>  <chr>     <obj> <chr>   <list>     <list>  <dbl> <list> <chr> 
-#> 1 Durbl    enet   glmnet::… 1208… #005.0… <prrr_fn_> <chr>   0.792 <dbl>  <NA>  
-#> 2 Enrgy    enet   glmnet::… 1208… #001.0… <prrr_fn_> <chr>   0.792 <dbl>  <NA>  
-#> 3 Durbl    robust MASS::rlm 6472… #00100… <prrr_fn_> <NULL> NA     <NULL> MM    
-#> 4 Enrgy    robust MASS::rlm 6481… #00100… <prrr_fn_> <NULL> NA     <NULL> MM    
-#> # … with 1 more variable: psi <list>
+#>   Industry model  estimator size …¹ grid_id model_o…² alpha family lambda method
+#>   <chr>    <chr>  <chr>       <dbl> <chr>   <list>    <dbl> <chr>   <dbl> <chr> 
+#> 1 Enrgy    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  0.792 <NA>  
+#> 2 Utils    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  1     <NA>  
+#> 3 Enrgy    robust MASS::rlm  0.0648 #00100… <tidyFit>    NA <NA>   NA     MM    
+#> 4 Utils    robust MASS::rlm  0.0648 #00100… <tidyFit>    NA <NA>   NA     MM    
+#> # … with 1 more variable: psi <list>, and abbreviated variable names
+#> #   ¹​`size (MB)`, ²​model_object
 ```
 
 The `tidyfit.models` frame can be used to access additional information.
@@ -576,22 +586,24 @@ Specifically, we can do 3 things:
 2.  Predict
 3.  Access a tibble of estimated parameters
 
-To **access the fitted models**, we need to call the handler function
-without any arguments (see
+The **fitted tidyFit models** are stored as an `R6` class in the
+`model_object` column and can be addressed directly with generics such
+as `coef` or `summary`. The underlying object (e.g. an `lm` class fitted
+model) is given in `...$object` (see
 [here](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
 for another example):
 
 ``` r
 subset_mod_frame %>% 
-  mutate(fitted_model = map(handler, ~.()))
+  mutate(fitted_model = map(model_object, ~.$object))
 #> # A tibble: 4 × 8
-#>   Industry model  estimator      size        grid_id handler    settings fitte…¹
-#>   <chr>    <chr>  <chr>          <objct_sz>  <chr>   <list>     <list>   <list> 
-#> 1 Durbl    enet   glmnet::glmnet 1208536 by… #005.0… <prrr_fn_> <tibble> <elnet>
-#> 2 Enrgy    enet   glmnet::glmnet 1208872 by… #001.0… <prrr_fn_> <tibble> <elnet>
-#> 3 Durbl    robust MASS::rlm      64728 bytes #00100… <prrr_fn_> <tibble> <rlm>  
-#> 4 Enrgy    robust MASS::rlm      64816 bytes #00100… <prrr_fn_> <tibble> <rlm>  
-#> # … with abbreviated variable name ¹​fitted_model
+#>   Industry model  estimator      `size (MB)` grid_id  model_o…¹ settings fitte…²
+#>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>    <list>   <list> 
+#> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|002 <tidyFit> <tibble> <elnet>
+#> 2 Utils    enet   glmnet::glmnet      1.21   #001|001 <tidyFit> <tibble> <elnet>
+#> 3 Enrgy    robust MASS::rlm           0.0648 #0010000 <tidyFit> <tibble> <rlm>  
+#> 4 Utils    robust MASS::rlm           0.0648 #0010000 <tidyFit> <tibble> <rlm>  
+#> # … with abbreviated variable names ¹​model_object, ²​fitted_model
 ```
 
 To **predict**, we need data with the same columns as the input data and
@@ -605,16 +617,16 @@ predict(subset_mod_frame, data)
 #> # Groups:   Industry, model [4]
 #>    Industry model prediction truth
 #>    <chr>    <chr>      <dbl> <dbl>
-#>  1 Durbl    enet      -0.897 -0.22
-#>  2 Durbl    enet       5.11   6.55
-#>  3 Durbl    enet      -1.85  -0.24
-#>  4 Durbl    enet       2.16   9.72
-#>  5 Durbl    enet      -0.739 -4.84
-#>  6 Durbl    enet       1.48   0.27
-#>  7 Durbl    enet       2.26   1.19
-#>  8 Durbl    enet       1.86   2.14
-#>  9 Durbl    enet       1.88   0.93
-#> 10 Durbl    enet      -0.351  1.93
+#>  1 Enrgy    enet      -4.75   2.29
+#>  2 Enrgy    enet       2.90   3.94
+#>  3 Enrgy    enet      -3.56  -3.64
+#>  4 Enrgy    enet      -4.34  -0.32
+#>  5 Enrgy    enet      -0.613 -1.16
+#>  6 Enrgy    enet      -1.76   4.65
+#>  7 Enrgy    enet       1.81   4.84
+#>  8 Enrgy    enet       1.18   1.06
+#>  9 Enrgy    enet       4.94   1.4 
+#> 10 Enrgy    enet      -3.89   4.03
 #> # … with 2,822 more rows
 ```
 
@@ -624,21 +636,21 @@ generic `coef` function:
 ``` r
 estimates <- coef(subset_mod_frame)
 estimates
-#> # A tibble: 25 × 5
+#> # A tibble: 28 × 5
 #> # Groups:   Industry, model [4]
 #>    Industry model term        estimate model_info      
 #>    <chr>    <chr> <chr>          <dbl> <list>          
-#>  1 Durbl    enet  (Intercept) -0.302   <tibble [1 × 4]>
-#>  2 Durbl    enet  Mkt-RF       0.992   <tibble [1 × 4]>
-#>  3 Durbl    enet  SMB          0.00978 <tibble [1 × 4]>
-#>  4 Durbl    enet  HML          0.229   <tibble [1 × 4]>
-#>  5 Enrgy    enet  (Intercept)  1.47    <tibble [1 × 4]>
-#>  6 Enrgy    enet  Mkt-RF       1.13    <tibble [1 × 4]>
-#>  7 Enrgy    enet  SMB          0.649   <tibble [1 × 4]>
-#>  8 Enrgy    enet  HML          0.0703  <tibble [1 × 4]>
-#>  9 Enrgy    enet  RMW         -0.552   <tibble [1 × 4]>
-#> 10 Enrgy    enet  CMA          1.16    <tibble [1 × 4]>
-#> # … with 15 more rows
+#>  1 Enrgy    enet  (Intercept)   1.47   <tibble [1 × 4]>
+#>  2 Enrgy    enet  Mkt-RF        1.13   <tibble [1 × 4]>
+#>  3 Enrgy    enet  SMB           0.649  <tibble [1 × 4]>
+#>  4 Enrgy    enet  HML           0.0703 <tibble [1 × 4]>
+#>  5 Enrgy    enet  RMW          -0.552  <tibble [1 × 4]>
+#>  6 Enrgy    enet  CMA           1.16   <tibble [1 × 4]>
+#>  7 Enrgy    enet  RF          -13.5    <tibble [1 × 4]>
+#>  8 Utils    enet  (Intercept)  -1.50   <tibble [1 × 4]>
+#>  9 Utils    enet  Mkt-RF        0.229  <tibble [1 × 4]>
+#> 10 Utils    enet  SMB           0.343  <tibble [1 × 4]>
+#> # … with 18 more rows
 ```
 
 The estimates contain additional method-specific information that is
@@ -647,21 +659,21 @@ similar information:
 
 ``` r
 tidyr::unnest(estimates, model_info)
-#> # A tibble: 25 × 8
+#> # A tibble: 28 × 8
 #> # Groups:   Industry, model [4]
 #>    Industry model term        estimate lambda dev.ratio std.error statistic
 #>    <chr>    <chr> <chr>          <dbl>  <dbl>     <dbl>     <dbl>     <dbl>
-#>  1 Durbl    enet  (Intercept) -0.302    0.792     0.735        NA        NA
-#>  2 Durbl    enet  Mkt-RF       0.992    0.792     0.735        NA        NA
-#>  3 Durbl    enet  SMB          0.00978  0.792     0.735        NA        NA
-#>  4 Durbl    enet  HML          0.229    0.792     0.735        NA        NA
-#>  5 Enrgy    enet  (Intercept)  1.47     0.792     0.807        NA        NA
-#>  6 Enrgy    enet  Mkt-RF       1.13     0.792     0.807        NA        NA
-#>  7 Enrgy    enet  SMB          0.649    0.792     0.807        NA        NA
-#>  8 Enrgy    enet  HML          0.0703   0.792     0.807        NA        NA
-#>  9 Enrgy    enet  RMW         -0.552    0.792     0.807        NA        NA
-#> 10 Enrgy    enet  CMA          1.16     0.792     0.807        NA        NA
-#> # … with 15 more rows
+#>  1 Enrgy    enet  (Intercept)   1.47    0.792     0.807        NA        NA
+#>  2 Enrgy    enet  Mkt-RF        1.13    0.792     0.807        NA        NA
+#>  3 Enrgy    enet  SMB           0.649   0.792     0.807        NA        NA
+#>  4 Enrgy    enet  HML           0.0703  0.792     0.807        NA        NA
+#>  5 Enrgy    enet  RMW          -0.552   0.792     0.807        NA        NA
+#>  6 Enrgy    enet  CMA           1.16    0.792     0.807        NA        NA
+#>  7 Enrgy    enet  RF          -13.5     0.792     0.807        NA        NA
+#>  8 Utils    enet  (Intercept)  -1.50    1         0.445        NA        NA
+#>  9 Utils    enet  Mkt-RF        0.229   1         0.445        NA        NA
+#> 10 Utils    enet  SMB           0.343   1         0.445        NA        NA
+#> # … with 18 more rows
 ```
 
 Suppose we would like to evaluate the relative performance of the two
@@ -679,7 +691,7 @@ model_frame %>%
   theme_bw()
 ```
 
-<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" style="display: block; margin: auto;" />
 
 The ElasticNet performs a little better (unsurprising really, given the
 small data set).

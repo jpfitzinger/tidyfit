@@ -25,3 +25,8 @@
 - Several additional cross validation methods such as bootstrap and sliding window methods
 - Several new vignettes to illustrate how to use CV methods
 - The version also adds a new method: the TVP method, which uses shrinkTVP to estimate a Bayesian time-varying parameter model.
+
+## tidyfit 0.5.0
+
+- This version introduces R6 classes for background handling of models. This generally makes the workflow more efficient and provides an easy method to store fitting information that is required at a later stage (e.g. to obtain coefficients or predictions).
+- A progress bar is introduced using 'progressr'

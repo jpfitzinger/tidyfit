@@ -137,6 +137,12 @@ df_test <- data %>%
   filter(Date >= 202000)
 ```
 
+Before beginning with the estimation, we activate the progress bar visualization. This allows us to gauge estimation progress along the way. `tidyfit` uses the `progressr`-package internally to generate a progress bar:
+
+```{r, eval=F}
+progressr::handlers(global=TRUE)
+```
+
 For purposes of this demonstration, the objective will be to fit an ElasticNet regression for each industry group, and compare results to a robust least squares regression. This can be done with `regress` after grouping the data. For grouped data, the functions `regress` and `classify` estimate models for each group independently:
 
 ```{r}
@@ -175,11 +181,11 @@ The `tidyfit.models` frame can be used to access additional information. Specifi
   2. Predict
   3. Access a tibble of estimated parameters
 
-To **access the fitted models**, we need to call the handler function without any arguments (see [here](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html) for another example):
+The **fitted tidyFit models** are stored as an `R6` class in the `model_object` column and can be addressed directly with generics such as `coef` or `summary`. The underlying object (e.g. an `lm` class fitted model) is given in `...$object` (see [here](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html) for another example):
 
 ```{r}
 subset_mod_frame %>% 
-  mutate(fitted_model = map(handler, ~.()))
+  mutate(fitted_model = map(model_object, ~.$object))
 ```
 
 To **predict**, we need data with the same columns as the input data and simply use the generic `predict` function. Groups are respected and if the response variable is in the data, it is included as a `truth` column in the resulting object:
