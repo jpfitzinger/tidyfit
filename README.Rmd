@@ -125,6 +125,12 @@ In this section, a minimal workflow is used to demonstrate how the package works
 
 ```{r example}
 data <- tidyfit::Factor_Industry_Returns
+
+# Calculate excess return
+data <- data %>% 
+  mutate(Return = Return - RF) %>% 
+  select(-RF)
+
 data
 ```
 
@@ -159,8 +165,8 @@ Note that the penalty and mixing parameters are chosen automatically using a tim
 The resulting `tidyfit.models` frame consists of 3 components:
 
   1. A group of identifying columns. This includes the `Industry` column, the model name, and grid ID (the ID for the model settings used).
-  2. A `handler` column. This column contains a partialised function (created with `purrr::partial`) that contains the model object as well as any additional information needed to perform predictions or access coefficients (e.g. the sample mean and s.d. for rescaling coefficients)
-  3. `settings`, as well as (if applicable) `messages` and `warnings`.
+  2. `estimator`, `size (MB)` and `model_object` columns. These columns contain information on the model itself. The `model_object` is the fitted `tidyFit` model (an `R6` class that contains the model object as well as any additional information needed to perform predictions or access coefficients)
+  3. Nested `settings`, as well as (if applicable) `messages` and `warnings`.
 
 ```{r}
 subset_mod_frame <- model_frame %>% 
@@ -175,11 +181,12 @@ subset_mod_frame %>%
   tidyr::unnest(settings, keep_empty = TRUE)
 ```
 
-The `tidyfit.models` frame can be used to access additional information. Specifically, we can do 3 things:
+The `tidyfit.models` frame can be used to access additional information. Specifically, we can do 4 things:
 
   1. Access the fitted model
   2. Predict
   3. Access a tibble of estimated parameters
+  4. Use additional generics
 
 The **fitted tidyFit models** are stored as an `R6` class in the `model_object` column and can be addressed directly with generics such as `coef` or `summary`. The underlying object (e.g. an `lm` class fitted model) is given in `...$object` (see [here](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html) for another example):
 
@@ -206,6 +213,8 @@ The estimates contain additional method-specific information that is nested in `
 ```{r}
 tidyr::unnest(estimates, model_info)
 ```
+
+Additional generics such as `fitted` or `resid` can be used to obtain more information on the models.
 
 Suppose we would like to evaluate the relative performance of the two methods. This becomes exceedingly simple using the `yardstick` package:
 

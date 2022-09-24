@@ -483,20 +483,26 @@ well as monthly factor returns for 5 factors:
 
 ``` r
 data <- tidyfit::Factor_Industry_Returns
+
+# Calculate excess return
+data <- data %>% 
+  mutate(Return = Return - RF) %>% 
+  select(-RF)
+
 data
-#> # A tibble: 7,080 × 9
-#>      Date Industry Return `Mkt-RF`   SMB   HML   RMW   CMA    RF
-#>     <dbl> <chr>     <dbl>    <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
-#>  1 196307 NoDur     -0.49    -0.39 -0.44 -0.89  0.68 -1.23  0.27
-#>  2 196308 NoDur      4.89     5.07 -0.75  1.68  0.36 -0.34  0.25
-#>  3 196309 NoDur     -1.69    -1.57 -0.55  0.08 -0.71  0.29  0.27
-#>  4 196310 NoDur      2.65     2.53 -1.37 -0.14  2.8  -2.02  0.29
-#>  5 196311 NoDur     -1.13    -0.85 -0.89  1.81 -0.51  2.31  0.27
-#>  6 196312 NoDur      2.81     1.83 -2.07 -0.08  0.03 -0.04  0.29
-#>  7 196401 NoDur      0.79     2.24  0.11  1.47  0.17  1.51  0.3 
-#>  8 196402 NoDur      1.87     1.54  0.3   2.74 -0.05  0.9   0.26
-#>  9 196403 NoDur      3.08     1.41  1.36  3.36 -2.21  3.19  0.31
-#> 10 196404 NoDur     -0.48     0.1  -1.59 -0.58 -1.27 -1.04  0.29
+#> # A tibble: 7,080 × 8
+#>      Date Industry Return `Mkt-RF`   SMB   HML   RMW   CMA
+#>     <dbl> <chr>     <dbl>    <dbl> <dbl> <dbl> <dbl> <dbl>
+#>  1 196307 NoDur     -0.76    -0.39 -0.44 -0.89  0.68 -1.23
+#>  2 196308 NoDur      4.64     5.07 -0.75  1.68  0.36 -0.34
+#>  3 196309 NoDur     -1.96    -1.57 -0.55  0.08 -0.71  0.29
+#>  4 196310 NoDur      2.36     2.53 -1.37 -0.14  2.8  -2.02
+#>  5 196311 NoDur     -1.4     -0.85 -0.89  1.81 -0.51  2.31
+#>  6 196312 NoDur      2.52     1.83 -2.07 -0.08  0.03 -0.04
+#>  7 196401 NoDur      0.49     2.24  0.11  1.47  0.17  1.51
+#>  8 196402 NoDur      1.61     1.54  0.3   2.74 -0.05  0.9 
+#>  9 196403 NoDur      2.77     1.41  1.36  3.36 -2.21  3.19
+#> 10 196404 NoDur     -0.77     0.1  -1.59 -0.58 -1.27 -1.04
 #> # … with 7,070 more rows
 ```
 
@@ -543,24 +549,26 @@ The resulting `tidyfit.models` frame consists of 3 components:
 
 1.  A group of identifying columns. This includes the `Industry` column,
     the model name, and grid ID (the ID for the model settings used).
-2.  A `handler` column. This column contains a partialised function
-    (created with `purrr::partial`) that contains the model object as
-    well as any additional information needed to perform predictions or
-    access coefficients (e.g. the sample mean and s.d. for rescaling
-    coefficients)
-3.  `settings`, as well as (if applicable) `messages` and `warnings`.
+2.  `estimator`, `size (MB)` and `model_object` columns. These columns
+    contain information on the model itself. The `model_object` is the
+    fitted `tidyFit` model (an `R6` class that contains the model object
+    as well as any additional information needed to perform predictions
+    or access coefficients)
+3.  Nested `settings`, as well as (if applicable) `messages` and
+    `warnings`.
 
 ``` r
 subset_mod_frame <- model_frame %>% 
   filter(Industry %in% unique(Industry)[1:2])
 subset_mod_frame
-#> # A tibble: 4 × 7
-#>   Industry model  estimator      `size (MB)` grid_id  model_object settings
-#>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>       <list>  
-#> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|002 <tidyFit>    <tibble>
-#> 2 Utils    enet   glmnet::glmnet      1.21   #001|001 <tidyFit>    <tibble>
-#> 3 Enrgy    robust MASS::rlm           0.0648 #0010000 <tidyFit>    <tibble>
-#> 4 Utils    robust MASS::rlm           0.0648 #0010000 <tidyFit>    <tibble>
+#> # A tibble: 4 × 8
+#>   Industry model  estimator      `size (MB)` grid_id  model_o…¹ settings warni…²
+#>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>    <list>   <chr>  
+#> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|004 <tidyFit> <tibble> <NA>   
+#> 2 Utils    enet   glmnet::glmnet      1.21   #001|001 <tidyFit> <tibble> <NA>   
+#> 3 Enrgy    robust MASS::rlm           0.0639 #0010000 <tidyFit> <tibble> <NA>   
+#> 4 Utils    robust MASS::rlm           0.0638 #0010000 <tidyFit> <tibble> <NA>   
+#> # … with abbreviated variable names ¹​model_object, ²​warnings
 ```
 
 Let’s unnest the settings columns:
@@ -568,23 +576,24 @@ Let’s unnest the settings columns:
 ``` r
 subset_mod_frame %>% 
   tidyr::unnest(settings, keep_empty = TRUE)
-#> # A tibble: 4 × 11
+#> # A tibble: 4 × 12
 #>   Industry model  estimator size …¹ grid_id model_o…² alpha family lambda method
 #>   <chr>    <chr>  <chr>       <dbl> <chr>   <list>    <dbl> <chr>   <dbl> <chr> 
-#> 1 Enrgy    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  0.792 <NA>  
+#> 1 Enrgy    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  0.498 <NA>  
 #> 2 Utils    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  1     <NA>  
-#> 3 Enrgy    robust MASS::rlm  0.0648 #00100… <tidyFit>    NA <NA>   NA     MM    
-#> 4 Utils    robust MASS::rlm  0.0648 #00100… <tidyFit>    NA <NA>   NA     MM    
-#> # … with 1 more variable: psi <list>, and abbreviated variable names
-#> #   ¹​`size (MB)`, ²​model_object
+#> 3 Enrgy    robust MASS::rlm  0.0639 #00100… <tidyFit>    NA <NA>   NA     MM    
+#> 4 Utils    robust MASS::rlm  0.0638 #00100… <tidyFit>    NA <NA>   NA     MM    
+#> # … with 2 more variables: psi <list>, warnings <chr>, and abbreviated variable
+#> #   names ¹​`size (MB)`, ²​model_object
 ```
 
 The `tidyfit.models` frame can be used to access additional information.
-Specifically, we can do 3 things:
+Specifically, we can do 4 things:
 
 1.  Access the fitted model
 2.  Predict
 3.  Access a tibble of estimated parameters
+4.  Use additional generics
 
 The **fitted tidyFit models** are stored as an `R6` class in the
 `model_object` column and can be addressed directly with generics such
@@ -596,14 +605,15 @@ for another example):
 ``` r
 subset_mod_frame %>% 
   mutate(fitted_model = map(model_object, ~.$object))
-#> # A tibble: 4 × 8
-#>   Industry model  estimator      `size (MB)` grid_id  model_o…¹ settings fitte…²
-#>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>    <list>   <list> 
-#> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|002 <tidyFit> <tibble> <elnet>
-#> 2 Utils    enet   glmnet::glmnet      1.21   #001|001 <tidyFit> <tibble> <elnet>
-#> 3 Enrgy    robust MASS::rlm           0.0648 #0010000 <tidyFit> <tibble> <rlm>  
-#> 4 Utils    robust MASS::rlm           0.0648 #0010000 <tidyFit> <tibble> <rlm>  
-#> # … with abbreviated variable names ¹​model_object, ²​fitted_model
+#> # A tibble: 4 × 9
+#>   Industry model  estimator   size …¹ grid_id model_o…² settings warni…³ fitte…⁴
+#>   <chr>    <chr>  <chr>         <dbl> <chr>   <list>    <list>   <chr>   <list> 
+#> 1 Enrgy    enet   glmnet::gl…  1.21   #001|0… <tidyFit> <tibble> <NA>    <elnet>
+#> 2 Utils    enet   glmnet::gl…  1.21   #001|0… <tidyFit> <tibble> <NA>    <elnet>
+#> 3 Enrgy    robust MASS::rlm    0.0639 #00100… <tidyFit> <tibble> <NA>    <rlm>  
+#> 4 Utils    robust MASS::rlm    0.0638 #00100… <tidyFit> <tibble> <NA>    <rlm>  
+#> # … with abbreviated variable names ¹​`size (MB)`, ²​model_object, ³​warnings,
+#> #   ⁴​fitted_model
 ```
 
 To **predict**, we need data with the same columns as the input data and
@@ -617,16 +627,16 @@ predict(subset_mod_frame, data)
 #> # Groups:   Industry, model [4]
 #>    Industry model prediction truth
 #>    <chr>    <chr>      <dbl> <dbl>
-#>  1 Enrgy    enet      -4.75   2.29
-#>  2 Enrgy    enet       2.90   3.94
-#>  3 Enrgy    enet      -3.56  -3.64
-#>  4 Enrgy    enet      -4.34  -0.32
-#>  5 Enrgy    enet      -0.613 -1.16
-#>  6 Enrgy    enet      -1.76   4.65
-#>  7 Enrgy    enet       1.81   4.84
-#>  8 Enrgy    enet       1.18   1.06
-#>  9 Enrgy    enet       4.94   1.4 
-#> 10 Enrgy    enet      -3.89   4.03
+#>  1 Enrgy    enet      -3.82   2.02
+#>  2 Enrgy    enet       3.92   3.69
+#>  3 Enrgy    enet      -2.42  -3.91
+#>  4 Enrgy    enet      -3.34  -0.61
+#>  5 Enrgy    enet       0.785 -1.43
+#>  6 Enrgy    enet      -0.292  4.36
+#>  7 Enrgy    enet       3.72   4.54
+#>  8 Enrgy    enet       2.31   0.8 
+#>  9 Enrgy    enet       7.32   1.09
+#> 10 Enrgy    enet      -2.58   3.74
 #> # … with 2,822 more rows
 ```
 
@@ -636,21 +646,21 @@ generic `coef` function:
 ``` r
 estimates <- coef(subset_mod_frame)
 estimates
-#> # A tibble: 28 × 5
+#> # A tibble: 24 × 5
 #> # Groups:   Industry, model [4]
 #>    Industry model term        estimate model_info      
 #>    <chr>    <chr> <chr>          <dbl> <list>          
-#>  1 Enrgy    enet  (Intercept)   1.47   <tibble [1 × 4]>
-#>  2 Enrgy    enet  Mkt-RF        1.13   <tibble [1 × 4]>
-#>  3 Enrgy    enet  SMB           0.649  <tibble [1 × 4]>
-#>  4 Enrgy    enet  HML           0.0703 <tibble [1 × 4]>
-#>  5 Enrgy    enet  RMW          -0.552  <tibble [1 × 4]>
-#>  6 Enrgy    enet  CMA           1.16   <tibble [1 × 4]>
-#>  7 Enrgy    enet  RF          -13.5    <tibble [1 × 4]>
-#>  8 Utils    enet  (Intercept)  -1.50   <tibble [1 × 4]>
-#>  9 Utils    enet  Mkt-RF        0.229  <tibble [1 × 4]>
-#> 10 Utils    enet  SMB           0.343  <tibble [1 × 4]>
-#> # … with 18 more rows
+#>  1 Enrgy    enet  (Intercept)  -0.968  <tibble [1 × 4]>
+#>  2 Enrgy    enet  Mkt-RF        1.21   <tibble [1 × 4]>
+#>  3 Enrgy    enet  SMB           0.705  <tibble [1 × 4]>
+#>  4 Enrgy    enet  HML          -0.0133 <tibble [1 × 4]>
+#>  5 Enrgy    enet  RMW          -0.619  <tibble [1 × 4]>
+#>  6 Enrgy    enet  CMA           1.35   <tibble [1 × 4]>
+#>  7 Utils    enet  (Intercept)   0.798  <tibble [1 × 4]>
+#>  8 Utils    enet  Mkt-RF        0.230  <tibble [1 × 4]>
+#>  9 Utils    enet  SMB           0.311  <tibble [1 × 4]>
+#> 10 Utils    enet  HML          -0.0229 <tibble [1 × 4]>
+#> # … with 14 more rows
 ```
 
 The estimates contain additional method-specific information that is
@@ -659,22 +669,25 @@ similar information:
 
 ``` r
 tidyr::unnest(estimates, model_info)
-#> # A tibble: 28 × 8
+#> # A tibble: 24 × 8
 #> # Groups:   Industry, model [4]
 #>    Industry model term        estimate lambda dev.ratio std.error statistic
 #>    <chr>    <chr> <chr>          <dbl>  <dbl>     <dbl>     <dbl>     <dbl>
-#>  1 Enrgy    enet  (Intercept)   1.47    0.792     0.807        NA        NA
-#>  2 Enrgy    enet  Mkt-RF        1.13    0.792     0.807        NA        NA
-#>  3 Enrgy    enet  SMB           0.649   0.792     0.807        NA        NA
-#>  4 Enrgy    enet  HML           0.0703  0.792     0.807        NA        NA
-#>  5 Enrgy    enet  RMW          -0.552   0.792     0.807        NA        NA
-#>  6 Enrgy    enet  CMA           1.16    0.792     0.807        NA        NA
-#>  7 Enrgy    enet  RF          -13.5     0.792     0.807        NA        NA
-#>  8 Utils    enet  (Intercept)  -1.50    1         0.445        NA        NA
-#>  9 Utils    enet  Mkt-RF        0.229   1         0.445        NA        NA
-#> 10 Utils    enet  SMB           0.343   1         0.445        NA        NA
-#> # … with 18 more rows
+#>  1 Enrgy    enet  (Intercept)  -0.968   0.498     0.813        NA        NA
+#>  2 Enrgy    enet  Mkt-RF        1.21    0.498     0.813        NA        NA
+#>  3 Enrgy    enet  SMB           0.705   0.498     0.813        NA        NA
+#>  4 Enrgy    enet  HML          -0.0133  0.498     0.813        NA        NA
+#>  5 Enrgy    enet  RMW          -0.619   0.498     0.813        NA        NA
+#>  6 Enrgy    enet  CMA           1.35    0.498     0.813        NA        NA
+#>  7 Utils    enet  (Intercept)   0.798   1         0.402        NA        NA
+#>  8 Utils    enet  Mkt-RF        0.230   1         0.402        NA        NA
+#>  9 Utils    enet  SMB           0.311   1         0.402        NA        NA
+#> 10 Utils    enet  HML          -0.0229  1         0.402        NA        NA
+#> # … with 14 more rows
 ```
+
+Additional generics such as `fitted` or `resid` can be used to obtain
+more information on the models.
 
 Suppose we would like to evaluate the relative performance of the two
 methods. This becomes exceedingly simple using the `yardstick` package:
