@@ -26,6 +26,12 @@ residuals.tidyfit.models <- function(object, ...) {
   .mask <- attr(object, "structure")$mask
   .weights <- attr(object, "structure")$weights
 
+  # Check mode
+  modes <- object$model_object %>%
+    purrr::map(~.$mode)
+  if (any(modes == "classification"))
+    stop("cannot produce residuals for classification models")
+
   sel_cols <- c("settings", "estimator", "size (MB)", "errors", "warnings", "messages")
   out <- object %>%
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
