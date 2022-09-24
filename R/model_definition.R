@@ -44,6 +44,20 @@ model_definition <- R6::R6Class(
       )
       do.call(.coef, all_args)
     },
+    resid = function(...) {
+      all_args <- append(append(
+        list(object = self$object, formula = self$formula, inner_grid = self$inner_grid, mode = self$mode),
+        self$args), self$fit_info
+      )
+      do.call(.resid, all_args)
+    },
+    fitted = function(...) {
+      all_args <- append(append(
+        list(object = self$object, formula = self$formula, inner_grid = self$inner_grid, mode = self$mode),
+        self$args), self$fit_info
+      )
+      do.call(.fitted, all_args)
+    },
     print = function(...) {
       cat("<tidyFit> object\n", crayon::italic("method:"),
           crayon::bold(self$method), "|",
