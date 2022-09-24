@@ -36,6 +36,12 @@ mod_frame
 
 `kappa_grid` defines the extent of shrinkage, with `kappa = 1` equal to an unregularized least squares (OLS) regression, and `kappa = 0.25` representing a regression graph that is shrunken to 25% of its original size, with 25% of the effective degrees of freedom. The regression graph is visualized using the `plot` function.
 
+Let's examine the first model in the `tidyfit.models` frame:
+
+```{r}
+mod_frame$model_object[[1]]
+```
+
 ## Accessing the fitted model
 
 We have two options to plot the regression trees. Many generics function directly on the `tidyFit` class. Therefore, we could simply plot (in this case the unregularized regression graph):
