@@ -63,8 +63,8 @@ model_definition <- R6::R6Class(
           crayon::bold(self$method), "|",
           crayon::italic("mode:"), crayon::bold(self$mode), "|",
           crayon::italic("fitted:"), crayon::bold(ifelse(is.null(self$object), "no", "yes")), "\n",
-          ifelse(is.null(self$error), crayon::green("no errors ✔"), crayon::red("check errors ✖")), "|",
-          ifelse(is.null(self$warnings), crayon::green("no warnings ✔"), crayon::yellow("check warnings ✖")))
+          ifelse(is.null(self$error), crayon::green("no errors \u2714"), crayon::red("check errors \u2716")), "|",
+          ifelse(is.null(self$warnings), crayon::green("no warnings \u2714"), crayon::yellow("check warnings \u2716")))
     },
     set_args = function(..., overwrite = TRUE) {
       new_args <- lapply(list(...), unlist)
