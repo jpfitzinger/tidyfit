@@ -9,7 +9,7 @@
 #'
 #' @return A 'tibble'.
 #'
-#' @details The function uses the 'handler' column in a \code{tidyfit.model} frame to return predictions using the \code{newdata} argument for each model.
+#' @details The function uses the 'model_object' column in a \code{tidyfit.model} frame to return predictions using the \code{newdata} argument for each model.
 #'
 #' When the response variable is found in \code{newdata}, it is automatically included as a 'truth' column.
 #'
@@ -20,7 +20,7 @@
 #' fit <- regress(data, Return ~ ., m("lm"), .mask = "Date")
 #' predict(fit, data)
 #'
-#' @seealso \code{\link{coef.tidyfit.models}}
+#' @seealso \code{\link{coef.tidyfit.models}}, \code{\link{residuals.tidyfit.models}} and \code{\link{fitted.tidyfit.models}}
 #'
 #' @export
 

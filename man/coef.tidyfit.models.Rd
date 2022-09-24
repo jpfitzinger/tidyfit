@@ -30,7 +30,7 @@ A 'tibble'.
 The function extracts and prepares coefficients from all models in a \code{tidyfit.models} frame and outputs a tidy frame of estimates.
 }
 \details{
-The function uses the 'handler' column in a \code{tidyfit.model} frame to return a tibble of estimated coefficients.
+The function uses the 'model_object' column in a \code{tidyfit.model} frame to return a tibble of estimated coefficients.
 
 Results are 'tidied' using \code{broom::tidy} whenever possible.
 
@@ -47,7 +47,7 @@ coef(fit)
 
 }
 \seealso{
-\code{\link{predict.tidyfit.models}}
+\code{\link{predict.tidyfit.models}}, \code{\link{fitted.tidyfit.models}} and \code{\link{residuals.tidyfit.models}}
 }
 \author{
 Johann Pfitzinger

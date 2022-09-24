@@ -10,7 +10,7 @@
 #'
 #' @return A 'tibble'.
 #'
-#' @details The function uses the 'handler' column in a \code{tidyfit.model} frame to return a tibble of estimated coefficients.
+#' @details The function uses the 'model_object' column in a \code{tidyfit.model} frame to return a tibble of estimated coefficients.
 #'
 #' Results are 'tidied' using \code{broom::tidy} whenever possible.
 #'
@@ -27,7 +27,7 @@
 #' fit <- regress(data, Return ~ ., m("lm"), .mask = c("Date", "Industry"))
 #' coef(fit)
 #'
-#' @seealso \code{\link{predict.tidyfit.models}}
+#' @seealso \code{\link{predict.tidyfit.models}}, \code{\link{fitted.tidyfit.models}} and \code{\link{residuals.tidyfit.models}}
 #'
 #' @export
 
