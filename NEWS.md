@@ -30,3 +30,7 @@
 
 - This version introduces R6 classes for background handling of models. This generally makes the workflow more efficient and provides an easy method to store fitting information that is required at a later stage (e.g. to obtain coefficients or predictions).
 - A progress bar is introduced using 'progressr'
+
+## tidyfit 0.5.1
+
+- Add 'fitted' and 'resid' methods for tidyfit.models frame
