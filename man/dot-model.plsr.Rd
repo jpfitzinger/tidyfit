@@ -39,7 +39,8 @@ fit <- m("plsr", Return ~ ., data, ncomp = 3)
 fit
 
 # Within 'regress' function
-fit <- regress(data, Return ~ ., m("plsr"), .mask = c("Date", "Industry"), .cv = "vfold")
+fit <- regress(data, Return ~ ., m("plsr", ncomp_pct = c(0, 0.5)),
+               .mask = c("Date", "Industry"), .cv = "vfold")
 coef(fit)
 
 }

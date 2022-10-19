@@ -19,17 +19,17 @@
 #' @examples
 #' # Load data
 #' data <- tidyfit::Factor_Industry_Returns
-#' data <- dplyr::filter(data, Industry == "HiTec")
+#' data <- dplyr::filter(data, Industry == "HiTec", Date >= 201801)
 #' data <- dplyr::select(data, -Industry)
 #'
-#' ctr <- list(maxiter = 10, parallelization = FALSE)
+#' ctr <- list(maxiter = 100, parallelization = FALSE)
 #'
 #' # Stand-alone function
-#' fit <- m("mslm", Return ~ ., data, index_col = "Date", k = 2, control = ctr)
+#' fit <- m("mslm", Return ~ HML, data, index_col = "Date", k = 2, control = ctr)
 #' fit
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ .,
+#' fit <- regress(data, Return ~ HML,
 #'                m("mslm", index_col = "Date", k = 2, control = ctr))
 #' tidyr::unnest(coef(fit), model_info)
 #'

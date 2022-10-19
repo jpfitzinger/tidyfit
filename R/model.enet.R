@@ -33,7 +33,8 @@
 #' fit
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("enet"), .mask = c("Date", "Industry"), .cv = "vfold")
+#' fit <- regress(data, Return ~ ., m("enet", alpha = c(0, 0.5), lambda = c(0.1, 0.2)),
+#'                .mask = c("Date", "Industry"), .cv = "vfold")
 #' coef(fit)
 #'
 #' @seealso \code{\link{.model.lasso}}, \code{\link{.model.adalasso}}, \code{\link{.model.ridge}} and \code{\link{m}} methods

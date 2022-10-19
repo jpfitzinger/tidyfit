@@ -37,11 +37,12 @@ If no hyperparameter grid is passed (\code{is.null(control$mstop)} and \code{is.
 data <- tidyfit::Factor_Industry_Returns
 
 # Stand-alone function
-fit <- m("boost", Return ~ ., data, nu = 0.1)
+fit <- m("boost", Return ~ ., data, nu = 0.1, mstop = 100)
 fit
 
 # Within 'regress' function
-fit <- regress(data, Return ~ ., m("boost", nu = c(0.1, 0.05)), .mask = c("Date", "Industry"))
+fit <- regress(data, Return ~ ., m("boost", nu = c(0.1, 0.05), mstop = 100),
+               .mask = c("Date", "Industry"))
 coef(fit)
 
 }
