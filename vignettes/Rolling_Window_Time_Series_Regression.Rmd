@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-In this short tutorial, I show how to calculate a rolling regression on grouped time series data using `tidyfit`. With very few lines of code, we will be able to estimate and analyse a large number of regressions. As usual, begin by loading necessary libraries:
+In this short tutorial, I show how to calculate a rolling regression on grouped time series data using `tidyfit`. With very few lines of code, we will be able to estimate and analyze a large number of regressions. As usual, begin by loading necessary libraries:
 
 ```{r}
 library(tidyverse)   # Data wrangling
@@ -60,7 +60,7 @@ mod_frame <- data %>%
 mod_frame
 ```
 
-The model frame now contains 10 regressions estimated using `stats::lm`. We may want to fit the regression using a heteroscedasticity and autocorrelation consistent (HAC) estimate of the covariance matrix, since we are working with financial time series. This can be done by passing the additional argument to `m(...)`:^[Note that the `...` in `m()` passes arguments to the underlying method (i.e. `stats::lm`). However in some cases `tidyfit` adds convenience functions, such as the ability to pass a `vcov.` arugment as used in `coeftest` for `lm`.]
+The model frame now contains 10 regressions estimated using `stats::lm`. We may want to fit the regression using a heteroscedasticity and autocorrelation consistent (HAC) estimate of the covariance matrix, since we are working with financial time series. This can be done by passing the additional argument to `m(...)`:^[Note that the `...` in `m()` passes arguments to the underlying method (i.e. `stats::lm`). However in some cases `tidyfit` adds convenience functions, such as the ability to pass a `vcov.` argument as used in `coeftest` for `lm`.]
 
 ```{r}
 mod_frame <- data %>% 
@@ -141,6 +141,6 @@ df_beta %>%
   theme_bw(8)
 ```
 
-While there are certainly very interesting insights to be had here, the aim of this walkthrough is not to interpret these results, but rather to demonstrate how a complex piece of analysis can be done very efficiently using the `tidyfit` package.
+While there are certainly very interesting insights to be had here, the aim of this walk-through is not to interpret these results, but rather to demonstrate how a complex piece of analysis can be done very efficiently using the `tidyfit` package.
 
 In a follow-up article found [here](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html), I compare the results in the plot above to a time-varying parameter regression to show how more robust methods can be used to avoid window effects in the rolling sample and to shrink some coefficients to constant values.

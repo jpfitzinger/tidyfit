@@ -15,6 +15,8 @@
 #' An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("mslm"))} (e.g. a date index).
 #'
 #' @author Johann Pfitzinger
+#' @references
+#' Sanchez-Espigares JA, Lopez-Moreno A (2021). _MSwM: Fitting Markov Switching Models_. R package version 1.5, <https://CRAN.R-project.org/package=MSwM>.
 #'
 #' @examples
 #' # Load data

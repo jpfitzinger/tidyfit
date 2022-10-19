@@ -39,6 +39,9 @@ fit <- regress(data, Return ~ .,
 coef(fit)
 
 }
+\references{
+Koenker R (2022). \emph{quantreg: Quantile Regression}. R package version 5.94, \url{https://CRAN.R-project.org/package=quantreg}.
+}
 \seealso{
 \code{\link{.model.lm}}, \code{\link{.model.bayes}} and \code{\link{m}} methods
 }

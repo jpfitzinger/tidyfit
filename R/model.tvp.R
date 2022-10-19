@@ -15,6 +15,11 @@
 #' An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("tvp"))} (e.g. a date index).
 #'
 #' @author Johann Pfitzinger
+#' @references
+#' Peter Knaus, Angela Bitto-Nemling, Annalisa Cadonna and Sylvia Frühwirth-Schnatter (2021).
+#' \emph{Shrinkage in the Time-Varying Parameter Model Framework Using the {R} Package {shrinkTVP}.
+#' Journal of Statistical Software 100(13), 1--32}.
+#' \doi{10.18637/jss.v100.i13}.\cr
 #'
 #' @examples
 #' # Load data

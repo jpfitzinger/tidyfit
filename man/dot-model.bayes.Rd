@@ -40,6 +40,9 @@ coef(fit)
 
 
 }
+\references{
+Gelman A, Su Y (2021). \emph{arm: Data Analysis Using Regression and Multilevel/Hierarchical Models}. R package version 1.12-2, \url{https://CRAN.R-project.org/package=arm}.
+}
 \seealso{
 \code{\link{.model.glm}} and \code{\link{m}} methods
 }

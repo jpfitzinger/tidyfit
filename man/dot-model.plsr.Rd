@@ -45,9 +45,7 @@ coef(fit)
 
 }
 \references{
-Kristian Hovde Liland, Bjørn-Helge Mevik, Ron Wehrens (2022).
-pls: Partial Least Squares and Principal Component Regression.
-R package version 2.8-1. URL https://CRAN.R-project.org/package=pls.
+Liland K, Mevik B, Wehrens R (2022). \emph{pls: Partial Least Squares and Principal Component Regression}. R package version 2.8-1, \url{https://CRAN.R-project.org/package=pls}.
 }
 \seealso{
 \code{\link{.model.pcr}} and \code{\link{m}} methods

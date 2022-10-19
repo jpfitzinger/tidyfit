@@ -45,9 +45,7 @@ coef(fit)
 
 }
 \references{
-Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010).
-Regularization Paths for Generalized Linear Models via Coordinate Descent.
-Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
+Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
 }
 \seealso{
 \code{\link{.model.enet}}, \code{\link{.model.ridge}}, \code{\link{.model.adalasso}} and \code{\link{m}} methods

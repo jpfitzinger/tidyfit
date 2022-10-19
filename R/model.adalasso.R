@@ -22,9 +22,7 @@
 #' The Adaptive Lasso and Its Oracle Properties.
 #' Journal of the American Statistical Association, 101(476), 1418-1429.
 #'
-#' Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010).
-#' Regularization Paths for Generalized Linear Models via Coordinate Descent.
-#' Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
+#' Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
 #'
 #' @examples
 #' # Load data

@@ -16,7 +16,7 @@
 
 ## tidyfit 0.3.0
 
-- This version adds the concept of an index which facilitates the addition of methods with heterogenous coefficients (e.g. mixed-effects model)
+- This version adds the concept of an index which facilitates the addition of methods with heterogeneous coefficients (e.g. mixed-effects model)
 - The backend handling of predictions has been adapted to allow coefficients to vary over one or more index columns
 
 ## tidyfit 0.4.0

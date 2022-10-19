@@ -26,7 +26,7 @@
 #'
 #' ### Gradient boosting
 #'
-#' \code{"boost"} performs gradient boosting regression or classificaiton using \code{mboost::glmboost}. See \code{\link{.model.boost}} for details.
+#' \code{"boost"} performs gradient boosting regression or classification using \code{mboost::glmboost}. See \code{\link{.model.boost}} for details.
 #'
 #' ### Factor regressions
 #'

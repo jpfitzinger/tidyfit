@@ -106,4 +106,4 @@ We can make a two interesting observations from these results:
   1. The variation seen in the rolling regression for some of the parameters --- specifically the risk-adjusted alpha (intercept) and the market beta --- is not supported by the TVP model, which shrinks these to almost constant parameters.
   2. The TVP estimates are markedly smoother and importantly remove the window effects seen in the rolling regression (i.e. the rolling regression adjusts too late).
 
-The TVP model seems to offer a much better tool analyse the factor betas in this case. 
+The TVP model seems to offer a much better tool analyze the factor betas in this case. 

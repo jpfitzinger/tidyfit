@@ -18,9 +18,7 @@
 #' @return A fitted tidyFit class model.
 #' @author Johann Pfitzinger
 #' @references
-#' Kristian Hovde Liland, Bjørn-Helge Mevik, Ron Wehrens (2022).
-#' pls: Partial Least Squares and Principal Component Regression.
-#' R package version 2.8-1. URL https://CRAN.R-project.org/package=pls.
+#' Liland K, Mevik B, Wehrens R (2022). _pls: Partial Least Squares and Principal Component Regression_. R package version 2.8-1, <https://CRAN.R-project.org/package=pls>.
 #'
 #' @examples
 #' # Load data

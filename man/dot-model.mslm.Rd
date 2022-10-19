@@ -44,6 +44,9 @@ fit <- regress(data, Return ~ HML,
 tidyr::unnest(coef(fit), model_info)
 
 }
+\references{
+Sanchez-Espigares JA, Lopez-Moreno A (2021). \emph{MSwM: Fitting Markov Switching Models}. R package version 1.5, \url{https://CRAN.R-project.org/package=MSwM}.
+}
 \seealso{
 \code{\link{.model.tvp}} and \code{\link{m}} methods
 }

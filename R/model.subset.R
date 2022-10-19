@@ -18,8 +18,8 @@
 #' @author Johann Pfitzinger
 #' @references
 #' A.I. McLeod, Changjiang Xu and Yuanhao Lai (2020).
-#' bestglm: Best Subset GLM and Regression Utilities.
-#' R package version 0.37.3. URL https://CRAN.R-project.org/package=bestglm.
+#' \emph{bestglm: Best Subset GLM and Regression Utilities.
+#' R package version 0.37.3.} URL https://CRAN.R-project.org/package=bestglm.\cr
 #'
 #' @examples
 #' # Load data

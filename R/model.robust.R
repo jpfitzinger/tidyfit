@@ -15,6 +15,10 @@
 #' An argument \code{vcov.} can be passed in control or to \code{...} in \code{\link{m}} to estimate the model with robust standard errors. \code{vcov.} can be one of "BS", "HAC", "HC" and "OPG" and is passed to the \code{sandwich} package.
 #'
 #' @author Johann Pfitzinger
+#' @references
+#' W. N. Venables and B. D. Ripley (2002).
+#' \emph{Modern Applied Statistics with S. 4th ed., Springer, New York.}
+#' URL https://www.stats.ox.ac.uk/pub/MASS4/.\cr
 #'
 #' @examples
 #' # Load data

@@ -13,6 +13,8 @@
 #' The function provides a wrapper for \code{quantreg::rq}. The argument \code{tau} is the chosen quantile (default \code{tau = 0.5}).
 #'
 #' @author Johann Pfitzinger
+#' @references
+#' Koenker R (2022). _quantreg: Quantile Regression_. R package version 5.94, <https://CRAN.R-project.org/package=quantreg>.
 #'
 #' @examples
 #' # Load data

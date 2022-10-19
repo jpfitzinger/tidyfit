@@ -20,9 +20,7 @@
 #' @return A fitted tidyFit class model.
 #' @author Johann Pfitzinger
 #' @references
-#' Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010).
-#' Regularization Paths for Generalized Linear Models via Coordinate Descent.
-#' Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
+#' Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
 #'
 #' @examples
 #' # Load data

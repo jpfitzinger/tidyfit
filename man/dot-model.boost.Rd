@@ -47,8 +47,7 @@ coef(fit)
 
 }
 \references{
-T. Hothorn, P. Buehlmann, T. Kneib, M. Schmid, and B. Hofner (2022).
-mboost: Model-Based Boosting, R package version 2.9-7, https://CRAN.R-project.org/package=mboost.
+T. Hothorn, P. Buehlmann, T. Kneib, M. Schmid, and B. Hofner (2022). mboost: Model-Based Boosting, R package version 2.9-7,https://CRAN.R-project.org/package=mboost.
 }
 \seealso{
 \code{\link{m}} method

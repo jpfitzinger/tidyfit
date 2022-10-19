@@ -43,6 +43,11 @@ fit <- m("robust", Return ~ `Mkt-RF` + HML + SMB, data, vcov. = "HAC")
 tidyr::unnest(coef(fit), model_info)
 
 }
+\references{
+W. N. Venables and B. D. Ripley (2002).
+\emph{Modern Applied Statistics with S. 4th ed., Springer, New York.}
+URL https://www.stats.ox.ac.uk/pub/MASS4/.\cr
+}
 \seealso{
 \code{\link{.model.lm}} and \code{\link{m}} methods
 }

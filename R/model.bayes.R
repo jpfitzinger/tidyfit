@@ -13,6 +13,8 @@
 #' @return A fitted tidyFit class model.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
+#' @references
+#' Gelman A, Su Y (2021). _arm: Data Analysis Using Regression and Multilevel/Hierarchical Models_. R package version 1.12-2, <https://CRAN.R-project.org/package=arm>.
 #'
 #' @examples
 #' # Load data
