@@ -32,12 +32,12 @@ data <- tidyfit::Factor_Industry_Returns
 data <- dplyr::filter(data, Industry == "HiTec")
 data <- dplyr::select(data, -Industry)
 
-# Stand-alone function
-fit <- m("tvp", Return ~ ., data, index_col = "Date", niter = 100)
+# Stand-alone function (using low niter for illustration)
+fit <- m("tvp", Return ~ ., data, index_col = "Date", niter = 50)
 fit
 
-# Within 'regress' function
-fit <- regress(data, Return ~ ., m("tvp", niter = 100, index_col = "Date"))
+# Within 'regress' function (using low niter for illustration)
+fit <- regress(data, Return ~ ., m("tvp", niter = 50, index_col = "Date"))
 tidyr::unnest(coef(fit), model_info)
 
 }

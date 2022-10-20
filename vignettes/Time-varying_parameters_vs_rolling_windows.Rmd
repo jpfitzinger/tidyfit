@@ -8,18 +8,27 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+use_saved_results <- TRUE
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   echo = TRUE,
+  eval = !use_saved_results,
   message = FALSE,
   warning = FALSE
 )
+
+if (use_saved_results) {
+  results <- readRDS("vignette_tvpvsrw.rds")
+  mod_rolling <- results$mod_rolling
+  mod_tvp <- results$mod_tvp
+}
 ```
 
 In this tutorial, I compare the coefficients estimated using a rolling window regression to those estimated using a Bayesian time-varying parameter model. For a primer on how to fit rolling window regressions using `tidyfit`, please see [here](https://tidyfit.unchartedml.com/articles/Rolling_Window_Time_Series_Regression.html). This articles follows directly from the linked primer, but focuses on only one industry.
 
-```{r}
+```{r, eval=TRUE}
 library(tidyverse)   # Data wrangling
 library(lubridate)   # Date calculations
 library(tidyfit)     # Model fitting
@@ -27,7 +36,7 @@ library(tidyfit)     # Model fitting
 
 ## Load the data
 
-```{r}
+```{r, eval=TRUE}
 data <- Factor_Industry_Returns
 data <- data %>% 
   mutate(Date = ym(Date)) %>%         # Parse dates
@@ -38,7 +47,7 @@ data
 
 We will examine only the HiTec industry to avoid unnecessary complexity:
 
-```{r}
+```{r, eval=TRUE}
 data <- data %>% 
   filter(Industry == "HiTec") %>% 
   select(-Industry)
@@ -68,19 +77,19 @@ The `sv = TRUE` adds stochastic volatility, while the `index_col` argument is a 
 
 Next we combine the two model frames:
 
-```{r}
+```{r, eval=TRUE}
 mod_frame <- bind_rows(mod_rolling, mod_tvp)
 ```
 
 The coefficients for all models can be obtained in the usual manner:
 
-```{r}
+```{r, eval=TRUE}
 beta <- coef(mod_frame)
 ```
 
 Now, however, we require some wrangling to adapt the output of the two methods. First we unnest the detailed model information. This contains upper and lower credible intervals for the TVP model. For the OLS model we generate the confidence interval, as before. Finally, we combine the `slice_id` and `index` columns into a joint `date` column:
 
-```{r}
+```{r, eval=TRUE}
 beta <- beta %>% 
   unnest(model_info) %>% 
   mutate(lower = ifelse(is.na(lower), estimate - 2*std.error, lower)) %>% 
@@ -92,7 +101,7 @@ beta <- beta %>%
 
 Plotting the outcome is relatively simple with `ggplot2`:
 
-```{r, fig.width=7, fig.height=6, fig.align="center"}
+```{r, fig.width=7, fig.height=6, fig.align="center", eval=TRUE}
 beta %>% 
   ggplot(aes(date, estimate)) +
   facet_wrap("term", scales = "free", ncol = 2) +
@@ -107,3 +116,9 @@ We can make a two interesting observations from these results:
   2. The TVP estimates are markedly smoother and importantly remove the window effects seen in the rolling regression (i.e. the rolling regression adjusts too late).
 
 The TVP model seems to offer a much better tool analyze the factor betas in this case. 
+
+```{r, include=FALSE}
+results <- list(mod_rolling = mod_rolling, mod_tvp = mod_tvp)
+saveRDS(results, "vignettes/vignette_tvpvsrw.rds")
+```
+

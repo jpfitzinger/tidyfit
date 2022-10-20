@@ -33,14 +33,16 @@ Note that at present \code{pls} does not offer weighted implementations or non-g
 \examples{
 # Load data
 data <- tidyfit::Factor_Industry_Returns
+data <- dplyr::filter(data, Industry == "HiTec")
+data <- dplyr::select(data, -Industry)
 
 # Stand-alone function
 fit <- m("pcr", Return ~ ., data, ncomp = 3)
 fit
 
 # Within 'regress' function
-fit <- regress(data, Return ~ ., m("pcr", ncomp_pct = c(0, 0.5)),
-               .mask = c("Date", "Industry"), .cv = "vfold")
+fit <- regress(data, Return ~ ., m("pcr", ncomp_pct = c(0, 0.25, 0.5)),
+               .mask = c("Date"), .cv = "vfold")
 coef(fit)
 
 }

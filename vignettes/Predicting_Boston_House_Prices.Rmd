@@ -8,16 +8,24 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+use_saved_results <- TRUE
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   echo = TRUE,
+  eval = !use_saved_results,
   message = FALSE,
   warning = FALSE
 )
+
+if (use_saved_results) {
+  results <- readRDS("vignette_pbhp.rds")
+  model_frame_all <- results$model_frame_all
+}
 ```
 
-```{r}
+```{r, eval=TRUE}
 library(tidyverse) # Data wrangling
 library(furrr)     # Parallel computation
 library(ggpubr)    # Plotting wrapper for ggplot2
@@ -28,7 +36,7 @@ The Boston house prices data set (`MASS::Boston`) presents a popular test case f
 
 Let's begin by loading the data, and splitting it into equally sized training and test sets:
 
-```{r}
+```{r, eval=TRUE}
 data <- MASS::Boston
 
 # For reproducibility
@@ -47,14 +55,14 @@ The aim is to predict the median value of owner-occupied homes (`'medv'` in the 
 
 To establish a baseline, we fit an OLS regression model and examine the test and training set R-squared. The `predict` function can be used to obtain predictions, and `yardstick` is used to assess performance. The regression is estimated using `tidyfit::regress`. `tidyfit::m` is a generic model wrapper that is capable of fitting a large number of different algorithms:
 
-```{r}
+```{r, eval=TRUE}
 model_frame <- data_trn %>% 
   regress(medv ~ ., OLS = m("lm"))
 ```
 
 Let's create a helper function to assess performance. The helper function wraps `predict` and prepares in and out-of-sample performance stats:
 
-```{r}
+```{r, eval=TRUE}
 assess <- function(model_frame, data_trn, data_tst) {
   
   oos <- model_frame %>% 
@@ -89,7 +97,7 @@ plotter <- function(df) {
 
 Now we plot the resulting metrics:
 
-```{r, fig.width=3, fig.height=3, fig.align="center"}
+```{r, fig.width=3, fig.height=3, fig.align="center", eval=TRUE}
 model_frame %>% 
   assess(data_trn, data_tst) %>% 
   plotter %>% 
@@ -98,7 +106,7 @@ model_frame %>%
 
 The in-sample fit of the regression is naturally better than out-of-sample, but the difference is not large. The results can be improved substantially by adding interaction terms between features. This leads to a vast improvement in in-sample fit (again, this is a logical consequence of including a large number of regressors), but leads to no improvement in out-of-sample fit, suggesting substantial overfit:
 
-```{r, fig.width=3, fig.height=3, fig.align="center"}
+```{r, fig.width=3, fig.height=3, fig.align="center", eval=TRUE}
 model_frame <- data_trn %>% 
   regress(medv ~ .*., OLS = m("lm"))
 
@@ -120,7 +128,7 @@ Regularization controls overfit by introducing parameter bias in exchange for a 
 
 `tidyfit` includes estimates from each of these categories, as summarized below:
 
-```{r, echo = F}
+```{r, echo = F, eval=TRUE}
 library(kableExtra)
 tbl <- data.frame(
   `Best subset` = c("Exhaustive search (`leaps`)", "Forward selection (`leaps`)", "Backward selection (`leaps`)", ""),
@@ -137,10 +145,10 @@ kbl(tbl, align = "ccccc") %>%
 
 In the next code chunk, most of the available regression techniques are fitted to the data set. Hyperparameters are optimized using a 10-fold cross validation powered by `rsample` and `furrr` in the background. Using `furrr` ensures that a `future` plan can be set to perform hyperparameter tuning on a parallelized backend:^[Parallelizing happens at the level of cross validation slices, so always consider if the overhead of parallel computation is worth it. For instance, parallelizing will likely be very useful with `.cv = "loo"` but can be less useful with `.cv = "vfold"`.]
 
-```{r, eval=F}
+```{r}
 plan(multisession(workers = 12))
 progressr::handlers(global=TRUE)
-model_frame <- data_trn %>% 
+model_frame_all <- data_trn %>% 
   regress(medv ~ .*., 
           OLS = m("lm"),
           BAYES = m("bayes"),
@@ -157,18 +165,10 @@ model_frame <- data_trn %>%
           .cv = "vfold", .cv_args = list(v = 10))
 ```
 
-```{r, eval=F, include=F}
-saveRDS(model_frame, "vignettes/Boston_Horserace_results.rds")
-```
-
-```{r, include=F}
-model_frame <- readRDS("Boston_Horserace_results.rds")
-```
-
 Let's use `yardstick` again to calculate in-sample and out-of-sample performance statistics. The models are arranged descending order of test set performance:
 
-```{r, fig.width=7.25, fig.height=4.25, fig.align="center"}
-model_frame %>% 
+```{r, fig.width=7.25, fig.height=4.25, fig.align="center", eval=TRUE}
+model_frame_all %>% 
   assess(data_trn, data_tst) %>% 
   plotter +
   rotate_x_text(90)
@@ -185,3 +185,9 @@ The package further includes a `tidyfit::classify` method that assumes a binomia
 ## What's the difference to `caret` or `parsnip`
 
 `tidyfit` is focused on the estimation of **regression coefficients** and the efficient handling of **high-volume model estimation** in grouped tibbles. The output is centered on the estimation of comparable regression and classification equations and coefficient vectors. Existing modeling wrappers such as `caret` and `parsnip` focus instead on standardized prediction workflows.
+
+```{r, include=FALSE}
+results <- list(model_frame_all = model_frame_all)
+saveRDS(results, "vignettes/vignette_pbhp.rds")
+```
+

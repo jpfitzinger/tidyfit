@@ -37,11 +37,11 @@ If no hyperparameter grid is passed (\code{is.null(control$lambda)} and \code{is
 data <- tidyfit::Factor_Industry_Returns
 
 # Stand-alone function
-fit <- m("enet", Return ~ ., data, lambda = 0.5, alpha = 0.5)
+fit <- m("enet", Return ~ ., data, lambda = c(0, 0.1), alpha = 0.5)
 fit
 
 # Within 'regress' function
-fit <- regress(data, Return ~ ., m("enet", alpha = c(0, 0.5), lambda = c(0.1, 0.2)),
+fit <- regress(data, Return ~ ., m("enet", alpha = c(0, 0.5), lambda = c(0.1)),
                .mask = c("Date", "Industry"), .cv = "vfold")
 coef(fit)
 

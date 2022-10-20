@@ -8,16 +8,25 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+use_saved_results <- TRUE
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   echo = TRUE,
+  eval = !use_saved_results,
   message = FALSE,
   warning = FALSE
 )
+
+if (use_saved_results) {
+  results <- readRDS("vignette_mc.rds")
+  fit <- results$fit
+  pred <- results$pred
+}
 ```
 
-```{r}
+```{r, eval=TRUE}
 library(tidyverse) # Data wrangling
 library(ggpubr)    # Plotting wrapper for ggplot2
 library(tidyfit)   # Auto-ML modeling
@@ -27,7 +36,7 @@ Multinomial classification is possible in `tidyfit` using the methods powered by
 
 Here's an example using the built-in `iris` dataset:
 
-```{r}
+```{r, eval=TRUE}
 data("iris")
 
 # For reproducibility
@@ -62,7 +71,7 @@ Note that we can add unregularized least squares estimates by setting `lambda = 
 
 Next, we can use `yardstick` to calculate the log loss accuracy metric and compare the performance of the different models:
 
-```{r, fig.width=6, fig.height=3, fig.align="center"}
+```{r, fig.width=6, fig.height=3, fig.align="center", eval=TRUE}
 metrics <- pred %>% 
   group_by(model, class) %>% 
   mutate(row_n = row_number()) %>% 
@@ -74,3 +83,9 @@ metrics %>%
   ggbarplot("model", ".estimate", fill = "darkblue") %>% 
   ggpar(ggtheme = theme_bw())
 ```
+
+```{r, include=FALSE}
+results <- list(fit = fit, pred = pred)
+saveRDS(results, "vignettes/vignette_mc.rds")
+```
+

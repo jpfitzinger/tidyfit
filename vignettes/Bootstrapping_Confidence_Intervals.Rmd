@@ -7,24 +7,33 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r, include = FALSE, eval=TRUE}
+use_saved_results <- TRUE
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   echo = TRUE,
+  eval = !use_saved_results,
   message = FALSE,
   warning = FALSE
 )
+
+if (use_saved_results) {
+  library(pls)
+  results <- readRDS("vignette_bci.rds")
+  model_frame <- results$model_frame
+}
 ```
 
-```{r}
+```{r, eval=TRUE}
 library(tidyverse)   # Data wrangling
 library(tidyfit)     # Model fitting
 ```
 
 The combination of `.cv = "bootstraps"` and `.return_slices = TRUE` in `tidyfit::regress` or `tidyfit::classify` makes it very easy to calculate bootstrap confidence intervals for estimated coefficients. As an additional convenience function, `coef.tidyfit.models` includes the option of adding percentile bootstrap intervals directly. In this short example, I will calculate and compare bootstrap confidence bands for a partial least squares regression and a principal components regression using Boston house price data:
 
-```{r}
+```{r, eval=TRUE}
 data <- MASS::Boston %>% 
   scale %>% 
   as_tibble
@@ -45,13 +54,13 @@ model_frame <- data %>%
 
 The coefficients are returned for each slice when `.add_bootstrap_intervals = FALSE` (default behavior):
 
-```{r}
+```{r, eval=TRUE}
 coef(model_frame)
 ```
 
 Now I calculate bootstrap intervals:
 
-```{r}
+```{r, eval=TRUE}
 estimates <- coef(model_frame, 
                   .add_bootstrap_interval = TRUE, 
                   .bootstrap_alpha = 0.05)
@@ -60,7 +69,7 @@ estimates
 
 The intervals are nested in `model_info`:
 
-```{r}
+```{r, eval=TRUE}
 estimates <- estimates %>% 
   unnest(model_info)
 estimates
@@ -70,11 +79,16 @@ estimates
 
 And thus, in a concise workflow, we have 95% bootstrap confidence intervals for the coefficients of a PCR and PLS regression:
 
-```{r, fig.width=7, fig.height=3.5, fig.align="center"}
+```{r, fig.width=7, fig.height=3.5, fig.align="center", eval=TRUE}
 estimates %>% 
   ggplot(aes(term, estimate, color = model)) +
   geom_hline(yintercept = 0) +
   geom_errorbar(aes(ymin = .lower, ymax = .upper), position = position_dodge()) +
   theme_bw(8)
+```
+
+```{r, include=FALSE}
+results <- list(model_frame = model_frame)
+saveRDS(results, "vignettes/vignette_bci.rds")
 ```
 

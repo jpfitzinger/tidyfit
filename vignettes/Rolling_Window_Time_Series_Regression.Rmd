@@ -8,18 +8,27 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+use_saved_results <- TRUE
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   echo = TRUE,
+  eval = !use_saved_results,
   message = FALSE,
   warning = FALSE
 )
+
+if (use_saved_results) {
+  results <- readRDS("vignette_rwtsr.rds")
+  mod_frame_hac <- results$mod_frame_hac
+  mod_frame_rolling <- results$mod_frame_rolling
+}
 ```
 
 In this short tutorial, I show how to calculate a rolling regression on grouped time series data using `tidyfit`. With very few lines of code, we will be able to estimate and analyze a large number of regressions. As usual, begin by loading necessary libraries:
 
-```{r}
+```{r, eval=TRUE}
 library(tidyverse)   # Data wrangling
 library(lubridate)   # Date calculations
 library(tidyfit)     # Model fitting
@@ -35,7 +44,7 @@ The data set consists monthly industry returns for 10 industries, as well as mon
   
 Returns are provided for 10 industries, and excess returns are calculated by subtracting the risk free rate from the monthly industry returns:
 
-```{r}
+```{r, eval=TRUE}
 data <- Factor_Industry_Returns
 data <- data %>% 
   mutate(Date = ym(Date)) %>%         # Parse dates
@@ -46,14 +55,14 @@ data
 
 The aim of the analysis is to calculate rolling window factor betas using a regression for each industry. To fit a regression for each industry, we simply group the data:
 
-```{r}
+```{r, eval=TRUE}
 data <- data %>% 
   group_by(Industry)
 ```
 
 Let's verify that this fits individual regressions:
 
-```{r}
+```{r, eval=TRUE}
 mod_frame <- data %>% 
   regress(Return ~ CMA + HML + `Mkt-RF` + RMW + SMB, m("lm"))
 
@@ -63,10 +72,12 @@ mod_frame
 The model frame now contains 10 regressions estimated using `stats::lm`. We may want to fit the regression using a heteroscedasticity and autocorrelation consistent (HAC) estimate of the covariance matrix, since we are working with financial time series. This can be done by passing the additional argument to `m(...)`:^[Note that the `...` in `m()` passes arguments to the underlying method (i.e. `stats::lm`). However in some cases `tidyfit` adds convenience functions, such as the ability to pass a `vcov.` argument as used in `coeftest` for `lm`.]
 
 ```{r}
-mod_frame <- data %>% 
+mod_frame_hac <- data %>% 
   regress(Return ~ CMA + HML + `Mkt-RF` + RMW + SMB, m("lm", vcov. = "HAC"))
+```
 
-mod_frame
+```{r, eval=TRUE}
+mod_frame_hac
 ```
 
 A rolling window regression can be estimated by specifying an appropriate cross validation method. `tidyfit` uses the `rsample` package from the `tidymodels` suite to create cross validation slices. Apart from the classic CV methods (vfold, loo, expanding window, train/test split), this also includes sliding functions (`sliding_window`, `sliding_index` and `sliding_period`), as well as `bootstraps`. The sliding functions do not generate a validation slice, but only create rolling window training slices. We will be using `sliding_index`, which works well with date indices. See `?rsample::sliding_index` for specifics.^[It is important to note that `sliding_index` can not be used to select hyperparameters since no test slices are produced. To perform time series CV, use the `rolling_origin` setting, which is similar, but produces train and test splits.]
@@ -74,7 +85,7 @@ A rolling window regression can be estimated by specifying an appropriate cross 
 Since the method `lm` has no hyperparameters, it is not passed to the cross validation loop by default, since this would create unnecessary computational overhead. To ensure that models are fitted on train slices, we need to add the additional argument `.force_cv = TRUE`. Furthermore, the CV slices are typically not returned but only used to select optimal hyperparameters. To return slices set `.return_slices = TRUE`:
 
 ```{r}
-mod_frame <- data %>% 
+mod_frame_rolling <- data %>% 
   regress(Return ~ CMA + HML + `Mkt-RF` + RMW + SMB,
           m("lm", vcov. = "HAC"),
           .cv = "sliding_index", .cv_args = list(lookback = years(5), step = 6, index = "Date"),
@@ -85,14 +96,14 @@ The `.cv_args` are arguments passed directly to `rsample::sliding_index`. We are
 
 The model frame now contains models for each slice for each industry. The `slice_id` provides the valid date for the respective slices. Betas can be extracted using the built-in `coef` function:
 
-```{r}
-df_beta <- coef(mod_frame)
+```{r, eval=TRUE}
+df_beta <- coef(mod_frame_rolling)
 df_beta
 ```
 
 In order to plot the betas, we will add confidence bands. HAC standard errors are nested in `model_info` in the coefficients frame:
 
-```{r}
+```{r, eval=TRUE}
 df_beta <- df_beta %>% 
   unnest(model_info) %>% 
   mutate(upper = estimate + 2 * std.error, lower = estimate - 2 * std.error)
@@ -101,7 +112,7 @@ df_beta
 
 Now, with all the pieces in place, we can plot the results. Let's begin by examining the market beta for each industry using `ggplot2`:
 
-```{r, fig.width=7, fig.height=5, fig.align="center"}
+```{r, fig.width=7, fig.height=5, fig.align="center", eval=TRUE}
 df_beta %>% 
   mutate(slice_id = as.Date(slice_id)) %>% 
   filter(term == "Mkt-RF") %>% 
@@ -115,7 +126,7 @@ df_beta %>%
 
 Or plotting risk-adjusted return (alpha) given by the intercept:
 
-```{r, fig.width=7, fig.height=5, fig.align="center"}
+```{r, fig.width=7, fig.height=5, fig.align="center", eval=TRUE}
 df_beta %>% 
   mutate(slice_id = as.Date(slice_id)) %>% 
   filter(term == "(Intercept)") %>% 
@@ -129,7 +140,7 @@ df_beta %>%
 
 Or plotting all parameters for the HiTec industry:
 
-```{r, fig.width=6, fig.height=4.25, fig.align="center"}
+```{r, fig.width=6, fig.height=4.25, fig.align="center", eval=TRUE}
 df_beta %>% 
   mutate(slice_id = as.Date(slice_id)) %>% 
   filter(Industry == "HiTec") %>% 
@@ -144,3 +155,9 @@ df_beta %>%
 While there are certainly very interesting insights to be had here, the aim of this walk-through is not to interpret these results, but rather to demonstrate how a complex piece of analysis can be done very efficiently using the `tidyfit` package.
 
 In a follow-up article found [here](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html), I compare the results in the plot above to a time-varying parameter regression to show how more robust methods can be used to avoid window effects in the rolling sample and to shrink some coefficients to constant values.
+
+```{r, include=FALSE}
+results <- list(mod_frame_rolling = mod_frame_rolling, mod_frame_hac = mod_frame_hac)
+saveRDS(results, "vignettes/vignette_rwtsr.rds")
+```
+
