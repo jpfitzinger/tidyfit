@@ -1,22 +1,26 @@
 #' @name .model.lasso
 #' @title Lasso regression and classification for \code{tidyfit}
-#' @description Fits a linear regression or classification with L1 penalty and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+#' @description Fits a linear regression or classification with L1 penalty on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 #'
 #' @details **Hyperparameters:**
 #'
 #' - \code{lambda} *(L1 penalty)*
 #'
-#' The Lasso regression is estimated using \code{glmnet::glmnet} with \code{alpha = 1}. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+#' **Important method arguments (passed to \code{\link{m}})**
+#'
+#' The Lasso regression is estimated using \code{glmnet::glmnet} with \code{alpha = 1}. See \code{?glmnet} for more details. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+#'
+#' **Implementation**
 #'
 #' If the response variable contains more than 2 classes, a multinomial response is used automatically.
 #'
-#' An intercept is always included and features are standardized with coefficients transformed to the original scale.
+#' Features are standardized by default with coefficients transformed to the original scale.
 #'
 #' If no hyperparameter grid is passed (\code{is.null(control$lambda)}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100. Note that the grid selection tools provided by \code{glmnet::glmnet} cannot be used (e.g. \code{dfmax}). This is to guarantee identical grids across groups in the tibble.
 #'
-#' @param self a tidyFit R6 class.
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #' @author Johann Pfitzinger
 #' @references
 #' Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
@@ -30,7 +34,8 @@
 #' fit
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("lasso", lambda = c(0.1, 0.5)), .mask = c("Date", "Industry"))
+#' fit <- regress(data, Return ~ ., m("lasso", lambda = c(0.1, 0.5)),
+#'                .mask = c("Date", "Industry"))
 #' coef(fit)
 #'
 #' @seealso \code{\link{.model.enet}}, \code{\link{.model.ridge}}, \code{\link{.model.adalasso}} and \code{\link{m}} methods

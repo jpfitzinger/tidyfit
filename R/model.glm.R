@@ -1,16 +1,22 @@
 #' @name .model.glm
 #' @title Generalized linear regression for \code{tidyfit}
-#' @description Fits a linear or logistic regression and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+#' @description Fits a linear or logistic regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 #'
 #' @details **Hyperparameters:**
 #'
 #' *None. Cross validation not applicable.*
 #'
-#' The function provides a wrapper for \code{stats::glm}.
+#' **Important method arguments (passed to \code{\link{m}})**
 #'
-#' @param self a tidyFit R6 class.
+#' The function provides a wrapper for \code{stats::glm}. See \code{?glm} for more details.
+#'
+#' **Implementation**
+#'
+#' *No implementation notes*
+#'
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #' @author Johann Pfitzinger
 #'
 #' @examples

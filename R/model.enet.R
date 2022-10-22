@@ -1,13 +1,17 @@
 #' @name .model.enet
 #' @title ElasticNet regression or classification for \code{tidyfit}
-#' @description Fits an ElasticNet regression or classification and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+#' @description Fits an ElasticNet regression or classification on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 #'
 #' @details **Hyperparameters:**
 #'
 #' - \code{lambda} *(penalty)*
 #' - \code{alpha} *(L1-L2 mixing parameter)*
 #'
-#' The ElasticNet regression is estimated using \code{glmnet::glmnet}. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+#' **Important method arguments (passed to \code{\link{m}})**
+#'
+#' The ElasticNet regression is estimated using \code{glmnet::glmnet}. See \code{?glmnet} for more details. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+#'
+#' **Implementation**
 #'
 #' If the response variable contains more than 2 classes, a multinomial response is used automatically.
 #'
@@ -15,9 +19,9 @@
 #'
 #' If no hyperparameter grid is passed (\code{is.null(control$lambda)} and \code{is.null(control$alpha)}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100 for \code{lambda} and 5 for \code{alpha}. Note that the grid selection tools provided by \code{glmnet::glmnet} cannot be used (e.g. \code{dfmax}). This is to guarantee identical grids across groups in the tibble.
 #'
-#' @param self a tidyFit R6 class.
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #' @author Johann Pfitzinger
 #' @references
 #' Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.

@@ -1,20 +1,25 @@
 #' @name .model.subset
 #' @title Best subset regression and classification for \code{tidyfit}
-#' @description Fits a best subset regression or classification and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+#' @description Fits a best subset regression or classification on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 #'
 #' @details **Hyperparameters:**
 #'
 #' *None. Cross validation not applicable.*
 #'
-#' The best subset regression is estimated using \code{bestglm::bestglm} which is a wrapper around \code{leaps::regsubsets} for the regression case, and performs an exhaustive search for the classification case. For classification pass \code{family = "binomial"} to \code{control} or to the argument \code{...} in \code{\link{m}}.
+#' **Important method arguments (passed to \code{\link{m}})**
 #'
-#' An intercept is always included and features are standardized with coefficients transformed to the original scale.
+#'  - \code{method} (e.g. 'forward', 'backward')
+#'  - \code{IC} (information criterion, e.g. 'AIC')
+#'
+#' The best subset regression is estimated using \code{bestglm::bestglm} which is a wrapper around \code{leaps::regsubsets} for the regression case, and performs an exhaustive search for the classification case. See \code{?bestglm} for more details.
+#'
+#' **Implementation**
 #'
 #' Forward or backward selection can be performed by passing \code{method = "forward"} or \code{method = "backward"} to \code{\link{m}}.
 #'
-#' @param self a tidyFit R6 class.
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #' @author Johann Pfitzinger
 #' @references
 #' A.I. McLeod, Changjiang Xu and Yuanhao Lai (2020).
@@ -30,10 +35,11 @@
 #' tidyr::unnest(fit, settings)
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("subset", method = "forward"), .mask = c("Date", "Industry"))
+#' fit <- regress(data, Return ~ ., m("subset", method = "forward"),
+#'                .mask = c("Date", "Industry"))
 #' coef(fit)
 #'
-#' @seealso \code{\link{m}} method
+#' @seealso \code{\link{.model.lm}} and \code{\link{m}} methods
 #'
 #' @importFrom purrr quietly safely partial
 #' @importFrom methods formalArgs

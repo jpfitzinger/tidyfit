@@ -1,20 +1,24 @@
 #' @name .model.adalasso
 #' @title Adaptive Lasso regression or classification for \code{tidyfit}
-#' @description Fits an adaptive Lasso regression or classification and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+#' @description Fits an adaptive Lasso regression or classification on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 #'
 #' @details **Hyperparameters:**
 #'
 #' - \code{lambda} *(L1 penalty)*
 #'
-#' The adaptive Lasso is a weighted implementation of the Lasso algorithm, with covariate-specific weights obtained using an initial regression fit (in this case, a ridge regression with \code{lambda = 0.01}). The adaptive Lasso is computed using the \code{glmnet::glmnet} function. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+#' **Important method arguments (passed to \code{\link{m}})**
 #'
-#' An intercept is always included and features are standardized with coefficients transformed to the original scale.
+#' The adaptive Lasso is a weighted implementation of the Lasso algorithm, with covariate-specific weights obtained using an initial regression fit (in this case, a ridge regression with \code{lambda = 0.01}). The adaptive Lasso is computed using the \code{glmnet::glmnet} function. See \code{?glmnet} for more details. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+#'
+#' **Implementation**
+#'
+#' Features are standardized by default with coefficients transformed to the original scale.
 #'
 #' If no hyperparameter grid is passed (\code{is.null(control$lambda)}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100. Note that the grid selection tools provided by \code{glmnet::glmnet} cannot be used (e.g. \code{dfmax}). This is to guarantee identical grids across groups in the tibble.
 #'
-#' @param self a tidyFit R6 class.
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #'
 #' @author Johann Pfitzinger
 #' @references
@@ -33,7 +37,8 @@
 #' fit
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("adalasso", lambda = c(0.1, 0.5)), .mask = c("Date", "Industry"))
+#' fit <- regress(data, Return ~ ., m("adalasso", lambda = c(0.1, 0.5)),
+#'                .mask = c("Date", "Industry"))
 #' coef(fit)
 #'
 #' @seealso \code{\link{.model.lasso}}, \code{\link{.model.enet}}, \code{\link{.model.ridge}} and \code{\link{m}} methods

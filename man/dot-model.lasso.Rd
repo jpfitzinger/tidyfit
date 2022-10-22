@@ -7,15 +7,15 @@
 \method{.model}{lasso}(self, data = NULL)
 }
 \arguments{
-\item{self}{a tidyFit R6 class.}
+\item{self}{a 'tidyFit' R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 }
 \value{
-A fitted tidyFit class model.
+A fitted 'tidyFit' class model.
 }
 \description{
-Fits a linear regression or classification with L1 penalty and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+Fits a linear regression or classification with L1 penalty on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 }
 \details{
 \strong{Hyperparameters:}
@@ -23,11 +23,15 @@ Fits a linear regression or classification with L1 penalty and returns the resul
 \item \code{lambda} \emph{(L1 penalty)}
 }
 
-The Lasso regression is estimated using \code{glmnet::glmnet} with \code{alpha = 1}. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+\strong{Important method arguments (passed to \code{\link{m}})}
+
+The Lasso regression is estimated using \code{glmnet::glmnet} with \code{alpha = 1}. See \code{?glmnet} for more details. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+
+\strong{Implementation}
 
 If the response variable contains more than 2 classes, a multinomial response is used automatically.
 
-An intercept is always included and features are standardized with coefficients transformed to the original scale.
+Features are standardized by default with coefficients transformed to the original scale.
 
 If no hyperparameter grid is passed (\code{is.null(control$lambda)}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100. Note that the grid selection tools provided by \code{glmnet::glmnet} cannot be used (e.g. \code{dfmax}). This is to guarantee identical grids across groups in the tibble.
 }
@@ -40,7 +44,8 @@ fit <- m("lasso", Return ~ ., data, lambda = 0.5)
 fit
 
 # Within 'regress' function
-fit <- regress(data, Return ~ ., m("lasso", lambda = c(0.1, 0.5)), .mask = c("Date", "Industry"))
+fit <- regress(data, Return ~ ., m("lasso", lambda = c(0.1, 0.5)),
+               .mask = c("Date", "Industry"))
 coef(fit)
 
 }

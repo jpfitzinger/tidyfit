@@ -7,22 +7,29 @@
 \method{.model}{robust}(self, data = NULL)
 }
 \arguments{
-\item{self}{a tidyFit R6 class.}
+\item{self}{a 'tidyFit' R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 }
 \value{
-A fitted tidyFit class model.
+A fitted 'tidyFit' class model.
 }
 \description{
-Fits a robust linear regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
+Fits a robust linear regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}}.
 }
 \details{
 \strong{Hyperparameters:}
 
 \emph{None. Cross validation not applicable.}
 
-The function provides a wrapper for \code{MASS::rlm}.
+\strong{Important method arguments (passed to \code{\link{m}})}
+\itemize{
+\item \code{method} (estimation algorithm, e.g. 'M', 'MM')
+}
+
+The function provides a wrapper for \code{MASS::rlm}. See \code{?rlm} for more details.
+
+\strong{Implementation}``
 
 An argument \code{vcov.} can be passed in control or to \code{...} in \code{\link{m}} to estimate the model with robust standard errors. \code{vcov.} can be one of "BS", "HAC", "HC" and "OPG" and is passed to the \code{sandwich} package.
 }

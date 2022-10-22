@@ -1,18 +1,24 @@
 #' @name .model.hfr
 #' @title Hierarchical feature regression for \code{tidyfit}
-#' @description Fits a hierarchical feature regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
+#' @description Fits a hierarchical feature regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}}.
 #'
 #' @details **Hyperparameters:**
 #'
 #' - kappa_grid (*proportional size of regression graph*)
 #'
-#' The hierarchical feature regression is estimated using the \code{hfr::cv.hfr} function. An intercept is always included and features are standardized with coefficients transformed to the original scale.
+#' **Important method arguments (passed to \code{\link{m}})**
+#'
+#' The hierarchical feature regression is estimated using the \code{hfr::cv.hfr} function. See \code{?cv.hfr} for more details.
+#'
+#' **Implementation**
+#'
+#' Features are standardized by default with coefficients transformed to the original scale.
 #'
 #' If no hyperparameter grid is provided (\code{is.null(control$kappa_grid)}), the default is \code{seq(0, 1, by = 0.1)}.
 #'
-#' @param self a tidyFit R6 class.
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #' @author Johann Pfitzinger
 #' @references
 #' Pfitzinger J (2022).
@@ -28,10 +34,11 @@
 #' fit
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("hfr", kappa_grid = c(0.1, 0.5)), .mask = c("Date", "Industry"))
+#' fit <- regress(data, Return ~ ., m("hfr", kappa_grid = c(0.1, 0.5)),
+#'                .mask = c("Date", "Industry"))
 #' coef(fit)
 #'
-#' @seealso \code{\link{m}} method
+#' @seealso \code{\link{.model.plsr}} and \code{\link{m}} methods
 #'
 #' @importFrom purrr safely quietly
 #' @importFrom stats coef

@@ -7,15 +7,15 @@
 \method{.model}{enet}(self, data = NULL)
 }
 \arguments{
-\item{self}{a tidyFit R6 class.}
+\item{self}{a 'tidyFit' R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 }
 \value{
-A fitted tidyFit class model.
+A fitted 'tidyFit' class model.
 }
 \description{
-Fits an ElasticNet regression or classification and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+Fits an ElasticNet regression or classification on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 }
 \details{
 \strong{Hyperparameters:}
@@ -24,7 +24,11 @@ Fits an ElasticNet regression or classification and returns the results as a tib
 \item \code{alpha} \emph{(L1-L2 mixing parameter)}
 }
 
-The ElasticNet regression is estimated using \code{glmnet::glmnet}. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+\strong{Important method arguments (passed to \code{\link{m}})}
+
+The ElasticNet regression is estimated using \code{glmnet::glmnet}. See \code{?glmnet} for more details. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+
+\strong{Implementation}
 
 If the response variable contains more than 2 classes, a multinomial response is used automatically.
 

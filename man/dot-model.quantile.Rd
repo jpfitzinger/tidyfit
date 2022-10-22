@@ -7,22 +7,31 @@
 \method{.model}{quantile}(self, data = NULL)
 }
 \arguments{
-\item{self}{a tidyFit R6 class.}
+\item{self}{a 'tidyFit' R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 }
 \value{
-A fitted tidyFit class model.
+A fitted 'tidyFit' class model.
 }
 \description{
-Fits a linear quantile regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
+Fits a linear quantile regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}}.
 }
 \details{
 \strong{Hyperparameters:}
 
 \emph{None. Cross validation not applicable.}
 
-The function provides a wrapper for \code{quantreg::rq}. The argument \code{tau} is the chosen quantile (default \code{tau = 0.5}).
+\strong{Important method arguments (passed to \code{\link{m}})}
+\itemize{
+\item \code{tau} (the quantile(s) to be estimated)
+}
+
+The function provides a wrapper for \code{quantreg::rq}. See \code{?rq} for more details. The argument \code{tau} is the chosen quantile (default \code{tau = 0.5}).
+
+\strong{Implementation}
+
+\emph{No implementation notes}
 }
 \examples{
 # Load data

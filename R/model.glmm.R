@@ -1,16 +1,22 @@
 #' @name .model.glmm
 #' @title Generalized linear mixed-effects model for \code{tidyfit}
-#' @description Fits a linear or logistic mixed-effects model (GLMM) and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+#' @description Fits a linear or logistic mixed-effects model (GLMM) on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 #'
 #' @details **Hyperparameters:**
 #'
 #' *None. Cross validation not applicable.*
 #'
-#' The function provides a wrapper for \code{lme4::glmer}.
+#' **Important method arguments (passed to \code{\link{m}})**
 #'
-#' @param self a tidyFit R6 class.
+#' The function provides a wrapper for \code{lme4::glmer}. See \code{?glmer} for more details.
+#'
+#' **Implementation**
+#'
+#' *No implementation notes*
+#'
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #' @author Johann Pfitzinger
 #' @references
 #' Douglas Bates, Martin Maechler, Ben Bolker, Steve Walker (2015). Fitting Linear Mixed-Effects Models Using lme4. Journal of Statistical Software, 67(1), 1-48. doi:10.18637/jss.v067.i01.
@@ -21,7 +27,8 @@
 #' data$Return <- ifelse(data$Return > 0, 1, 0)
 #'
 #' # Estimate model with random effects
-#' fit <- classify(data, Return ~ CMA + (CMA | Industry), logit = m("glmm"), .mask = "Date")
+#' fit <- classify(data, Return ~ CMA + (CMA | Industry), logit = m("glmm"),
+#'                 .mask = "Date")
 #' fit
 #'
 #'

@@ -7,15 +7,15 @@
 \method{.model}{pcr}(self, data = NULL)
 }
 \arguments{
-\item{self}{a tidyFit R6 class.}
+\item{self}{a 'tidyFit' R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 }
 \value{
-A fitted tidyFit class model.
+A fitted 'tidyFit' class model.
 }
 \description{
-Fits a principal components regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
+Fits a principal components regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}}.
 }
 \details{
 \strong{Hyperparameters:}
@@ -24,7 +24,13 @@ Fits a principal components regression and returns the results as a tibble. The 
 \item \code{ncomp_pct} \emph{(number of components, percentage of features)}
 }
 
-The principal components regression is fitted using \code{pls} package. Covariates are standardized, with coefficients back-transformed to the original scale. An intercept is always included.
+\strong{Important method arguments (passed to \code{\link{m}})}
+
+The principal components regression is fitted using \code{pls} package. See \code{?pcr} for more details.
+
+\strong{Implementation}
+
+Covariates are standardized, with coefficients back-transformed to the original scale. An intercept is always included.
 
 If no hyperparameter grid is passed (\code{is.null(control$ncomp) & is.null(control$ncomp_pct)}), the default is \code{ncomp_pct = seq(0, 1, length.out = 20)}, where 0 results in one component and 1 results in the number of features.
 

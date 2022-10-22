@@ -7,24 +7,30 @@
 \method{.model}{subset}(self, data = NULL)
 }
 \arguments{
-\item{self}{a tidyFit R6 class.}
+\item{self}{a 'tidyFit' R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 }
 \value{
-A fitted tidyFit class model.
+A fitted 'tidyFit' class model.
 }
 \description{
-Fits a best subset regression or classification and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+Fits a best subset regression or classification on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 }
 \details{
 \strong{Hyperparameters:}
 
 \emph{None. Cross validation not applicable.}
 
-The best subset regression is estimated using \code{bestglm::bestglm} which is a wrapper around \code{leaps::regsubsets} for the regression case, and performs an exhaustive search for the classification case. For classification pass \code{family = "binomial"} to \code{control} or to the argument \code{...} in \code{\link{m}}.
+\strong{Important method arguments (passed to \code{\link{m}})}
+\itemize{
+\item \code{method} (e.g. 'forward', 'backward')
+\item \code{IC} (information criterion, e.g. 'AIC')
+}
 
-An intercept is always included and features are standardized with coefficients transformed to the original scale.
+The best subset regression is estimated using \code{bestglm::bestglm} which is a wrapper around \code{leaps::regsubsets} for the regression case, and performs an exhaustive search for the classification case. See \code{?bestglm} for more details.
+
+\strong{Implementation}
 
 Forward or backward selection can be performed by passing \code{method = "forward"} or \code{method = "backward"} to \code{\link{m}}.
 }
@@ -37,7 +43,8 @@ fit <- m("subset", Return ~ ., data, method = c("forward", "backward"))
 tidyr::unnest(fit, settings)
 
 # Within 'regress' function
-fit <- regress(data, Return ~ ., m("subset", method = "forward"), .mask = c("Date", "Industry"))
+fit <- regress(data, Return ~ ., m("subset", method = "forward"),
+               .mask = c("Date", "Industry"))
 coef(fit)
 
 }
@@ -47,7 +54,7 @@ A.I. McLeod, Changjiang Xu and Yuanhao Lai (2020).
 R package version 0.37.3.} URL https://CRAN.R-project.org/package=bestglm.\cr
 }
 \seealso{
-\code{\link{m}} method
+\code{\link{.model.lm}} and \code{\link{m}} methods
 }
 \author{
 Johann Pfitzinger

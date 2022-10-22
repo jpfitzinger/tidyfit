@@ -7,24 +7,32 @@
 \method{.model}{tvp}(self, data = NULL)
 }
 \arguments{
-\item{self}{a tidyFit R6 class.}
+\item{self}{a 'tidyFit' R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 }
 \value{
-A fitted tidyFit class model.
+A fitted 'tidyFit' class model.
 }
 \description{
-Fits a Bayesian time-varying regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
+Fits a Bayesian time-varying regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}}.
 }
 \details{
 \strong{Hyperparameters:}
 
 \emph{None. Cross validation not applicable.}
 
-The function provides a wrapper for \code{shrinkTVP::shrinkTVP}.
+\strong{Important method arguments (passed to \code{\link{m}})}
+\itemize{
+\item \code{mod_type}
+\item \code{niter} (number of MCMC iterations)
+}
 
-An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("tvp"))} (e.g. a date index).
+The function provides a wrapper for \code{shrinkTVP::shrinkTVP}. See \code{?shrinkTVP} for more details.
+
+\strong{Implementation}
+
+An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("tvp"))} (e.g. a date index, see Examples).
 }
 \examples{
 # Load data
@@ -48,7 +56,7 @@ Journal of Statistical Software 100(13), 1--32}.
 \doi{10.18637/jss.v100.i13}.\cr
 }
 \seealso{
-\code{\link{.model.robust}}, \code{\link{.model.glm}} and \code{\link{m}} methods
+\code{\link{.model.bayes}}, \code{\link{.model.mslm}} and \code{\link{m}} methods
 }
 \author{
 Johann Pfitzinger

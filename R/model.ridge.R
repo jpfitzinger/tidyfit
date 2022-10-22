@@ -1,16 +1,20 @@
 #' @name .model.ridge
 #' @title Ridge regression and classification for \code{tidyfit}
-#' @description Fits a linear regression or classification with L2 penalty and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+#' @description Fits a linear regression or classification with L2 penalty on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 #'
 #' @details **Hyperparameters:**
 #'
 #' - \code{lambda} *(L2 penalty)*
 #'
-#' The ridge regression is estimated using \code{glmnet::glmnet} with \code{alpha = 0}. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+#' **Important method arguments (passed to \code{\link{m}})**
+#'
+#' The ridge regression is estimated using \code{glmnet::glmnet} with \code{alpha = 0}. See \code{?glmnet} for more details. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+#'
+#' **Implementation**
 #'
 #' If the response variable contains more than 2 classes, a multinomial response is used automatically.
 #'
-#' An intercept is always included and features are standardized with coefficients transformed to the original scale.
+#' Features are standardized by default with coefficients transformed to the original scale.
 #'
 #' If no hyperparameter grid is passed (\code{is.null(control$lambda)}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100. Note that the grid selection tools provided by \code{glmnet::glmnet} cannot be used (e.g. \code{dfmax}). This is to guarantee identical grids across groups in the tibble.
 #'
@@ -30,7 +34,8 @@
 #' fit
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("ridge", lambda = c(0.1, 0.5)), .mask = c("Date", "Industry"))
+#' fit <- regress(data, Return ~ ., m("ridge", lambda = c(0.1, 0.5)),
+#'                .mask = c("Date", "Industry"))
 #' coef(fit)
 #'
 #' @seealso \code{\link{.model.lasso}}, \code{\link{.model.adalasso}}, \code{\link{.model.enet}} and \code{\link{m}} methods

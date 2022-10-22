@@ -1,21 +1,25 @@
 #' @name .model.boost
 #' @title Gradient boosting regression for \code{tidyfit}
-#' @description Fits a gradient boosting regression or classification and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+#' @description Fits a gradient boosting regression or classification on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 #'
 #' @details **Hyperparameters:**
 #'
 #' - \code{mstop} (*number of boosting iterations*)
 #' - \code{nu} (*step size*)
 #'
-#' The gradient boosting regression is performed using \code{mboost::glmboost}. For classification pass \code{family = "binomial"} to \code{control} or to the argument \code{...} in \code{\link{m}}.
+#' **Important method arguments (passed to \code{\link{m}})**
 #'
-#' An intercept is always included and features are standardized with coefficients transformed to the original scale.
+#' The gradient boosting regression is performed using \code{mboost::glmboost}. See \code{?glmboost} for more details.
+#'
+#' **Implementation**
+#'
+#' Features are standardized by default with coefficients transformed to the original scale.
 #'
 #' If no hyperparameter grid is passed (\code{is.null(control$mstop)} and \code{is.null(control$nu)}), the default grid is used with \code{mstop = c(100, 500, 1000, 5000)} and \code{nu = c(0.01, 0.05, 0.1, 0.15, 0.2, 0.25)}.
 #'
-#' @param self a tidyFit R6 class.
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #' @return A 'tibble'.
 #' @author Johann Pfitzinger
 #' @references

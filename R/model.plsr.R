@@ -1,21 +1,27 @@
 #' @name .model.plsr
 #' @title Partial Least Squares Regression for \code{tidyfit}
-#' @description Fits a partial least squares regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
+#' @description Fits a partial least squares regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}}.
 #'
 #' @details **Hyperparameters:**
 #'
 #' - \code{ncomp} *(number of components)*
 #' - \code{ncomp_pct} *(number of components, percentage of features)*
 #'
-#' The partial least squares regression is fitted using \code{pls} package. Covariates are standardized, with coefficients back-transformed to the original scale. An intercept is always included.
+#' **Important method arguments (passed to \code{\link{m}})**
+#'
+#' The partial least squares regression is fitted using \code{pls} package. See \code{?plsr} for more details.
+#'
+#' **Implementation**
+#'
+#' Covariates are standardized, with coefficients back-transformed to the original scale. An intercept is always included.
 #'
 #' If no hyperparameter grid is passed (\code{is.null(control$ncomp) & is.null(control$ncomp_pct)}), the default is \code{ncomp_pct = seq(0, 1, length.out = 20)}, where 0 results in one component and 1 results in the number of features.
 #'
 #' Note that at present \code{pls} does not offer weighted implementations or non-gaussian response. The method can therefore only be used with \code{\link{regress}}
 #'
-#' @param self a tidyFit R6 class.
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #' @author Johann Pfitzinger
 #' @references
 #' Liland K, Mevik B, Wehrens R (2022). _pls: Partial Least Squares and Principal Component Regression_. R package version 2.8-1, <https://CRAN.R-project.org/package=pls>.

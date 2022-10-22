@@ -1,16 +1,24 @@
 #' @name .model.quantile
 #' @title Quantile regression for \code{tidyfit}
-#' @description Fits a linear quantile regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
+#' @description Fits a linear quantile regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}}.
 #'
-#' @param self a tidyFit R6 class.
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #'
 #' @details  **Hyperparameters:**
 #'
 #' *None. Cross validation not applicable.*
 #'
-#' The function provides a wrapper for \code{quantreg::rq}. The argument \code{tau} is the chosen quantile (default \code{tau = 0.5}).
+#' **Important method arguments (passed to \code{\link{m}})**
+#'
+#'  - \code{tau} (the quantile(s) to be estimated)
+#'
+#' The function provides a wrapper for \code{quantreg::rq}. See \code{?rq} for more details. The argument \code{tau} is the chosen quantile (default \code{tau = 0.5}).
+#'
+#' **Implementation**
+#'
+#' *No implementation notes*
 #'
 #' @author Johann Pfitzinger
 #' @references

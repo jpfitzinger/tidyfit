@@ -1,18 +1,25 @@
 #' @name .model.tvp
 #' @title Bayesian Time-Varying Regression for \code{tidyfit}
-#' @description Fits a Bayesian time-varying regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
+#' @description Fits a Bayesian time-varying regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}}.
 #'
-#' @param self a tidyFit R6 class.
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #'
 #' @details  **Hyperparameters:**
 #'
 #' *None. Cross validation not applicable.*
 #'
-#' The function provides a wrapper for \code{shrinkTVP::shrinkTVP}.
+#' **Important method arguments (passed to \code{\link{m}})**
 #'
-#' An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("tvp"))} (e.g. a date index).
+#'  - \code{mod_type}
+#'  - \code{niter} (number of MCMC iterations)
+#'
+#' The function provides a wrapper for \code{shrinkTVP::shrinkTVP}. See \code{?shrinkTVP} for more details.
+#'
+#' **Implementation**
+#'
+#' An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("tvp"))} (e.g. a date index, see Examples).
 #'
 #' @author Johann Pfitzinger
 #' @references
@@ -35,7 +42,7 @@
 #' fit <- regress(data, Return ~ ., m("tvp", niter = 50, index_col = "Date"))
 #' tidyr::unnest(coef(fit), model_info)
 #'
-#' @seealso \code{\link{.model.robust}}, \code{\link{.model.glm}} and \code{\link{m}} methods
+#' @seealso \code{\link{.model.bayes}}, \code{\link{.model.mslm}} and \code{\link{m}} methods
 #'
 #' @importFrom purrr safely quietly
 #' @importFrom methods formalArgs

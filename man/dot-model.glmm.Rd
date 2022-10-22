@@ -7,22 +7,28 @@
 \method{.model}{glmm}(self, data = NULL)
 }
 \arguments{
-\item{self}{a tidyFit R6 class.}
+\item{self}{a 'tidyFit' R6 class.}
 
 \item{data}{a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).}
 }
 \value{
-A fitted tidyFit class model.
+A fitted 'tidyFit' class model.
 }
 \description{
-Fits a linear or logistic mixed-effects model (GLMM) and returns the results as a tibble. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+Fits a linear or logistic mixed-effects model (GLMM) on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 }
 \details{
 \strong{Hyperparameters:}
 
 \emph{None. Cross validation not applicable.}
 
-The function provides a wrapper for \code{lme4::glmer}.
+\strong{Important method arguments (passed to \code{\link{m}})}
+
+The function provides a wrapper for \code{lme4::glmer}. See \code{?glmer} for more details.
+
+\strong{Implementation}
+
+\emph{No implementation notes}
 }
 \examples{
 # Load data
@@ -30,7 +36,8 @@ data <- tidyfit::Factor_Industry_Returns
 data$Return <- ifelse(data$Return > 0, 1, 0)
 
 # Estimate model with random effects
-fit <- classify(data, Return ~ CMA + (CMA | Industry), logit = m("glmm"), .mask = "Date")
+fit <- classify(data, Return ~ CMA + (CMA | Industry), logit = m("glmm"),
+                .mask = "Date")
 fit
 
 

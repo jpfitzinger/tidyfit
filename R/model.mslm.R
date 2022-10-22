@@ -1,18 +1,30 @@
 #' @name .model.mslm
 #' @title Markov-Switching Regression for \code{tidyfit}
-#' @description Fits a Markov-Switching regression and returns the results as a tibble. The function can be used with \code{\link{regress}}.
+#' @description Fits a Markov-Switching regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}}.
 #'
-#' @param self a tidyFit R6 class.
+#' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
-#' @return A fitted tidyFit class model.
+#' @return A fitted 'tidyFit' class model.
 #'
 #' @details  **Hyperparameters:**
 #'
 #' *None. Cross validation not applicable.*
 #'
-#' The function provides a wrapper for \code{MSwM::msmFit}. Note that only the regression method with 'lm' is implemented at this stage.
+#' **Important method arguments (passed to \code{\link{m}})**
+#'
+#'  - \code{k} (the number of regimes)
+#'  - \code{sw} (logical vector indicating which coefficients switch)
+#'  - \code{control} (additional fitting parameters)
+#'
+#' The function provides a wrapper for \code{MSwM::msmFit}. See \code{?msmFit} for more details.
+#'
+#' **Implementation**
+#'
+#' Note that only the regression method with 'lm' is implemented at this stage.
 #'
 #' An argument \code{index_col} can be passed, which allows a custom index to be added to \code{coef(m("mslm"))} (e.g. a date index).
+#'
+#' If no \code{sw} argument is passed, all coefficients are permitted to switch between regimes.``
 #'
 #' @author Johann Pfitzinger
 #' @references
