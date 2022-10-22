@@ -1,0 +1,22 @@
+---
+title: "Flowchart"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Flowchart}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+The following flowchart illustrates how `tidyfit` processes data and fits models:
+
+![](ProcessChart.jpg)
