@@ -8,7 +8,7 @@
 
 `tidyfit` is an `R`-package that facilitates and automates linear
 regression and classification modeling in a tidy environment. The
-package includes several methods, such as Lasso, PLS and ElasticNet
+package includes several methods, such as Lasso, PLS and Bayesian
 regressions. `tidyfit` builds on the `tidymodels` suite, but emphasizes
 automated modeling with a focus on grouped data, model comparisons, and
 high-volume analytics with standardized input/output interfaces. The
@@ -18,8 +18,8 @@ method-specific transformations handled in the background.
 
 ## Installation
 
-You can install the development version of tidyfit from
-[GitHub](https://github.com/) with:
+You can install the development version of `tidyfit` from
+[GitHub](https://github.com/jpfitzinger/tidyfit) with:
 
 ``` r
 # install.packages("devtools")
@@ -36,13 +36,18 @@ library(tidyfit)
 -   `m()`
 
 All 3 of these functions return a `tidyfit.models` frame, which is a
-tibble containing information about fitted regression and classification
-models. `regress` and `classify` perform regression and classification
-on tidy data. The functions ingest a tibble, prepare input data for the
-models by splitting groups, partitioning cross validation slices and
-handling any necessary adjustments and transformations. The data is
-ultimately passed to the model wrapper `m()` which fits the models. The
-basic usage is as follows:
+data frame containing information about fitted regression and
+classification models. `regress` and `classify` perform regression and
+classification on tidy data. The functions ingest a `tibble`, prepare
+input data for the models by splitting groups, partitioning cross
+validation slices and handling any necessary adjustments and
+transformations. The data is ultimately passed to the model wrapper
+`m()` which fits the models.
+
+[See the
+flowchart](https://tidyfit.unchartedml.com/articles/Flowchart.html)
+
+The basic usage is as follows:
 
 ``` r
 regress(
@@ -455,14 +460,16 @@ In this section, a minimal workflow is used to demonstrate how the
 package works. For more detailed guides of specialized topics, or simply
 for further reading, follow these links:
 
--   [Accessing fitted
-    models](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
+-   [The backend work
+    flow](https://tidyfit.unchartedml.com/articles/Flowchart.html)
 -   [Regularized
     regression](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html)
     (Boston house price data)
 -   [Multinomial
     classification](https://tidyfit.unchartedml.com/articles/Multinomial_Classification.html)
     (iris data)
+-   [Accessing fitted
+    models](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
 -   [Rolling window regression for time
     series](https://tidyfit.unchartedml.com/articles/Rolling_Window_Time_Series_Regression.html)
     (factor data)
@@ -473,7 +480,6 @@ for further reading, follow these links:
     intervals](https://tidyfit.unchartedml.com/articles/Bootstrapping_Confidence_Intervals.html)
 -   \[coming soon\] Fixed and Random effects
 -   \[coming soon\] Quantile regression
--   \[coming soon\] Custom models
 
 `tidyfit` includes a data set of financial Fama-French factor returns
 freely available
@@ -515,14 +521,11 @@ df_test <- data %>%
   filter(Date >= 202000)
 ```
 
-Before beginning with the estimation, we activate the progress bar
+Before beginning with the estimation, we can activate the progress bar
 visualization. This allows us to gauge estimation progress along the
 way. `tidyfit` uses the `progressr`-package internally to generate a
-progress bar:
-
-``` r
-progressr::handlers(global=TRUE)
-```
+progress bar — run `progressr::handlers(global=TRUE)` to activate
+progress bars in your environment.
 
 For purposes of this demonstration, the objective will be to fit an
 ElasticNet regression for each industry group, and compare results to a
@@ -567,7 +570,7 @@ subset_mod_frame
 #> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|004 <tidyFit> <tibble> <NA>   
 #> 2 Utils    enet   glmnet::glmnet      1.21   #001|001 <tidyFit> <tibble> <NA>   
 #> 3 Enrgy    robust MASS::rlm           0.0639 #0010000 <tidyFit> <tibble> <NA>   
-#> 4 Utils    robust MASS::rlm           0.0638 #0010000 <tidyFit> <tibble> <NA>   
+#> 4 Utils    robust MASS::rlm           0.0639 #0010000 <tidyFit> <tibble> <NA>   
 #> # … with abbreviated variable names ¹​model_object, ²​warnings
 ```
 
@@ -582,7 +585,7 @@ subset_mod_frame %>%
 #> 1 Enrgy    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  0.498 <NA>  
 #> 2 Utils    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  1     <NA>  
 #> 3 Enrgy    robust MASS::rlm  0.0639 #00100… <tidyFit>    NA <NA>   NA     MM    
-#> 4 Utils    robust MASS::rlm  0.0638 #00100… <tidyFit>    NA <NA>   NA     MM    
+#> 4 Utils    robust MASS::rlm  0.0639 #00100… <tidyFit>    NA <NA>   NA     MM    
 #> # … with 2 more variables: psi <list>, warnings <chr>, and abbreviated variable
 #> #   names ¹​`size (MB)`, ²​model_object
 ```
@@ -592,7 +595,7 @@ Specifically, we can do 4 things:
 
 1.  Access the fitted model
 2.  Predict
-3.  Access a tibble of estimated parameters
+3.  Access a data frame of estimated parameters
 4.  Use additional generics
 
 The **fitted tidyFit models** are stored as an `R6` class in the
@@ -611,7 +614,7 @@ subset_mod_frame %>%
 #> 1 Enrgy    enet   glmnet::gl…  1.21   #001|0… <tidyFit> <tibble> <NA>    <elnet>
 #> 2 Utils    enet   glmnet::gl…  1.21   #001|0… <tidyFit> <tibble> <NA>    <elnet>
 #> 3 Enrgy    robust MASS::rlm    0.0639 #00100… <tidyFit> <tibble> <NA>    <rlm>  
-#> 4 Utils    robust MASS::rlm    0.0638 #00100… <tidyFit> <tibble> <NA>    <rlm>  
+#> 4 Utils    robust MASS::rlm    0.0639 #00100… <tidyFit> <tibble> <NA>    <rlm>  
 #> # … with abbreviated variable names ¹​`size (MB)`, ²​model_object, ³​warnings,
 #> #   ⁴​fitted_model
 ```
@@ -704,7 +707,7 @@ model_frame %>%
   theme_bw()
 ```
 
-<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" style="display: block; margin: auto;" />
 
 The ElasticNet performs a little better (unsurprising really, given the
 small data set).

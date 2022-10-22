@@ -24,11 +24,11 @@ library(tidyfit)
 <!-- badges: start -->
 <!-- badges: end -->
 
-`tidyfit` is an `R`-package that facilitates and automates linear regression and classification modeling in a tidy environment. The package includes several methods, such as Lasso, PLS and ElasticNet regressions. `tidyfit` builds on the `tidymodels` suite, but emphasizes automated modeling with a focus on grouped data, model comparisons, and high-volume analytics with standardized input/output interfaces. The objective is to make model fitting, cross validation and model output very simple and standardized across all methods, with any necessary method-specific transformations handled in the background.
+`tidyfit` is an `R`-package that facilitates and automates linear regression and classification modeling in a tidy environment. The package includes several methods, such as Lasso, PLS and Bayesian regressions. `tidyfit` builds on the `tidymodels` suite, but emphasizes automated modeling with a focus on grouped data, model comparisons, and high-volume analytics with standardized input/output interfaces. The objective is to make model fitting, cross validation and model output very simple and standardized across all methods, with any necessary method-specific transformations handled in the background.
 
 ## Installation
 
-You can install the development version of tidyfit from [GitHub](https://github.com/) with:
+You can install the development version of `tidyfit` from [GitHub](https://github.com/jpfitzinger/tidyfit) with:
 
 ```{r, eval=F}
 # install.packages("devtools")
@@ -44,7 +44,11 @@ library(tidyfit)
  - `classify()`
  - `m()`
 
-All 3 of these functions return a `tidyfit.models` frame, which is a tibble containing information about fitted regression and classification models. `regress` and `classify` perform regression and classification on tidy data. The functions ingest a tibble, prepare input data for the models by splitting groups, partitioning cross validation slices and handling any necessary adjustments and transformations. The data is ultimately passed to the model wrapper `m()` which fits the models. The basic usage is as follows:
+All 3 of these functions return a `tidyfit.models` frame, which is a data frame containing information about fitted regression and classification models. `regress` and `classify` perform regression and classification on tidy data. The functions ingest a `tibble`, prepare input data for the models by splitting groups, partitioning cross validation slices and handling any necessary adjustments and transformations. The data is ultimately passed to the model wrapper `m()` which fits the models. 
+
+[See the flowchart](https://tidyfit.unchartedml.com/articles/Flowchart.html)
+
+The basic usage is as follows:
 
 ```{r, eval=F}
 regress(
@@ -111,15 +115,15 @@ It is important to note that the above list is not complete, since some of the m
 
 In this section, a minimal workflow is used to demonstrate how the package works. For more detailed guides of specialized topics, or simply for further reading, follow these links:
 
-  - [Accessing fitted models](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
+  - [The backend work flow](https://tidyfit.unchartedml.com/articles/Flowchart.html)
   - [Regularized regression](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html) (Boston house price data)
   - [Multinomial classification](https://tidyfit.unchartedml.com/articles/Multinomial_Classification.html) (iris data)
+  - [Accessing fitted models](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
   - [Rolling window regression for time series](https://tidyfit.unchartedml.com/articles/Rolling_Window_Time_Series_Regression.html) (factor data)
   - [Time-varying parameters](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html) (factor data)
   - [Bootstrap confidence intervals](https://tidyfit.unchartedml.com/articles/Bootstrapping_Confidence_Intervals.html)
   - [coming soon] Fixed and Random effects
   - [coming soon] Quantile regression
-  - [coming soon] Custom models
 
 `tidyfit` includes a data set of financial Fama-French factor returns freely available [here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html). The data set includes monthly industry returns for 10 industries, as well as monthly factor returns for 5 factors:
 
@@ -143,11 +147,7 @@ df_test <- data %>%
   filter(Date >= 202000)
 ```
 
-Before beginning with the estimation, we activate the progress bar visualization. This allows us to gauge estimation progress along the way. `tidyfit` uses the `progressr`-package internally to generate a progress bar:
-
-```{r, eval=F}
-progressr::handlers(global=TRUE)
-```
+Before beginning with the estimation, we can activate the progress bar visualization. This allows us to gauge estimation progress along the way. `tidyfit` uses the `progressr`-package internally to generate a progress bar --- run `progressr::handlers(global=TRUE)` to activate progress bars in your environment.
 
 For purposes of this demonstration, the objective will be to fit an ElasticNet regression for each industry group, and compare results to a robust least squares regression. This can be done with `regress` after grouping the data. For grouped data, the functions `regress` and `classify` estimate models for each group independently:
 
@@ -185,7 +185,7 @@ The `tidyfit.models` frame can be used to access additional information. Specifi
 
   1. Access the fitted model
   2. Predict
-  3. Access a tibble of estimated parameters
+  3. Access a data frame of estimated parameters
   4. Use additional generics
 
 The **fitted tidyFit models** are stored as an `R6` class in the `model_object` column and can be addressed directly with generics such as `coef` or `summary`. The underlying object (e.g. an `lm` class fitted model) is given in `...$object` (see [here](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html) for another example):
