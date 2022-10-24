@@ -33,7 +33,6 @@ Imports:
 Suggests:
   arm,
   bestglm,
-  ggrepel,
   glmnet,
   hfr,
   kableExtra,

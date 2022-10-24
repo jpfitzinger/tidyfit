@@ -86,8 +86,8 @@ plotter <- function(df) {
     mutate(model = str_wrap(model, 12)) %>% 
     mutate(model = factor(model, levels = unique(.$model))) %>% 
     ggplot(aes(model, .estimate)) +
-    geom_point(aes(color = type), size = 3, shape = 4) + 
-    ggrepel::geom_label_repel(aes(label = lab, color = type), size = 3, ) +
+    geom_point(aes(color = type), size = 2.5, shape = 4) + 
+    geom_label(aes(label = lab, color = type), size = 2, nudge_x = 0.35) +
     theme_bw() +
     scale_color_manual(values = c("firebrick", "darkblue")) +
     theme(legend.title = element_blank(), 
