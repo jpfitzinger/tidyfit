@@ -21,14 +21,12 @@ knitr::opts_chunk$set(
 
 if (use_saved_results) {
   results <- readRDS("vignette_pbhp.rds")
-  model_frame_all <- results$model_frame_all
+  eval_frame <- results$eval_frame
 }
 ```
 
 ```{r, eval=TRUE}
 library(tidyverse) # Data wrangling
-library(furrr)     # Parallel computation
-library(ggpubr)    # Plotting wrapper for ggplot2
 library(tidyfit)   # Auto-ML modeling
 ```
 
@@ -70,8 +68,7 @@ assess <- function(model_frame, data_trn, data_tst) {
     group_by(model, .add = TRUE) %>% 
     yardstick::rsq_trad(truth, prediction) %>% 
     mutate(type = "Out-of-sample") %>% 
-    arrange(desc(.estimate)) %>% 
-    mutate(model = factor(model, levels = unique(.$model)))
+    arrange(desc(.estimate))
   
   is <- model_frame %>% 
     predict(data_trn) %>% 
@@ -87,10 +84,14 @@ plotter <- function(df) {
   df %>% 
     mutate(lab = round(.estimate, 2)) %>% 
     mutate(model = str_wrap(model, 12)) %>% 
-    ggscatter("model", ".estimate", color = "type", size = 3, shape = 4, 
-              label = "lab", label.rectangle = TRUE, font.label = c(9), repel = T) %>% 
-    ggpar(ggtheme = theme_bw(), legend = "top", 
-          legend.title = "", xlab = F, ylab = "R-squared", palette = c("firebrick", "darkblue")) +
+    mutate(model = factor(model, levels = unique(.$model))) %>% 
+    ggplot(aes(model, .estimate)) +
+    geom_point(aes(color = type), size = 3, shape = 4) + 
+    ggrepel::geom_label_repel(aes(label = lab, color = type), size = 3, ) +
+    theme_bw() +
+    scale_color_manual(values = c("firebrick", "darkblue")) +
+    theme(legend.title = element_blank(), 
+          axis.title.x = element_blank()) +
     coord_cartesian(ylim = c(0.65, 0.95))
 }
 ```
@@ -100,8 +101,7 @@ Now we plot the resulting metrics:
 ```{r, fig.width=3, fig.height=3, fig.align="center", eval=TRUE}
 model_frame %>% 
   assess(data_trn, data_tst) %>% 
-  plotter %>% 
-  ggpar(legend = "right")
+  plotter
 ```
 
 The in-sample fit of the regression is naturally better than out-of-sample, but the difference is not large. The results can be improved substantially by adding interaction terms between features. This leads to a vast improvement in in-sample fit (again, this is a logical consequence of including a large number of regressors), but leads to no improvement in out-of-sample fit, suggesting substantial overfit:
@@ -112,8 +112,7 @@ model_frame <- data_trn %>%
 
 model_frame %>% 
   assess(data_trn, data_tst) %>% 
-  plotter %>% 
-  ggpar(legend = "right")
+  plotter
 ```
 
 ## Regularized regression estimators
@@ -143,11 +142,9 @@ kbl(tbl, align = "ccccc") %>%
 
 ```
 
-In the next code chunk, most of the available regression techniques are fitted to the data set. Hyperparameters are optimized using a 10-fold cross validation powered by `rsample` and `furrr` in the background. Using `furrr` ensures that a `future` plan can be set to perform hyperparameter tuning on a parallelized backend:^[Parallelizing happens at the level of cross validation slices, so always consider if the overhead of parallel computation is worth it. For instance, parallelizing will likely be very useful with `.cv = "loo"` but can be less useful with `.cv = "vfold"`.]
+In the next code chunk, most of the available regression techniques are fitted to the data set. Hyperparameters are optimized using a 10-fold cross validation powered by `rsample` in the background. As a practical aside, it is possible to set a `future` plan to ensure hyperparameter tuning is performed on a parallelized backend.^[Parallelizing happens at the level of cross validation slices, so always consider if the overhead of parallel computation is worth it. For instance, parallelizing will likely be very useful with `.cv = "loo"` but can be less useful with `.cv = "vfold"`.] This is done using `plan(multisession(workers = n_workers))`, where `n_workers` is the number of available cores. Furthermore, a progress bar could be activated using `progressr::handlers(global=TRUE)`.
 
 ```{r}
-plan(multisession(workers = 12))
-progressr::handlers(global=TRUE)
 model_frame_all <- data_trn %>% 
   regress(medv ~ .*., 
           OLS = m("lm"),
@@ -167,11 +164,16 @@ model_frame_all <- data_trn %>%
 
 Let's use `yardstick` again to calculate in-sample and out-of-sample performance statistics. The models are arranged descending order of test set performance:
 
+```{r}
+eval_frame <- model_frame_all %>% 
+  assess(data_trn, data_tst)
+```
+
 ```{r, fig.width=7.25, fig.height=4.25, fig.align="center", eval=TRUE}
-model_frame_all %>% 
-  assess(data_trn, data_tst) %>% 
+eval_frame %>% 
   plotter +
-  rotate_x_text(90)
+  theme(legend.position = "top", 
+        axis.text.x = element_text(angle = 90))
 ```
 
 The adaptive Lasso regression achieves the highest out-of-sample performance, roughly on par with the Bayesian regression and hierarchical feature regression. The subset selection algorithms achieve relatively good results, while the penalized and latent factor regressions perform worst. All methods improve on the OLS results.
@@ -185,9 +187,4 @@ The package further includes a `tidyfit::classify` method that assumes a binomia
 ## What's the difference to `caret` or `parsnip`
 
 `tidyfit` is focused on the estimation of **regression coefficients** and the efficient handling of **high-volume model estimation** in grouped tibbles. The output is centered on the estimation of comparable regression and classification equations and coefficient vectors. Existing modeling wrappers such as `caret` and `parsnip` focus instead on standardized prediction workflows.
-
-```{r, include=FALSE}
-results <- list(model_frame_all = model_frame_all)
-saveRDS(results, "vignettes/vignette_pbhp.rds")
-```
 

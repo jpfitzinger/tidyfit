@@ -71,6 +71,9 @@ Now there is a column with `cv.hfr` objects. This is useful, when we want to per
 Finally, we can use `pwalk` to compare the different settings in a plot:
 
 ```{r, fig.width=7, fig.height=6, fig.align='center'}
+# Store current par before editing
+old_par <- par()
+
 par(mfrow = c(2, 2))
 par(family = "sans", cex = 0.7)
 mod_frame %>% 
@@ -79,6 +82,11 @@ mod_frame %>%
   pwalk(~plot(.x, kappa = .y, 
               max_leaf_size = 2, 
               show_details = FALSE))
+```
+
+```{r}
+# Restore old par
+par(old_par)
 ```
 
 Notice how with each smaller value of `kappa` the height of the tree shrinks and the model parameters become more similar in size. This is precisely how HFR regularization works: it shrinks the parameters towards group means over groups of similar features as determined by the regression graph.

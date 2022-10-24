@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 if (use_saved_results) {
   library(pls)
   results <- readRDS("vignette_bci.rds")
-  model_frame <- results$model_frame
+  estimates <- results$estimates
 }
 ```
 
@@ -52,20 +52,18 @@ model_frame <- data %>%
           .return_slices = TRUE)
 ```
 
-The coefficients are returned for each slice when `.add_bootstrap_intervals = FALSE` (default behavior):
+The coefficients are returned for each slice when `.add_bootstrap_intervals = FALSE` (default behavior --- see `coef(model_frame)`). To obtain bootstrap intervals, I pass `.add_bootstrap_interval = TRUE` to `coef`:
 
-```{r, eval=TRUE}
-coef(model_frame)
-```
-
-Now I calculate bootstrap intervals:
-
-```{r, eval=TRUE}
+```{r}
 estimates <- coef(model_frame, 
                   .add_bootstrap_interval = TRUE, 
                   .bootstrap_alpha = 0.05)
+```
+
+```{r, eval=TRUE}
 estimates
 ```
+
 
 The intervals are nested in `model_info`:
 
@@ -85,10 +83,5 @@ estimates %>%
   geom_hline(yintercept = 0) +
   geom_errorbar(aes(ymin = .lower, ymax = .upper), position = position_dodge()) +
   theme_bw(8)
-```
-
-```{r, include=FALSE}
-results <- list(model_frame = model_frame)
-saveRDS(results, "vignettes/vignette_bci.rds")
 ```
 

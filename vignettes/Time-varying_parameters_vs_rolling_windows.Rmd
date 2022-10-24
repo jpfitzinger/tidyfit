@@ -21,8 +21,7 @@ knitr::opts_chunk$set(
 
 if (use_saved_results) {
   results <- readRDS("vignette_tvpvsrw.rds")
-  mod_rolling <- results$mod_rolling
-  mod_tvp <- results$mod_tvp
+  beta <- results$beta
 }
 ```
 
@@ -77,19 +76,19 @@ The `sv = TRUE` adds stochastic volatility, while the `index_col` argument is a 
 
 Next we combine the two model frames:
 
-```{r, eval=TRUE}
+```{r}
 mod_frame <- bind_rows(mod_rolling, mod_tvp)
 ```
 
 The coefficients for all models can be obtained in the usual manner:
 
-```{r, eval=TRUE}
+```{r}
 beta <- coef(mod_frame)
 ```
 
 Now, however, we require some wrangling to adapt the output of the two methods. First we unnest the detailed model information. This contains upper and lower credible intervals for the TVP model. For the OLS model we generate the confidence interval, as before. Finally, we combine the `slice_id` and `index` columns into a joint `date` column:
 
-```{r, eval=TRUE}
+```{r}
 beta <- beta %>% 
   unnest(model_info) %>% 
   mutate(lower = ifelse(is.na(lower), estimate - 2*std.error, lower)) %>% 
@@ -116,9 +115,3 @@ We can make a two interesting observations from these results:
   2. The TVP estimates are markedly smoother and importantly remove the window effects seen in the rolling regression (i.e. the rolling regression adjusts too late).
 
 The TVP model seems to offer a much better tool analyze the factor betas in this case. 
-
-```{r, include=FALSE}
-results <- list(mod_rolling = mod_rolling, mod_tvp = mod_tvp)
-saveRDS(results, "vignettes/vignette_tvpvsrw.rds")
-```
-

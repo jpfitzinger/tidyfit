@@ -21,8 +21,7 @@ knitr::opts_chunk$set(
 
 if (use_saved_results) {
   results <- readRDS("vignette_rwtsr.rds")
-  mod_frame_hac <- results$mod_frame_hac
-  mod_frame_rolling <- results$mod_frame_rolling
+  df_beta <- results$df_beta
 }
 ```
 
@@ -71,12 +70,10 @@ mod_frame
 
 The model frame now contains 10 regressions estimated using `stats::lm`. We may want to fit the regression using a heteroscedasticity and autocorrelation consistent (HAC) estimate of the covariance matrix, since we are working with financial time series. This can be done by passing the additional argument to `m(...)`:^[Note that the `...` in `m()` passes arguments to the underlying method (i.e. `stats::lm`). However in some cases `tidyfit` adds convenience functions, such as the ability to pass a `vcov.` argument as used in `coeftest` for `lm`.]
 
-```{r}
+```{r, eval=TRUE}
 mod_frame_hac <- data %>% 
   regress(Return ~ CMA + HML + `Mkt-RF` + RMW + SMB, m("lm", vcov. = "HAC"))
-```
 
-```{r, eval=TRUE}
 mod_frame_hac
 ```
 
@@ -96,8 +93,11 @@ The `.cv_args` are arguments passed directly to `rsample::sliding_index`. We are
 
 The model frame now contains models for each slice for each industry. The `slice_id` provides the valid date for the respective slices. Betas can be extracted using the built-in `coef` function:
 
-```{r, eval=TRUE}
+```{r}
 df_beta <- coef(mod_frame_rolling)
+```
+
+```{r, eval=TRUE}
 df_beta
 ```
 
@@ -107,6 +107,9 @@ In order to plot the betas, we will add confidence bands. HAC standard errors ar
 df_beta <- df_beta %>% 
   unnest(model_info) %>% 
   mutate(upper = estimate + 2 * std.error, lower = estimate - 2 * std.error)
+```
+
+```{r, eval=TRUE}
 df_beta
 ```
 
@@ -155,9 +158,3 @@ df_beta %>%
 While there are certainly very interesting insights to be had here, the aim of this walk-through is not to interpret these results, but rather to demonstrate how a complex piece of analysis can be done very efficiently using the `tidyfit` package.
 
 In a follow-up article found [here](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html), I compare the results in the plot above to a time-varying parameter regression to show how more robust methods can be used to avoid window effects in the rolling sample and to shrink some coefficients to constant values.
-
-```{r, include=FALSE}
-results <- list(mod_frame_rolling = mod_frame_rolling, mod_frame_hac = mod_frame_hac)
-saveRDS(results, "vignettes/vignette_rwtsr.rds")
-```
-

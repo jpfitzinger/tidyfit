@@ -21,14 +21,12 @@ knitr::opts_chunk$set(
 
 if (use_saved_results) {
   results <- readRDS("vignette_mc.rds")
-  fit <- results$fit
   pred <- results$pred
 }
 ```
 
 ```{r, eval=TRUE}
 library(tidyverse) # Data wrangling
-library(ggpubr)    # Plotting wrapper for ggplot2
 library(tidyfit)   # Auto-ML modeling
 ```
 
@@ -80,12 +78,9 @@ metrics <- pred %>%
   yardstick::mn_log_loss(truth, setosa:virginica)
 
 metrics %>% 
-  ggbarplot("model", ".estimate", fill = "darkblue") %>% 
-  ggpar(ggtheme = theme_bw())
-```
-
-```{r, include=FALSE}
-results <- list(fit = fit, pred = pred)
-saveRDS(results, "vignettes/vignette_mc.rds")
+  ggplot(aes(model, .estimate)) +
+  geom_col(fill = "darkblue") +
+  theme_bw() +
+  theme(axis.title.x = element_blank())
 ```
 
