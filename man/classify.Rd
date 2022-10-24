@@ -16,18 +16,18 @@
 
 \item{.weights}{optional name of column containing sample weights.}
 
-\item{.mask}{optional vector of columns names to ignore. Can be useful when using 'y ~ .' formula setup.}
+\item{.mask}{optional vector of columns names to ignore. Can be useful when using 'y ~ .' formula syntax.}
 
-\item{.return_slices}{boolean. Should the output of individual cross validation slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.}
+\item{.return_slices}{logical. Should the output of individual cross validation slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.}
 
-\item{.tune_each_group}{boolean. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.}
+\item{.tune_each_group}{logical. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.}
 
-\item{.force_cv}{boolean. Should models be evaluated across all cv slices, even if no hyperparameters are tuned. Default is \code{.force_cv=TRUE}.}
+\item{.force_cv}{logical. Should models be evaluated across all cross validation slices, even if no hyperparameters are tuned. Default is \code{.force_cv=TRUE}.}
 }
 \value{
 A \code{tidyfit.models} frame containing model details for each group.
 
-The \strong{models frame} consists of 4 different components:
+The \strong{'tidyfit.models' frame} consists of 4 different components:
 \enumerate{
 \item A group of identifying columns (e.g. model name, data groups, grid IDs)
 \item A 'model_object' column, which contains the fitted model.
@@ -35,7 +35,7 @@ The \strong{models frame} consists of 4 different components:
 \item Columns showing errors, warnings and messages (if applicable)
 }
 
-Coefficients or predictions can be accessed using the built-in \code{coef} and \code{predict} methods. Note that all coefficients are transformed to ensure comparability across methods.
+Coefficients, predictions, fitted values or residuals can be accessed using the built-in \code{coef}, \code{predict}, \code{fitted} and \code{resid} methods. Note that all coefficients are transformed to ensure comparability across methods.
 }
 \description{
 This function is a wrapper to fit many different types of linear
@@ -46,8 +46,17 @@ classification models on a (grouped) \code{tibble}.
 
 Hyperparameters are tuned automatically using the '.cv' and '.cv_args' arguments, or can be passed to \code{m()} (e.g. \code{lasso = m("lasso", lambda = 0.5)}). See the individual model functions (\code{?m()}) for an overview of hyperparameters.
 
-Cross validation is performed using the 'rsample' package with possible methods including 'initial_split' (simple train-test split), 'initial_time_split' (train-test split with retained order),
-'vfold' (aka kfold) cross validation, 'loo', time series ('rolling_origin') and 'bootstraps' cross validation. \code{.cv = "rolling_origin"} implements either rolling or expanding window cross validation with 'rsample::rolling_origin'.
+Cross validation is performed using the 'rsample' package with possible methods including
+\itemize{
+\item 'initial_split' (simple train-test split)
+\item 'initial_time_split' (train-test split with retained order)
+\item 'vfold' (aka kfold cross validation)
+\item 'loo' (leave-one-out)
+\item 'rolling_origin' (generalized time series cross validation, e.g. rolling or expanding windows)
+\item 'sliding_window', 'sliding_index', 'sliding_period' (specialized time series splits)
+\item 'bootstraps'
+}
+
 The negative log loss is used to validate performance in the cross validation.
 
 Note that arguments for weights are automatically passed to the functions by setting the '.weights' argument. Weights are also considered during cross validation by calculating weighted versions of the cross validation loss function.

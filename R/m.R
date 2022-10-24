@@ -2,13 +2,13 @@
 #' @title Generic model wrapper for \code{tidyfit}
 #' @description The function can fit various regression or classification models and returns the results as a tibble. \code{m()} can be used in conjunction with \code{\link{regress}} and \code{\link{classify}}, or as a stand-alone function.
 #'
-#' @details \code{model_method} specifies the model used to regress \code{y} on \code{x} and can take one of several options:
+#' @details \code{model_method} specifies the model to fit to the data and can take one of several options:
 #'
 #' ### Linear (generalized) regression or classification
 #'
 #' \code{"lm"} performs an OLS regression using \code{stats::lm}. See \code{\link{.model.lm}} for details.
 #'
-#' \code{"glm"} performs a generalized regression using \code{stats::glm}. See \code{\link{.model.glm}} for details.
+#' \code{"glm"} performs a generalized regression or classification using \code{stats::glm}. See \code{\link{.model.glm}} for details.
 #'
 #' \code{"robust"} performs a robust regression using \code{MASS::rlm}. See \code{\link{.model.robust}} for details.
 #'
@@ -40,7 +40,7 @@
 #'
 #' \code{"subset"} performs a best subset regression or classification using \code{bestglm::bestglm} (wrapper for \code{leaps}). See \code{\link{.model.subset}} for details.
 #'
-#' ### Bayesian regression
+#' ### Bayesian methods
 #'
 #' \code{"bayes"} performs a Bayesian generalized regression or classification using \code{arm::bayesglm}. See \code{\link{.model.bayes}} for details.
 #'
@@ -54,13 +54,13 @@
 #'
 #' \code{"mslm"} performs a Markov-switching regression using \code{MSwM::msmFit}. See \code{\link{.model.mslm}} for details.
 #'
-#' When called without \code{formula} and \code{data} arguments, the function returns a partialised version of itself that can be called with data to fit a model.
+#' When called without \code{formula} and \code{data} arguments, the function returns a 'tidyfit.models' data frame with unfitted models.
 #'
 #' @param model_method The name of the method to fit. See Details.
 #' @param formula an object of class "formula": a symbolic description of the model to be fitted.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
 #' @param ...  Additional arguments passed to the underlying method function (e.g. \code{lm} or \code{glm}).
-#' @return A 'tibble'.
+#' @return A 'tidyfit.models' data frame.
 #' @author Johann Pfitzinger
 #'
 #' @examples

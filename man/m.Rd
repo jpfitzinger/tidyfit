@@ -16,18 +16,18 @@ m(model_method, formula = NULL, data = NULL, ...)
 \item{...}{Additional arguments passed to the underlying method function (e.g. \code{lm} or \code{glm}).}
 }
 \value{
-A 'tibble'.
+A 'tidyfit.models' data frame.
 }
 \description{
 The function can fit various regression or classification models and returns the results as a tibble. \code{m()} can be used in conjunction with \code{\link{regress}} and \code{\link{classify}}, or as a stand-alone function.
 }
 \details{
-\code{model_method} specifies the model used to regress \code{y} on \code{x} and can take one of several options:
+\code{model_method} specifies the model to fit to the data and can take one of several options:
 \subsection{Linear (generalized) regression or classification}{
 
 \code{"lm"} performs an OLS regression using \code{stats::lm}. See \code{\link{.model.lm}} for details.
 
-\code{"glm"} performs a generalized regression using \code{stats::glm}. See \code{\link{.model.glm}} for details.
+\code{"glm"} performs a generalized regression or classification using \code{stats::glm}. See \code{\link{.model.glm}} for details.
 
 \code{"robust"} performs a robust regression using \code{MASS::rlm}. See \code{\link{.model.robust}} for details.
 
@@ -64,7 +64,7 @@ The function can fit various regression or classification models and returns the
 \code{"subset"} performs a best subset regression or classification using \code{bestglm::bestglm} (wrapper for \code{leaps}). See \code{\link{.model.subset}} for details.
 }
 
-\subsection{Bayesian regression}{
+\subsection{Bayesian methods}{
 
 \code{"bayes"} performs a Bayesian generalized regression or classification using \code{arm::bayesglm}. See \code{\link{.model.bayes}} for details.
 
@@ -80,7 +80,7 @@ The function can fit various regression or classification models and returns the
 
 \code{"mslm"} performs a Markov-switching regression using \code{MSwM::msmFit}. See \code{\link{.model.mslm}} for details.
 
-When called without \code{formula} and \code{data} arguments, the function returns a partialised version of itself that can be called with data to fit a model.
+When called without \code{formula} and \code{data} arguments, the function returns a 'tidyfit.models' data frame with unfitted models.
 }
 }
 \examples{
