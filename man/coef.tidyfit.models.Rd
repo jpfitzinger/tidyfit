@@ -17,7 +17,7 @@
 
 \item{...}{currently not used}
 
-\item{.add_bootstrap_interval}{calculate bootstrap intervals for the parameters. See Details.}
+\item{.add_bootstrap_interval}{calculate bootstrap intervals for the parameters. See 'Details'.}
 
 \item{.bootstrap_alpha}{confidence level used for the bootstrap interval. Default is \code{.bootstrap_alpha = 0.05}.}
 
@@ -30,7 +30,7 @@ A 'tibble'.
 The function extracts and prepares coefficients from all models in a \code{tidyfit.models} frame and outputs a tidy frame of estimates.
 }
 \details{
-The function uses the 'model_object' column in a \code{tidyfit.model} frame to return a tibble of estimated coefficients.
+The function uses the 'model_object' column in a \code{tidyfit.model} frame to return a data frame of estimated coefficients.
 
 Results are 'tidied' using \code{broom::tidy} whenever possible.
 

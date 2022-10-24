@@ -4,13 +4,13 @@
 #'
 #' @param object \code{model.frame} created using \code{\link{regress}}, \code{\link{classify}} or \code{\link{m}}
 #' @param ... currently not used
-#' @param .add_bootstrap_interval calculate bootstrap intervals for the parameters. See Details.
+#' @param .add_bootstrap_interval calculate bootstrap intervals for the parameters. See 'Details'.
 #' @param .bootstrap_alpha confidence level used for the bootstrap interval. Default is \code{.bootstrap_alpha = 0.05}.
 #' @param .keep_grid_id boolean. By default the grid ID column is dropped, if there is only one unique setting per model or group. \code{.keep_grid_id = TRUE} ensures that the column is never dropped.
 #'
 #' @return A 'tibble'.
 #'
-#' @details The function uses the 'model_object' column in a \code{tidyfit.model} frame to return a tibble of estimated coefficients.
+#' @details The function uses the 'model_object' column in a \code{tidyfit.model} frame to return a data frame of estimated coefficients.
 #'
 #' Results are 'tidied' using \code{broom::tidy} whenever possible.
 #'
