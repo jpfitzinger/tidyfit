@@ -22,6 +22,7 @@ library(tidyfit)
 # tidyfit <img src="man/figures/logo.png" align="right" alt="" width="120" />
 
 <!-- badges: start -->
+![CRAN](https://img.shields.io/cran/v/tidyfit?label=CRAN)
 <!-- badges: end -->
 
 `tidyfit` is an `R`-package that facilitates and automates linear regression and classification modeling in a tidy environment. The package includes several methods, such as Lasso, PLS and Bayesian regressions. `tidyfit` builds on the `tidymodels` suite, but emphasizes automated modeling with a focus on grouped data, model comparisons, and high-volume analytics with standardized input/output interfaces. The objective is to make model fitting, cross validation and model output very simple and standardized across all methods, with any necessary method-specific transformations handled in the background.

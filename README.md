@@ -4,6 +4,8 @@
 # tidyfit <img src="man/figures/logo.png" align="right" alt="" width="120" />
 
 <!-- badges: start -->
+
+![CRAN](https://img.shields.io/cran/v/tidyfit?label=CRAN)
 <!-- badges: end -->
 
 `tidyfit` is an `R`-package that facilitates and automates linear
@@ -570,7 +572,7 @@ subset_mod_frame
 #> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|004 <tidyFit> <tibble> <NA>   
 #> 2 Utils    enet   glmnet::glmnet      1.21   #001|001 <tidyFit> <tibble> <NA>   
 #> 3 Enrgy    robust MASS::rlm           0.0639 #0010000 <tidyFit> <tibble> <NA>   
-#> 4 Utils    robust MASS::rlm           0.0639 #0010000 <tidyFit> <tibble> <NA>   
+#> 4 Utils    robust MASS::rlm           0.0638 #0010000 <tidyFit> <tibble> <NA>   
 #> # … with abbreviated variable names ¹​model_object, ²​warnings
 ```
 
@@ -585,7 +587,7 @@ subset_mod_frame %>%
 #> 1 Enrgy    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  0.498 <NA>  
 #> 2 Utils    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  1     <NA>  
 #> 3 Enrgy    robust MASS::rlm  0.0639 #00100… <tidyFit>    NA <NA>   NA     MM    
-#> 4 Utils    robust MASS::rlm  0.0639 #00100… <tidyFit>    NA <NA>   NA     MM    
+#> 4 Utils    robust MASS::rlm  0.0638 #00100… <tidyFit>    NA <NA>   NA     MM    
 #> # … with 2 more variables: psi <list>, warnings <chr>, and abbreviated variable
 #> #   names ¹​`size (MB)`, ²​model_object
 ```
@@ -614,7 +616,7 @@ subset_mod_frame %>%
 #> 1 Enrgy    enet   glmnet::gl…  1.21   #001|0… <tidyFit> <tibble> <NA>    <elnet>
 #> 2 Utils    enet   glmnet::gl…  1.21   #001|0… <tidyFit> <tibble> <NA>    <elnet>
 #> 3 Enrgy    robust MASS::rlm    0.0639 #00100… <tidyFit> <tibble> <NA>    <rlm>  
-#> 4 Utils    robust MASS::rlm    0.0639 #00100… <tidyFit> <tibble> <NA>    <rlm>  
+#> 4 Utils    robust MASS::rlm    0.0638 #00100… <tidyFit> <tibble> <NA>    <rlm>  
 #> # … with abbreviated variable names ¹​`size (MB)`, ²​model_object, ³​warnings,
 #> #   ⁴​fitted_model
 ```
