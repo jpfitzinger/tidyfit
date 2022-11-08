@@ -21,11 +21,12 @@ Fits an adaptive Lasso regression or classification on a 'tidyFit' \code{R6} cla
 \strong{Hyperparameters:}
 \itemize{
 \item \code{lambda} \emph{(L1 penalty)}
+\item \code{lambda_ridge} \emph{(L2 penalty (default = 0.01) used in the first step to determine the penalty factor)}
 }
 
 \strong{Important method arguments (passed to \code{\link{m}})}
 
-The adaptive Lasso is a weighted implementation of the Lasso algorithm, with covariate-specific weights obtained using an initial regression fit (in this case, a ridge regression with \code{lambda = 0.01}). The adaptive Lasso is computed using the \code{glmnet::glmnet} function. See \code{?glmnet} for more details. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+The adaptive Lasso is a weighted implementation of the Lasso algorithm, with covariate-specific weights obtained using an initial regression fit (in this case, a ridge regression with \code{lambda = lambda_ridge}, where \code{lambda_ridge} can be passed as an argument). The adaptive Lasso is computed using the \code{glmnet::glmnet} function. See \code{?glmnet} for more details. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
 
 \strong{Implementation}
 
