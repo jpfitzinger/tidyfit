@@ -5,10 +5,11 @@
 #' @details **Hyperparameters:**
 #'
 #' - \code{lambda} *(L1 penalty)*
+#' - \code{lambda_ridge} *(L2 penalty (default = 0.01) used in the first step to determine the penalty factor)*
 #'
 #' **Important method arguments (passed to \code{\link{m}})**
 #'
-#' The adaptive Lasso is a weighted implementation of the Lasso algorithm, with covariate-specific weights obtained using an initial regression fit (in this case, a ridge regression with \code{lambda = 0.01}). The adaptive Lasso is computed using the \code{glmnet::glmnet} function. See \code{?glmnet} for more details. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+#' The adaptive Lasso is a weighted implementation of the Lasso algorithm, with covariate-specific weights obtained using an initial regression fit (in this case, a ridge regression with \code{lambda = lambda_ridge}, where \code{lambda_ridge} can be passed as an argument). The adaptive Lasso is computed using the \code{glmnet::glmnet} function. See \code{?glmnet} for more details. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
 #'
 #' **Implementation**
 #'
@@ -66,7 +67,13 @@
     self$set_args(family = "multinomial", overwrite = FALSE)
     y <- as.factor(y)
   }
+
   ctr <- self$args[names(self$args) %in% methods::formalArgs(glmnet::glmnet)]
+  if (is.null(self$args$lambda_ridge)) {
+    lambda_ridge <- 0.01
+  } else {
+    lambda_ridge <- self$args$lambda_ridge
+  }
 
   incl_intercept <- "(Intercept)" %in% colnames(x)
   if (incl_intercept) x <- x[, -1]
@@ -79,7 +86,7 @@
 
   control_ <- within(ctr, rm("lambda", "alpha"))
   penalty_mod <- do.call(eval_fun, append(list(x = x, y = y, alpha = 0,
-                                               lambda = 0.01, intercept = incl_intercept), control_))
+                                               lambda = lambda_ridge, intercept = incl_intercept), control_))
   if (is.null(penalty_mod$error)) {
     coefs <- stats::coef(penalty_mod$result$result)
     if (!inherits(coefs, "list")) coefs <- list(coefs)
@@ -87,6 +94,7 @@
       cf <- cf[-1]
       cf <- abs(cf)^(-1)
       cf[is.infinite(cf) | is.na(cf)] <- 0
+      cf <- cf + 1e-8
       return(cf)
     })
     penalty_factor <- rowMeans(penalty_factor)
