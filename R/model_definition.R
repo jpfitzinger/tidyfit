@@ -91,7 +91,7 @@ model_definition <- R6::R6Class(
 .store_on_self <- function(self, model) {
   self$object <- model$result$result
   self$error <- model$error[[1]]
-  if (length(model$result$messages)>0) self$messages <- model$result$messages
-  if (length(model$result$warnings)>0) self$warnings <- model$result$warnings
+  if (length(model$result$messages)>0) self$messages <- paste(model$result$messages, collapse = " | ")
+  if (length(model$result$warnings)>0) self$warnings <- paste(model$result$warnings, collapse = " | ")
   invisible(self)
 }
