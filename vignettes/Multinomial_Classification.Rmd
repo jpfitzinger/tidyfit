@@ -30,7 +30,7 @@ library(tidyverse) # Data wrangling
 library(tidyfit)   # Auto-ML modeling
 ```
 
-Multinomial classification is possible in `tidyfit` using the methods powered by `glmnet` (LASSO, Ridge, ElasticNet and AdaLASSO). Currently, none of the other methods support multinomial classification.^[I may add support for multinomial classification with `mboost` in future.] When the response variable contains more than 2 classes, `classify` automatically uses a multinomial response for the above-mentioned methods.
+Multinomial classification is possible in `tidyfit` using the methods powered by `glmnet`, `e1071` and `randomForest` (LASSO, Ridge, ElasticNet,  AdaLASSO, SVM and Random Forest). Currently, none of the other methods support multinomial classification.^[Feature selection methods such as `relief` or `chisq` can be used with multinomial response variables. I may also add support for multinomial classification with `mboost` in future.] When the response variable contains more than 2 classes, `classify` automatically uses a multinomial response for the above-mentioned methods.
 
 Here's an example using the built-in `iris` dataset:
 
@@ -54,22 +54,24 @@ The code chunk below fits the above mentioned algorithms on the training split, 
 ```{r}
 fit <- data_trn %>% 
   classify(Species ~ ., 
-           m("lasso"), 
-           m("ridge"), 
-           m("enet"), 
-           m("adalasso"),
-           ols = m("ridge", lambda = 1e-5), 
-           .cv = "vfold")
+           LASSO = m("lasso"), 
+           Ridge = m("ridge"), 
+           ElasticNet = m("enet"), 
+           AdaLASSO = m("adalasso"),
+           SVM = m("svm"),
+           `Random Forest` = m("rf"),
+           `Least Squares` = m("ridge", lambda = 1e-5), 
+           .cv = "vfold_cv")
 
 pred <- fit %>% 
   predict(data_tst)
 ```
 
-Note that we can add unregularized least squares estimates by setting `lambda = 0`.
+Note that we can add unregularized least squares estimates by setting `lambda = 0` (or very close to zero).
 
 Next, we can use `yardstick` to calculate the log loss accuracy metric and compare the performance of the different models:
 
-```{r, fig.width=6, fig.height=3, fig.align="center", eval=TRUE}
+```{r, fig.width=7, fig.height=3, fig.align="center", eval=TRUE}
 metrics <- pred %>% 
   group_by(model, class) %>% 
   mutate(row_n = row_number()) %>% 
@@ -78,9 +80,11 @@ metrics <- pred %>%
   yardstick::mn_log_loss(truth, setosa:virginica)
 
 metrics %>% 
+  mutate(model = str_wrap(model, 11)) %>% 
   ggplot(aes(model, .estimate)) +
   geom_col(fill = "darkblue") +
   theme_bw() +
   theme(axis.title.x = element_blank())
 ```
 
+The least squares estimate performs poorest, while the random forest (nonlinear) and the support vector machine (SVM) achieve the best results. The SVM is estimated with a linear kernel by default (use `kernel = <chosen_kernel>` to use a different kernel).
