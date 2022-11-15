@@ -46,7 +46,7 @@ fit
 
 # Within 'regress' function
 fit <- regress(data, Return ~ ., m("enet", alpha = c(0, 0.5), lambda = c(0.1)),
-               .mask = c("Date", "Industry"), .cv = "vfold")
+               .mask = c("Date", "Industry"), .cv = "vfold_cv")
 coef(fit)
 
 }
