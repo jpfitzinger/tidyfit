@@ -36,6 +36,11 @@
       grid$nu <- c(0.01, 0.05, 0.1, 0.15, 0.2, 0.25)
     }
   }
+  if (model_method == "svm") {
+    if (!"cost" %in% args) {
+      grid$cost <- dials::grid_regular(dials::cost(), levels = 10)$cost
+    }
+  }
 
   return(grid)
 

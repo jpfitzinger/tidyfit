@@ -24,6 +24,14 @@
   if (!is.null(control$kappa_grid) & model_method == "hfr") {
     control$kappa_grid <- list(control$kappa_grid)
   }
+  if (model_method %in% c("pcr", "plsr")) {
+    if (!is.null(control[["ncomp"]])) {
+      control$ncomp <- list(control$ncomp)
+    }
+    if (!is.null(control[["ncomp_pct"]])) {
+      control$ncomp_pct <- list(control$ncomp_pct)
+    }
+  }
   if (!is.null(control$sw) & model_method == "mslm") {
     control$sw <- list(control$sw)
   }
@@ -52,31 +60,6 @@
   return(control)
 
 }
-
-# # Combine grid_id in settings col and model frame
-# .unnest_settings <- function(model_frame) {
-#
-#   if ("settings" %in% colnames(model_frame)) {
-#     model_frame <- model_frame %>%
-#       dplyr::rename(grid_id_ = .data$grid_id) %>%
-#       tidyr::unnest(.data$settings)
-#     if ("grid_id" %in% colnames(model_frame)) {
-#       model_frame <- model_frame %>%
-#         dplyr::mutate(grid_id = paste(substring(.data$grid_id_,1, 4), .data$grid_id, sep = ".")) %>%
-#         dplyr::select(-.data$grid_id_)
-#     } else {
-#       model_frame <- model_frame %>%
-#         dplyr::rename(grid_id = .data$grid_id_)
-#     }
-#     model_frame <- model_frame %>%
-#       dplyr::relocate(.data$grid_id) %>%
-#       tidyr::nest(settings = -any_of(c("grid_id", "estimator", "size", "handler", "warnings", "messages"))) %>%
-#       dplyr::relocate(any_of(c("warnings", "messages")), .after = .data$settings)
-#   }
-#
-#   return(model_frame)
-#
-# }
 
 .control_to_settings <- function(mod) {
   if (length(mod$args) > 0) {
@@ -111,7 +94,7 @@
     unlist(lst)
   }
   df <- df %>%
-    dplyr::mutate(estimator = make_vector(purrr::map(.data$model_object, function(mod) mod$estimator))) %>%
+    dplyr::mutate(estimator_fct = make_vector(purrr::map(.data$model_object, function(mod) mod$estimator))) %>%
     dplyr::mutate(`size (MB)` = make_vector(purrr::map(.data$model_object, function(mod) utils::object.size(mod$object)))/1e6) %>%
     dplyr::mutate(errors = make_vector(purrr::map(.data$model_object, function(mod) mod$error))) %>%
     dplyr::mutate(warnings = make_vector(purrr::map(.data$model_object, function(mod) mod$warnings))) %>%
@@ -134,4 +117,32 @@
 
 appr_in <- function(a, b) {
   round(a, 12) %in% round(b, 12)
+}
+
+.coef_rescaler <- function(coefs,
+                           x_mean = NULL,
+                           x_sd = NULL,
+                           y_mean = NULL,
+                           y_sd = NULL) {
+
+  rescaled_coefs <- coefs
+  includes_intercept <- "(Intercept)" %in% names(coefs)
+  var_names <- names(coefs)
+  var_names <- var_names[var_names != "(Intercept)"]
+
+  if (!is.null(x_sd)) {
+    rescaled_coefs[var_names] = coefs[var_names] / x_sd[var_names]
+  }
+  if (!is.null(x_mean) & includes_intercept) {
+    rescaled_coefs["(Intercept)"] <- coefs["(Intercept)"] - crossprod(rescaled_coefs[var_names], x_mean[var_names])
+  }
+  if (!is.null(y_sd)) {
+    rescaled_coefs <- rescaled_coefs * y_sd
+  }
+  if (!is.null(y_mean) & includes_intercept) {
+    rescaled_coefs["(Intercept)"] <- rescaled_coefs["(Intercept)"] + y_mean
+  }
+
+  return(rescaled_coefs)
+
 }
