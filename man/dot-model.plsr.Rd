@@ -34,6 +34,8 @@ Covariates are standardized, with coefficients back-transformed to the original 
 
 If no hyperparameter grid is passed (\code{is.null(control$ncomp) & is.null(control$ncomp_pct)}), the default is \code{ncomp_pct = seq(0, 1, length.out = 20)}, where 0 results in one component and 1 results in the number of features.
 
+When 'jackknife = TRUE' is passed (and a 'validation' method is chosen), \code{coef} also returns the jack-knife standard errors, t-statistics and p-values.
+
 Note that at present \code{pls} does not offer weighted implementations or non-gaussian response. The method can therefore only be used with \code{\link{regress}}
 }
 \examples{
@@ -43,13 +45,14 @@ data <- dplyr::filter(data, Industry == "HiTec")
 data <- dplyr::select(data, -Industry)
 
 # Stand-alone function
-fit <- m("plsr", Return ~ ., data, ncomp = 3)
+fit <- m("plsr", Return ~ ., data, ncomp = 1:3)
 fit
 
 # Within 'regress' function
-fit <- regress(data, Return ~ ., m("plsr", ncomp_pct = c(0, 0.25, 0.5)),
-               .mask = c("Date"), .cv = "vfold")
-coef(fit)
+fit <- regress(data, Return ~ .,
+               m("pcr", jackknife = TRUE, validation = "LOO", ncomp_pct = 0.5),
+               .mask = c("Date"))
+tidyr::unnest(coef(fit), model_info)
 
 }
 \references{
