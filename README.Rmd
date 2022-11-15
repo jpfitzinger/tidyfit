@@ -25,15 +25,26 @@ library(tidyfit)
 ![CRAN](https://img.shields.io/cran/v/tidyfit?label=CRAN)
 <!-- badges: end -->
 
-`tidyfit` is an `R`-package that facilitates and automates linear regression and classification modeling in a tidy environment. The package includes several methods, such as Lasso, PLS and Bayesian regressions. `tidyfit` builds on the `tidymodels` suite, but emphasizes automated modeling with a focus on grouped data, model comparisons, and high-volume analytics with standardized input/output interfaces. The objective is to make model fitting, cross validation and model output very simple and standardized across all methods, with any necessary method-specific transformations handled in the background.
+`tidyfit` is an `R`-package that facilitates and automates linear and nonlinear regression and classification modeling in a tidy environment. The package includes methods such as the Lasso, PLS, time-varying parameter or Bayesian model averaging regressions, and many more. The aim is threefold:
+
+1. Offer a **standardized input-output interface** for a broad set of "good" modeling packages. Unlike projects such as `caret`, the aim is not to cover a comprehensive set of available packages, but rather a curated list of the most useful ones.
+2. Efficient **modeling with `tidy` data**, including verbs for regression and classification, automatic consideration of grouped data, and `tidy` output formats throughout.
+3. **Augment and automate** methods to ensure statistical comparability (e.g. across coefficients of different linear estimators), sensible default settings, necessary transformations (e.g. standardizing features when required), automatic hyperparameter optimization, etc.
+
+`tidyfit` builds on the `tidymodels` suite, but emphasizes automated modeling with a focus on grouped data, model comparisons, and high-volume analytics. The objective is to make model fitting, cross validation and model output very simple and standardized across all methods, with many necessary method-specific transformations handled in the background.
 
 ## Installation
 
-You can install the development version of `tidyfit` from [GitHub](https://github.com/jpfitzinger/tidyfit) with:
+`tidyfit` can be installed from CRAN or the development version from [GitHub](https://github.com/jpfitzinger/tidyfit) with:
 
 ```{r, eval=F}
+# CRAN
+install.packages("tidyfit")
+
+# Dev version
 # install.packages("devtools")
 devtools::install_github("jpfitzinger/tidyfit")
+
 library(tidyfit)
 ```
 
@@ -55,9 +66,8 @@ The basic usage is as follows:
 regress(
   .data, 
   formula = y ~ x1 + x2, 
-  mod1 = m(<args for underlying method>), mod2 = m(), ...,    # Pass multiple model wrappers
-  .cv = "vfold", .cv_args = list(), .weights = "weight_col",  # Additional settings
-  <further arguments>
+  mod1 = m(<args for underlying method>), mod2 = m(), ...,   # Pass multiple model wrappers
+  .cv = "vfold_cv", .weights = "weight_col"                  # Examples of additional settings
 )
 ```
 
@@ -78,7 +88,7 @@ An important feature of `m()` is that all arguments can be passed as vectors, al
  - Passing a hyperparameter grid: `m("lasso", lambda = seq(0, 1, by = 0.1))`
  - Different algorithms for robust regression: `m("robust", method = c("M", "MM"))`
  - Forward vs. backward selection: `m("subset", method = c("forward", "backward"))`
- - Logit and Probit models: `m("glm", family = list(binomial(link="logit"), binomial(link="probit")))`
+ - Logit vs. Probit models: `m("glm", family = list(binomial(link="logit"), binomial(link="probit")))`
  
 Arguments that are meant to be vectors (e.g. weights) are recognized by the function and not interpreted as grids.
 
@@ -91,15 +101,15 @@ library(kableExtra)
 tbl <- data.frame(
   Method = c("OLS", "Generalized least squares", "Robust regression (e.g. Huber loss)", 
              "Quantile regression", "LASSO", "Ridge", "Adaptive LASSO", "ElasticNet",
-             "Gradient boosting regression", "Principal components regression", "Partial least squares",
-             "Hierarchical feature regression", "Best subset selection", "Bayesian regression", "Bayesian time-varying parameters regression", "Generalized mixed-effects regression", "Markov-switching regression"),
-  Name = c("lm", "glm", "robust", "quantile", "lasso", "ridge", "adalasso", "enet", "boost", "pcr", "plsr", 
-           "hfr", "subset", "bayes", "tvp", "glmm", "mslm"),
-  Package = c("`stats::lm`", "`stats::glm`", "`MASS::rlm`", "`quantreg::rq`", "`glmnet::glmnet`", "`glmnet::glmnet`", "`glmnet::glmnet`", "`glmnet::glmnet`",
-              "`mboost::glmboost`", "`pls::plsr`", "`pls::pcr`", "`hfr::hfr`", "`bestglm::bestglm`", "`arm::bayesglm`", "`shrinkTVP::shrinkTVP`", "`lme4::glmer`", "`MSwM::msmFit`"),
-  Regression = c("yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes"),
-  Classification = c("no", "yes", "no", "no", "yes", "yes", "yes", "yes", "yes", "no", "no", "no", "yes", "yes", "no", "yes", "no"),
-  group = c("Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Gradient boosting", "Factor regressions", "Factor regressions", "Factor regressions", "Best subset selection", "Bayesian regression", "Bayesian regression", "Mixed-effects modeling", "Specialized time series methods")
+             "Gradient boosting regression", "Support vector machine", "Random forest", "Principal components regression", "Partial least squares",
+             "Hierarchical feature regression", "Best subset selection", "General-to-specific", "Bayesian regression", "Bayesian model averaging", "Bayesian time-varying parameters regression", "Generalized mixed-effects regression", "Markov-switching regression", "Pearson correlation", "Chi-squared test", "Minimum redundancy, maximum relevance", "ReliefF"),
+  Name = c("lm", "glm", "robust", "quantile", "lasso", "ridge", "adalasso", "enet", "boost", "svm", "rf", "pcr", "plsr", 
+           "hfr", "subset", "gets", "bayes", "bma", "tvp", "glmm", "mslm", "cor", "chisq", "mrmr", "relief"),
+  Package = c("`stats`", "`stats`", "`MASS`", "`quantreg`", "`glmnet`", "`glmnet`", "`glmnet`", "`glmnet`",
+              "`mboost`", "`e1071`", "`randomForest`", "`pls`", "`pls`", "`hfr`", "`bestglm`", "`gets`", "`arm`", "BMS", "`shrinkTVP`", "`lme4`", "`MSwM`", "`stats`", "`stats`", "`mRMRe`", "`CORElearn`"),
+  Regression = c("yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "no", "yes", "yes"),
+  Classification = c("no", "yes", "no", "no", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "no", "no", "no", "yes", "no", "yes", "no", "no", "yes", "no", "no", "yes", "yes", "yes"),
+  group = c("Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Machine Learning", "Machine Learning", "Machine Learning", "Factor regressions", "Factor regressions", "Factor regressions", "Subset selection", "Subset selection", "Bayesian regression", "Bayesian regression", "Bayesian regression", "Mixed-effects modeling", "Specialized time series methods", "Feature selection", "Feature selection", "Feature selection", "Feature selection")
 )
 
 kbl(tbl[,1:5], align = "lcccc") %>% 
@@ -116,15 +126,13 @@ It is important to note that the above list is not complete, since some of the m
 
 In this section, a minimal workflow is used to demonstrate how the package works. For more detailed guides of specialized topics, or simply for further reading, follow these links:
 
-  - [The backend work flow](https://tidyfit.unchartedml.com/articles/Flowchart.html)
+  - [The flowchart](https://tidyfit.unchartedml.com/articles/Flowchart.html)
   - [Regularized regression](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html) (Boston house price data)
   - [Multinomial classification](https://tidyfit.unchartedml.com/articles/Multinomial_Classification.html) (iris data)
   - [Accessing fitted models](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
   - [Rolling window regression for time series](https://tidyfit.unchartedml.com/articles/Rolling_Window_Time_Series_Regression.html) (factor data)
   - [Time-varying parameters](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html) (factor data)
   - [Bootstrap confidence intervals](https://tidyfit.unchartedml.com/articles/Bootstrapping_Confidence_Intervals.html)
-  - [coming soon] Fixed and Random effects
-  - [coming soon] Quantile regression
 
 `tidyfit` includes a data set of financial Fama-French factor returns freely available [here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html). The data set includes monthly industry returns for 10 industries, as well as monthly factor returns for 5 factors:
 
@@ -166,7 +174,7 @@ Note that the penalty and mixing parameters are chosen automatically using a tim
 The resulting `tidyfit.models` frame consists of 3 components:
 
   1. A group of identifying columns. This includes the `Industry` column, the model name, and grid ID (the ID for the model settings used).
-  2. `estimator`, `size (MB)` and `model_object` columns. These columns contain information on the model itself. The `model_object` is the fitted `tidyFit` model (an `R6` class that contains the model object as well as any additional information needed to perform predictions or access coefficients)
+  2. `estimator_fct`, `size (MB)` and `model_object` columns. These columns contain information on the model itself. The `model_object` is the fitted `tidyFit` model (an `R6` class that contains the model object as well as any additional information needed to perform predictions or access coefficients)
   3. Nested `settings`, as well as (if applicable) `messages` and `warnings`.
 
 ```{r}
@@ -227,8 +235,7 @@ model_frame %>%
   yardstick::rmse(truth, prediction) %>% 
   # Plot
   ggplot(aes(Industry, .estimate)) +
-  geom_col(aes(fill = model), position = position_dodge()) +
-  theme_bw()
+  geom_col(aes(fill = model), position = position_dodge())
 ```
 
 The ElasticNet performs a little better (unsurprising really, given the small data set).

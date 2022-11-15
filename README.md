@@ -8,24 +8,44 @@
 ![CRAN](https://img.shields.io/cran/v/tidyfit?label=CRAN)
 <!-- badges: end -->
 
-`tidyfit` is an `R`-package that facilitates and automates linear
-regression and classification modeling in a tidy environment. The
-package includes several methods, such as Lasso, PLS and Bayesian
-regressions. `tidyfit` builds on the `tidymodels` suite, but emphasizes
-automated modeling with a focus on grouped data, model comparisons, and
-high-volume analytics with standardized input/output interfaces. The
-objective is to make model fitting, cross validation and model output
-very simple and standardized across all methods, with any necessary
-method-specific transformations handled in the background.
+`tidyfit` is an `R`-package that facilitates and automates linear and
+nonlinear regression and classification modeling in a tidy environment.
+The package includes methods such as the Lasso, PLS, time-varying
+parameter or Bayesian model averaging regressions, and many more. The
+aim is threefold:
+
+1.  Offer a **standardized input-output interface** for a broad set of
+    “good” modeling packages. Unlike projects such as `caret`, the aim
+    is not to cover a comprehensive set of available packages, but
+    rather a curated list of the most useful ones.
+2.  Efficient **modeling with `tidy` data**, including verbs for
+    regression and classification, automatic consideration of grouped
+    data, and `tidy` output formats throughout.
+3.  **Augment and automate** methods to ensure statistical comparability
+    (e.g. across coefficients of different linear estimators), sensible
+    default settings, necessary transformations (e.g. standardizing
+    features when required), automatic hyperparameter optimization, etc.
+
+`tidyfit` builds on the `tidymodels` suite, but emphasizes automated
+modeling with a focus on grouped data, model comparisons, and
+high-volume analytics. The objective is to make model fitting, cross
+validation and model output very simple and standardized across all
+methods, with many necessary method-specific transformations handled in
+the background.
 
 ## Installation
 
-You can install the development version of `tidyfit` from
+`tidyfit` can be installed from CRAN or the development version from
 [GitHub](https://github.com/jpfitzinger/tidyfit) with:
 
 ``` r
+# CRAN
+install.packages("tidyfit")
+
+# Dev version
 # install.packages("devtools")
 devtools::install_github("jpfitzinger/tidyfit")
+
 library(tidyfit)
 ```
 
@@ -55,9 +75,8 @@ The basic usage is as follows:
 regress(
   .data, 
   formula = y ~ x1 + x2, 
-  mod1 = m(<args for underlying method>), mod2 = m(), ...,    # Pass multiple model wrappers
-  .cv = "vfold", .cv_args = list(), .weights = "weight_col",  # Additional settings
-  <further arguments>
+  mod1 = m(<args for underlying method>), mod2 = m(), ...,   # Pass multiple model wrappers
+  .cv = "vfold_cv", .weights = "weight_col"                  # Examples of additional settings
 )
 ```
 
@@ -85,7 +104,7 @@ for any method:
     `m("robust", method = c("M", "MM"))`
 -   Forward vs. backward selection:
     `m("subset", method = c("forward", "backward"))`
--   Logit and Probit models:
+-   Logit vs. Probit models:
     `m("glm", family = list(binomial(link="logit"), binomial(link="probit")))`
 
 Arguments that are meant to be vectors (e.g. weights) are recognized by
@@ -129,7 +148,7 @@ OLS
 lm
 </td>
 <td style="text-align:center;">
-`stats::lm`
+`stats`
 </td>
 <td style="text-align:center;">
 yes
@@ -146,7 +165,7 @@ Generalized least squares
 glm
 </td>
 <td style="text-align:center;">
-`stats::glm`
+`stats`
 </td>
 <td style="text-align:center;">
 yes
@@ -163,7 +182,7 @@ Robust regression (e.g. Huber loss)
 robust
 </td>
 <td style="text-align:center;">
-`MASS::rlm`
+`MASS`
 </td>
 <td style="text-align:center;">
 yes
@@ -180,7 +199,7 @@ Quantile regression
 quantile
 </td>
 <td style="text-align:center;">
-`quantreg::rq`
+`quantreg`
 </td>
 <td style="text-align:center;">
 yes
@@ -202,7 +221,7 @@ LASSO
 lasso
 </td>
 <td style="text-align:center;">
-`glmnet::glmnet`
+`glmnet`
 </td>
 <td style="text-align:center;">
 yes
@@ -219,7 +238,7 @@ Ridge
 ridge
 </td>
 <td style="text-align:center;">
-`glmnet::glmnet`
+`glmnet`
 </td>
 <td style="text-align:center;">
 yes
@@ -236,7 +255,7 @@ Adaptive LASSO
 adalasso
 </td>
 <td style="text-align:center;">
-`glmnet::glmnet`
+`glmnet`
 </td>
 <td style="text-align:center;">
 yes
@@ -253,7 +272,7 @@ ElasticNet
 enet
 </td>
 <td style="text-align:center;">
-`glmnet::glmnet`
+`glmnet`
 </td>
 <td style="text-align:center;">
 yes
@@ -262,9 +281,9 @@ yes
 yes
 </td>
 </tr>
-<tr grouplength="1">
+<tr grouplength="3">
 <td colspan="5" style="border-bottom: 1px solid;">
-<strong>Gradient boosting</strong>
+<strong>Machine Learning</strong>
 </td>
 </tr>
 <tr>
@@ -275,7 +294,41 @@ Gradient boosting regression
 boost
 </td>
 <td style="text-align:center;">
-`mboost::glmboost`
+`mboost`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Support vector machine
+</td>
+<td style="text-align:center;">
+svm
+</td>
+<td style="text-align:center;">
+`e1071`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Random forest
+</td>
+<td style="text-align:center;">
+rf
+</td>
+<td style="text-align:center;">
+`randomForest`
 </td>
 <td style="text-align:center;">
 yes
@@ -297,7 +350,7 @@ Principal components regression
 pcr
 </td>
 <td style="text-align:center;">
-`pls::plsr`
+`pls`
 </td>
 <td style="text-align:center;">
 yes
@@ -314,7 +367,7 @@ Partial least squares
 plsr
 </td>
 <td style="text-align:center;">
-`pls::pcr`
+`pls`
 </td>
 <td style="text-align:center;">
 yes
@@ -331,7 +384,7 @@ Hierarchical feature regression
 hfr
 </td>
 <td style="text-align:center;">
-`hfr::hfr`
+`hfr`
 </td>
 <td style="text-align:center;">
 yes
@@ -340,9 +393,9 @@ yes
 no
 </td>
 </tr>
-<tr grouplength="1">
+<tr grouplength="2">
 <td colspan="5" style="border-bottom: 1px solid;">
-<strong>Best subset selection</strong>
+<strong>Subset selection</strong>
 </td>
 </tr>
 <tr>
@@ -353,7 +406,7 @@ Best subset selection
 subset
 </td>
 <td style="text-align:center;">
-`bestglm::bestglm`
+`bestglm`
 </td>
 <td style="text-align:center;">
 yes
@@ -362,7 +415,24 @@ yes
 yes
 </td>
 </tr>
-<tr grouplength="2">
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+General-to-specific
+</td>
+<td style="text-align:center;">
+gets
+</td>
+<td style="text-align:center;">
+`gets`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr grouplength="3">
 <td colspan="5" style="border-bottom: 1px solid;">
 <strong>Bayesian regression</strong>
 </td>
@@ -375,7 +445,7 @@ Bayesian regression
 bayes
 </td>
 <td style="text-align:center;">
-`arm::bayesglm`
+`arm`
 </td>
 <td style="text-align:center;">
 yes
@@ -386,13 +456,30 @@ yes
 </tr>
 <tr>
 <td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Bayesian model averaging
+</td>
+<td style="text-align:center;">
+bma
+</td>
+<td style="text-align:center;">
+BMS
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 Bayesian time-varying parameters regression
 </td>
 <td style="text-align:center;">
 tvp
 </td>
 <td style="text-align:center;">
-`shrinkTVP::shrinkTVP`
+`shrinkTVP`
 </td>
 <td style="text-align:center;">
 yes
@@ -414,7 +501,7 @@ Generalized mixed-effects regression
 glmm
 </td>
 <td style="text-align:center;">
-`lme4::glmer`
+`lme4`
 </td>
 <td style="text-align:center;">
 yes
@@ -436,13 +523,86 @@ Markov-switching regression
 mslm
 </td>
 <td style="text-align:center;">
-`MSwM::msmFit`
+`MSwM`
 </td>
 <td style="text-align:center;">
 yes
 </td>
 <td style="text-align:center;">
 no
+</td>
+</tr>
+<tr grouplength="4">
+<td colspan="5" style="border-bottom: 1px solid;">
+<strong>Feature selection</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Pearson correlation
+</td>
+<td style="text-align:center;">
+cor
+</td>
+<td style="text-align:center;">
+`stats`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Chi-squared test
+</td>
+<td style="text-align:center;">
+chisq
+</td>
+<td style="text-align:center;">
+`stats`
+</td>
+<td style="text-align:center;">
+no
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Minimum redundancy, maximum relevance
+</td>
+<td style="text-align:center;">
+mrmr
+</td>
+<td style="text-align:center;">
+`mRMRe`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+ReliefF
+</td>
+<td style="text-align:center;">
+relief
+</td>
+<td style="text-align:center;">
+`CORElearn`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
 </td>
 </tr>
 </tbody>
@@ -462,8 +622,8 @@ In this section, a minimal workflow is used to demonstrate how the
 package works. For more detailed guides of specialized topics, or simply
 for further reading, follow these links:
 
--   [The backend work
-    flow](https://tidyfit.unchartedml.com/articles/Flowchart.html)
+-   [The
+    flowchart](https://tidyfit.unchartedml.com/articles/Flowchart.html)
 -   [Regularized
     regression](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html)
     (Boston house price data)
@@ -480,8 +640,6 @@ for further reading, follow these links:
     (factor data)
 -   [Bootstrap confidence
     intervals](https://tidyfit.unchartedml.com/articles/Bootstrapping_Confidence_Intervals.html)
--   \[coming soon\] Fixed and Random effects
--   \[coming soon\] Quantile regression
 
 `tidyfit` includes a data set of financial Fama-French factor returns
 freely available
@@ -554,11 +712,11 @@ The resulting `tidyfit.models` frame consists of 3 components:
 
 1.  A group of identifying columns. This includes the `Industry` column,
     the model name, and grid ID (the ID for the model settings used).
-2.  `estimator`, `size (MB)` and `model_object` columns. These columns
-    contain information on the model itself. The `model_object` is the
-    fitted `tidyFit` model (an `R6` class that contains the model object
-    as well as any additional information needed to perform predictions
-    or access coefficients)
+2.  `estimator_fct`, `size (MB)` and `model_object` columns. These
+    columns contain information on the model itself. The `model_object`
+    is the fitted `tidyFit` model (an `R6` class that contains the model
+    object as well as any additional information needed to perform
+    predictions or access coefficients)
 3.  Nested `settings`, as well as (if applicable) `messages` and
     `warnings`.
 
@@ -567,7 +725,7 @@ subset_mod_frame <- model_frame %>%
   filter(Industry %in% unique(Industry)[1:2])
 subset_mod_frame
 #> # A tibble: 4 × 8
-#>   Industry model  estimator      `size (MB)` grid_id  model_o…¹ settings warni…²
+#>   Industry model  estimator_fct  `size (MB)` grid_id  model_o…¹ settings warni…²
 #>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>    <list>   <chr>  
 #> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|004 <tidyFit> <tibble> <NA>   
 #> 2 Utils    enet   glmnet::glmnet      1.21   #001|001 <tidyFit> <tibble> <NA>   
@@ -582,14 +740,14 @@ Let’s unnest the settings columns:
 subset_mod_frame %>% 
   tidyr::unnest(settings, keep_empty = TRUE)
 #> # A tibble: 4 × 12
-#>   Industry model  estimator size …¹ grid_id model_o…² alpha family lambda method
+#>   Industry model  estimat…¹ size …² grid_id model_o…³ alpha family lambda method
 #>   <chr>    <chr>  <chr>       <dbl> <chr>   <list>    <dbl> <chr>   <dbl> <chr> 
 #> 1 Enrgy    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  0.498 <NA>  
 #> 2 Utils    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  1     <NA>  
 #> 3 Enrgy    robust MASS::rlm  0.0639 #00100… <tidyFit>    NA <NA>   NA     MM    
 #> 4 Utils    robust MASS::rlm  0.0638 #00100… <tidyFit>    NA <NA>   NA     MM    
 #> # … with 2 more variables: psi <list>, warnings <chr>, and abbreviated variable
-#> #   names ¹​`size (MB)`, ²​model_object
+#> #   names ¹​estimator_fct, ²​`size (MB)`, ³​model_object
 ```
 
 The `tidyfit.models` frame can be used to access additional information.
@@ -611,14 +769,14 @@ for another example):
 subset_mod_frame %>% 
   mutate(fitted_model = map(model_object, ~.$object))
 #> # A tibble: 4 × 9
-#>   Industry model  estimator   size …¹ grid_id model_o…² settings warni…³ fitte…⁴
+#>   Industry model  estimator…¹ size …² grid_id model_o…³ settings warni…⁴ fitte…⁵
 #>   <chr>    <chr>  <chr>         <dbl> <chr>   <list>    <list>   <chr>   <list> 
 #> 1 Enrgy    enet   glmnet::gl…  1.21   #001|0… <tidyFit> <tibble> <NA>    <elnet>
 #> 2 Utils    enet   glmnet::gl…  1.21   #001|0… <tidyFit> <tibble> <NA>    <elnet>
 #> 3 Enrgy    robust MASS::rlm    0.0639 #00100… <tidyFit> <tibble> <NA>    <rlm>  
 #> 4 Utils    robust MASS::rlm    0.0638 #00100… <tidyFit> <tibble> <NA>    <rlm>  
-#> # … with abbreviated variable names ¹​`size (MB)`, ²​model_object, ³​warnings,
-#> #   ⁴​fitted_model
+#> # … with abbreviated variable names ¹​estimator_fct, ²​`size (MB)`,
+#> #   ³​model_object, ⁴​warnings, ⁵​fitted_model
 ```
 
 To **predict**, we need data with the same columns as the input data and
@@ -705,8 +863,7 @@ model_frame %>%
   yardstick::rmse(truth, prediction) %>% 
   # Plot
   ggplot(aes(Industry, .estimate)) +
-  geom_col(aes(fill = model), position = position_dodge()) +
-  theme_bw()
+  geom_col(aes(fill = model), position = position_dodge())
 ```
 
 <img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" style="display: block; margin: auto;" />
