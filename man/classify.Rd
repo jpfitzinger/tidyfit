@@ -50,12 +50,15 @@ Cross validation is performed using the 'rsample' package with possible methods 
 \itemize{
 \item 'initial_split' (simple train-test split)
 \item 'initial_time_split' (train-test split with retained order)
-\item 'vfold' (aka kfold cross validation)
-\item 'loo' (leave-one-out)
+\item 'vfold_cv' (aka kfold cross validation)
+\item 'loo_cv' (leave-one-out)
 \item 'rolling_origin' (generalized time series cross validation, e.g. rolling or expanding windows)
 \item 'sliding_window', 'sliding_index', 'sliding_period' (specialized time series splits)
 \item 'bootstraps'
+\item 'group_vfold_cv', 'group_bootstraps'
 }
+
+See package documentation for 'rsample' for all available methods.
 
 The negative log loss is used to validate performance in the cross validation.
 
