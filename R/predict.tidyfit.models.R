@@ -41,14 +41,16 @@ predict.tidyfit.models <- function(object, newdata, ..., .keep_grid_id = FALSE) 
       dplyr::left_join(newdata, by = gr_vars)
   }
 
-  sel_cols <- c("settings", "estimator", "size (MB)", "errors", "warnings", "messages")
+  sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
   out <- object %>%
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
     purrr::transpose() %>%
     purrr::map_dfr(function(row){
-      out <- row$model_object$predict(as.data.frame(row$newdata)) %>%
-        dplyr::mutate(model = row$model, grid_id_ = row$grid_id)
-      dplyr::bind_cols(row[gr_vars], out)
+      out <- row$model_object$predict(as.data.frame(row$newdata))
+      if (is.null(out)) return(NULL)
+      out <- out %>%
+        dplyr::mutate(model = row[["model"]], grid_id_ = row[["grid_id"]])
+      return(dplyr::bind_cols(row[gr_vars], out))
     })
 
   if ("grid_id" %in% colnames(out)) {

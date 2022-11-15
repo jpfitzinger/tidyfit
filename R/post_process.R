@@ -53,7 +53,7 @@
 
   df <- .reassign_model_info(df)
   df <- .make_model_cols(df)
-  col_ord <- c(gr_vars, "model", "estimator", "size (MB)", "grid_id", "model_object", "settings", "errors", "warnings", "messages")
+  col_ord <- c(gr_vars, "model", "estimator_fct", "size (MB)", "grid_id", "model_object", "settings", "errors", "warnings", "messages")
   df <- dplyr::relocate(df, any_of(col_ord))
 
   df <- tibble::new_tibble(df, class = "tidyfit.models",

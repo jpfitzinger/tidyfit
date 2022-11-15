@@ -31,31 +31,19 @@ model_definition <- R6::R6Class(
     },
     fit = function(...) {private$fit_(self, ...)},
     predict = function(data) {
-      all_args <- append(append(
-        list(object = self$object, data = data, formula = self$formula, inner_grid = self$inner_grid, mode = self$mode),
-        self$args), self$fit_info
-      )
+      all_args <- list(object = self$object, data = data, self = self)
       do.call(.predict, all_args)
     },
     coef = function(...) {
-      all_args <- append(append(
-        list(object = self$object, formula = self$formula, inner_grid = self$inner_grid, mode = self$mode),
-        self$args), self$fit_info
-      )
+      all_args <- list(object = self$object, self = self)
       do.call(.coef, all_args)
     },
     resid = function(...) {
-      all_args <- append(append(
-        list(object = self$object, formula = self$formula, inner_grid = self$inner_grid, mode = self$mode),
-        self$args), self$fit_info
-      )
+      all_args <- list(object = self$object, self = self)
       do.call(.resid, all_args)
     },
     fitted = function(...) {
-      all_args <- append(append(
-        list(object = self$object, formula = self$formula, inner_grid = self$inner_grid, mode = self$mode),
-        self$args), self$fit_info
-      )
+      all_args <- list(object = self$object, self = self)
       do.call(.fitted, all_args)
     },
     print = function(...) {

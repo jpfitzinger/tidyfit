@@ -26,7 +26,7 @@ fitted.tidyfit.models <- function(object, ...) {
   .mask <- attr(object, "structure")$mask
   .weights <- attr(object, "structure")$weights
 
-  sel_cols <- c("settings", "estimator", "size (MB)", "errors", "warnings", "messages")
+  sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
   out <- object %>%
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
     dplyr::mutate(fitted = purrr::map(.data$model_object, ~.$fitted())) %>%

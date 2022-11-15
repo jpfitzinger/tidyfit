@@ -32,7 +32,7 @@ residuals.tidyfit.models <- function(object, ...) {
   if (any(modes == "classification"))
     stop("cannot produce residuals for classification models")
 
-  sel_cols <- c("settings", "estimator", "size (MB)", "errors", "warnings", "messages")
+  sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
   out <- object %>%
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
     dplyr::mutate(residual = purrr::map(.data$model_object, ~.$resid())) %>%

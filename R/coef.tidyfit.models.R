@@ -41,7 +41,7 @@ coef.tidyfit.models <- function(
     .bootstrap_alpha = 0.05,
     .keep_grid_id = FALSE) {
 
-  sel_cols <- c("settings", "estimator", "size (MB)", "errors", "warnings", "messages")
+  sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
   gr_vars <- attr(object, "structure")$groups
   out <- object %>%
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
