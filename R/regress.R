@@ -11,11 +11,14 @@
 #'
 #'  - 'initial_split' (simple train-test split)
 #'  - 'initial_time_split' (train-test split with retained order)
-#'  - 'vfold' (aka kfold cross validation)
-#'  - 'loo' (leave-one-out)
+#'  - 'vfold_cv' (aka kfold cross validation)
+#'  - 'loo_cv' (leave-one-out)
 #'  - 'rolling_origin' (generalized time series cross validation, e.g. rolling or expanding windows)
 #'  - 'sliding_window', 'sliding_index', 'sliding_period' (specialized time series splits)
 #'  - 'bootstraps'
+#'  - 'group_vfold_cv', 'group_bootstraps'
+#'
+#' See package documentation for 'rsample' for all available methods.
 #'
 #' The mean squared error loss is used to validate performance in the cross validation.
 #'
@@ -72,9 +75,7 @@ regress <- function(
   .data,
   formula,
   ...,
-  .cv = c("none", "initial_split", "initial_time_split", "loo", "vfold",
-          "rolling_origin", "sliding_index", "sliding_period", "sliding_window",
-          "bootstraps"),
+  .cv = "none",
   .cv_args = NULL,
   .weights = NULL,
   .mask = NULL,
@@ -84,7 +85,6 @@ regress <- function(
 ) {
 
   model_list <- list(...)
-  .cv <- match.arg(.cv)
   if (is.null(.cv_args)) .cv_args <- list()
   if (!inherits(.cv_args, "list"))
     stop("'.cv_args' must be a 'list'.")

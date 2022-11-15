@@ -23,23 +23,17 @@
     if (!.cv_args$index %in% colnames(mf))
       stop("'index_col' not found in the data")
   }
+  if (!is.null(.cv_args$group)) {
+    if (!.cv_args$group %in% colnames(mf))
+      stop("'group' column not found in the data")
+  }
 
-  cv_func <- switch(
-    .cv,
-    initial_split = rsample::initial_split,
-    initial_time_split = rsample::initial_time_split,
-    vfold = rsample::vfold_cv,
-    loo = rsample::loo_cv,
-    rolling_origin = rsample::rolling_origin,
-    sliding_index = rsample::sliding_index,
-    sliding_period = rsample::sliding_period,
-    sliding_window = rsample::sliding_window,
-    bootstraps = rsample::bootstraps
-  )
-
-  if (.cv == "none") {
-    cv <- NULL
-  } else {
+  if (!.cv == "none") {
+    # Check if cv method exists
+    if (!exists(.cv, asNamespace("rsample"), mode = "function")) {
+      stop(paste0("Method '", .cv, "' not exported by 'rsample'."))
+    }
+    cv_func <- getFromNamespace(.cv, asNamespace("rsample"))
     cv <- do.call(cv_func, append(list(data = mf), .cv_args))
     if (inherits(cv, "rsplit"))
       cv <- dplyr::tibble(splits = list(cv), id = .cv)
@@ -48,6 +42,9 @@
       adj_id <- adj_id[(length(adj_id) - nrow(cv) + 1):length(adj_id)]
       cv$id <- as.character(mf[adj_id, .cv_args$index])
     }
+  } else {
+    cv <- NULL
   }
+
   return(list(mf = mf, cv = cv, wts = wts, grps = grps))
 }
