@@ -17,6 +17,8 @@
 #'
 #' If no hyperparameter grid is passed (\code{is.null(control$ncomp) & is.null(control$ncomp_pct)}), the default is \code{ncomp_pct = seq(0, 1, length.out = 20)}, where 0 results in one component and 1 results in the number of features.
 #'
+#' When 'jackknife = TRUE' is passed (and a 'validation' method is chosen), \code{coef} also returns the jack-knife standard errors, t-statistics and p-values.
+#'
 #' Note that at present \code{pls} does not offer weighted implementations or non-gaussian response. The method can therefore only be used with \code{\link{regress}}
 #'
 #' @param self a 'tidyFit' R6 class.
@@ -33,13 +35,14 @@
 #' data <- dplyr::select(data, -Industry)
 #'
 #' # Stand-alone function
-#' fit <- m("pcr", Return ~ ., data, ncomp = 3)
+#' fit <- m("pcr", Return ~ ., data, ncomp = 1:3)
 #' fit
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("pcr", ncomp_pct = c(0, 0.25, 0.5)),
-#'                .mask = c("Date"), .cv = "vfold")
-#' coef(fit)
+#' fit <- regress(data, Return ~ .,
+#'                m("pcr", jackknife = TRUE, validation = "LOO", ncomp_pct = 0.5),
+#'                .mask = c("Date"))
+#' tidyr::unnest(coef(fit), model_info)
 #'
 #' @seealso \code{\link{.model.plsr}} and \code{\link{m}} methods
 #'
@@ -62,10 +65,15 @@
 
   self$set_args(ncomp = 1 + round((NCOL(x) - 1) * self$args$ncomp_pct),
                 overwrite = FALSE)
-  ctr <- self$args[names(self$args) %in% methods::formalArgs(pls::mvr)]
+  ctr <- self$args[names(self$args) %in% c(methods::formalArgs(pls::mvr),
+                                           "jackknife", "length.seq", "segments",
+                                           "segment.type", "mvrCv", "tol", "maxit",
+                                           "lower", "upper", "trunc.pow")]
   ctr$model <- FALSE
   ctr$x <- FALSE
   ctr$y <- FALSE
+
+  ctr$ncomp <- max(ctr$ncomp)
 
   eval_fun_ <- function(...) {
     args <- list(...)
@@ -76,6 +84,10 @@
                  append(list(formula = self$formula, data = data,
                              scale=standard_sd, center=T), ctr))
   .store_on_self(self, res)
+  self$inner_grid <- data.frame(
+    grid_id = paste(substring(self$grid_id, 1, 4), formatC(1:length(self$args$ncomp), 2, flag = "0"), sep = "|"),
+    ncomp = self$args$ncomp
+  )
   self$fit_info <- list(standard_sd = standard_sd)
   self$estimator <- "pls::pcr"
   invisible(self)
