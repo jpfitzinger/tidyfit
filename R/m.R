@@ -18,15 +18,19 @@
 #'
 #' \code{"lasso"} performs a linear regression or classification with L1 penalty using \code{glmnet::glmnet}. See \code{\link{.model.lasso}} for details.
 #'
-#' \code{"ridge"} performs a linear regression or classification with L2 penalty using \code{glmnet::glmnet}. See \code{\link{.model.lasso}} for details.
+#' \code{"ridge"} performs a linear regression or classification with L2 penalty using \code{glmnet::glmnet}. See \code{\link{.model.ridge}} for details.
 #'
 #' \code{"adalasso"} performs an Adaptive Lasso regression or classification using \code{glmnet::glmnet}. See \code{\link{.model.adalasso}} for details.
 #'
 #' \code{"enet"} performs a linear regression or classification with L1 and L2 penalties using \code{glmnet::glmnet}. See \code{\link{.model.enet}} for details.
 #'
-#' ### Gradient boosting
+#' ### Other Machine Learning
 #'
 #' \code{"boost"} performs gradient boosting regression or classification using \code{mboost::glmboost}. See \code{\link{.model.boost}} for details.
+#'
+#' \code{"rf"} performs a random forest regression or classification using \code{randomForest::randomForest}. See \code{\link{.model.rf}} for details.
+#'
+#' \code{"svm"} performs a support vector regression or classification using \code{e1071::svm}. See \code{\link{.model.svm}} for details.
 #'
 #' ### Factor regressions
 #'
@@ -40,9 +44,13 @@
 #'
 #' \code{"subset"} performs a best subset regression or classification using \code{bestglm::bestglm} (wrapper for \code{leaps}). See \code{\link{.model.subset}} for details.
 #'
+#' \code{"gets"} performs a general-to-specific regression using \code{gets::gets}. See \code{\link{.model.gets}} for details.
+#'
 #' ### Bayesian methods
 #'
 #' \code{"bayes"} performs a Bayesian generalized regression or classification using \code{arm::bayesglm}. See \code{\link{.model.bayes}} for details.
+#'
+#' \code{"bma"} performs a Bayesian model averaging regression using \code{BMS::bms}. See \code{\link{.model.bma}} for details.
 #'
 #' \code{"tvp"} performs a Bayesian time-varying parameter regression using \code{shrinkTVP::shrinkTVP}. See \code{\link{.model.tvp}} for details.
 #'
@@ -53,6 +61,16 @@
 #' ### Specialized time series methods
 #'
 #' \code{"mslm"} performs a Markov-switching regression using \code{MSwM::msmFit}. See \code{\link{.model.mslm}} for details.
+#'
+#' ### Feature selection
+#'
+#' \code{"cor"} calculates Pearson's correlation coefficient using \code{stats::cor.test}. See \code{\link{.model.cor}} for details.
+#'
+#' \code{"chisq"} calculates Pearson's Chi-squared test using \code{stats::chisq.test}. See \code{\link{.model.chisq}} for details.
+#'
+#' \code{"mrmr"} performs a minimum redundancy, maximum relevance features selection routine using \code{mRMRe::mRMR.ensemble}. See \code{\link{.model.mrmr}} for details.
+#'
+#' \code{"relief"} performs a ReliefF feature selection routine using \code{CORElearn::attrEval}. See \code{\link{.model.relief}} for details.
 #'
 #' When called without \code{formula} and \code{data} arguments, the function returns a 'tidyfit.models' data frame with unfitted models.
 #'
@@ -114,7 +132,7 @@ m <- function(
 
   mods <- .make_model_cols(mods)
   mods <- .unnest_args(mods)
-  col_ord <- c("estimator", "size (MB)", "grid_id", "model_object", "settings", "errors", "warnings", "messages")
+  col_ord <- c("estimator_fct", "size (MB)", "grid_id", "model_object", "settings", "errors", "warnings", "messages")
   mods <- dplyr::relocate(mods, any_of(col_ord)) %>%
     dplyr::arrange(.data$grid_id)
   mods <- tibble::new_tibble(mods, class = "tidyfit.models")
