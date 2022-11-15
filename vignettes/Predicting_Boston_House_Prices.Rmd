@@ -30,7 +30,7 @@ library(tidyverse) # Data wrangling
 library(tidyfit)   # Auto-ML modeling
 ```
 
-The Boston house prices data set (`MASS::Boston`) presents a popular test case for regression algorithms. In this article, I assess the relative performance of 12 different linear regression techniques using `tidyfit::regress`.
+The Boston house prices data set (`MASS::Boston`) presents a popular test case for regression algorithms. In this article, I assess the relative performance of 15 different linear regression techniques using `tidyfit::regress`.
 
 Let's begin by loading the data, and splitting it into equally sized training and test sets:
 
@@ -47,7 +47,7 @@ data_tst <- data[ix_tst,]
 as_tibble(data)
 ```
 
-The aim is to predict the median value of owner-occupied homes (`'medv'` in the data set) using the remaining columns.^[Have a look at `?MASS::Boston` for definitions of the features.] We will assess performance using R-squared, which is proportional to MSE and allows intuitive comparisons between in-sample and out-of-sample fit.
+The aim is to predict the median value of owner-occupied homes (`'medv'` in the data set) using the remaining columns.^[Have a look at `?MASS::Boston` for definitions of the features.] We will assess performance using $R^2$, which allows intuitive comparisons of in-sample and out-of-sample fit.
 
 ## A simple regression
 
@@ -122,7 +122,7 @@ Regularization controls overfit by introducing parameter bias in exchange for a 
 1. Best subset selection
 2. L1/L2 penalized regression
 3. Latent factor regression
-4. Iterative algorithms
+4. Other machine learning
 5. Bayesian regression
 
 `tidyfit` includes estimates from each of these categories, as summarized below:
@@ -130,11 +130,11 @@ Regularization controls overfit by introducing parameter bias in exchange for a 
 ```{r, echo = F, eval=TRUE}
 library(kableExtra)
 tbl <- data.frame(
-  `Best subset` = c("Exhaustive search (`leaps`)", "Forward selection (`leaps`)", "Backward selection (`leaps`)", ""),
-  `L2/L2 penalized` = c("Lasso (`glmnet`)", "Ridge (`glmnet`)", "ElasticNet (`glmnet`)", "Adaptive Lasso (`glmnet`)"),
+  `Best subset` = c("Exhaustive search (`leaps`)", "Forward selection (`leaps`)", "Backward selection (`leaps`)", "Sequential Replacement (`leaps`)"),
+  `L1/L2 penalized` = c("Lasso (`glmnet`)", "Ridge (`glmnet`)", "ElasticNet (`glmnet`)", "Adaptive Lasso (`glmnet`)"),
   `Latent factors` = c("Principal components regression (`pls`)", "Partial least squares (`pls`)", "", ""),
-  `Iterative` = c("Gradient Boosting (`mboost`)", "Hierarchical feature regression (`hfr`)", "", ""),
-  `Bayesian` = c("Bayesian regression (`arm`)", "", "", ""),
+  `Machine Learning` = c("Gradient Boosting (`mboost`)", "Hierarchical feature regression (`hfr`)", "Support vector regression (`e1071`)", ""),
+  `Bayesian` = c("Bayesian regression (`arm`)", "Bayesian model averaging (`BMS`)", "", ""),
   check.names = F
 )
 kbl(tbl, align = "ccccc") %>% 
@@ -142,24 +142,27 @@ kbl(tbl, align = "ccccc") %>%
 
 ```
 
-In the next code chunk, most of the available regression techniques are fitted to the data set. Hyperparameters are optimized using a 10-fold cross validation powered by `rsample` in the background. As a practical aside, it is possible to set a `future` plan to ensure hyperparameter tuning is performed on a parallelized backend.^[Parallelizing happens at the level of cross validation slices, so always consider if the overhead of parallel computation is worth it. For instance, parallelizing will likely be very useful with `.cv = "loo"` but can be less useful with `.cv = "vfold"`.] This is done using `plan(multisession(workers = n_workers))`, where `n_workers` is the number of available cores. Furthermore, a progress bar could be activated using `progressr::handlers(global=TRUE)`.
+In the next code chunk, 15 of the available regression techniques are fitted to the data set. Hyperparameters are optimized using a 10-fold cross validation powered by `rsample` in the background. As a practical aside, it is possible to set a `future` plan to ensure hyperparameter tuning is performed on a parallelized backend.^[Parallelizing happens at the level of cross validation slices, so always consider if the overhead of parallel computation is worth it. For instance, parallelizing will likely be very useful with `.cv = "loo_cv"` but can be less useful with `.cv = "vfold_cv"`.] This is done using `plan(multisession(workers = n_workers))`, where `n_workers` is the number of available cores. Furthermore, a progress bar could be activated using `progressr::handlers(global=TRUE)`.
 
 ```{r}
 model_frame_all <- data_trn %>% 
   regress(medv ~ .*., 
           OLS = m("lm"),
           BAYES = m("bayes"),
+          BMA = m("bma", iter = 5000),
+          SEQREP = m("subset", method = "seqrep", IC = "AIC"),
           `FORWARD SELECTION` = m("subset", method = "forward", IC = "AIC"),
           `BACKWARD SELECTION` = m("subset", method = "backward", IC = "AIC"),
-          LASSO = m("lasso"), 
-          RIDGE = m("ridge"), 
-          ELASTICNET = m("enet"), 
-          ADALASSO = m("adalasso"),
-          PCR = m("pcr"), 
-          PLSR = m("plsr"), 
-          HFR = m("hfr"), 
+          LASSO = m("lasso"),
+          RIDGE = m("ridge"),
+          ELASTICNET = m("enet"),
+          ADALASSO = m("adalasso", lambda_ridge = c(0.001, 0.01, 0.1)),
+          PCR = m("pcr"),
+          PLSR = m("plsr"),
+          HFR = m("hfr"),
           `GRADIENT BOOSTING` = m("boost"),
-          .cv = "vfold", .cv_args = list(v = 10))
+          SVR = m("svm"),
+          .cv = "vfold_cv", .cv_args = list(v = 10))
 ```
 
 Let's use `yardstick` again to calculate in-sample and out-of-sample performance statistics. The models are arranged descending order of test set performance:
@@ -176,15 +179,10 @@ eval_frame %>%
         axis.text.x = element_text(angle = 90))
 ```
 
-The adaptive Lasso regression achieves the highest out-of-sample performance, roughly on par with the Bayesian regression and hierarchical feature regression. The subset selection algorithms achieve relatively good results, while the penalized and latent factor regressions perform worst. All methods improve on the OLS results.
+The Bayesian regression techniques achieve the highest out-of-sample performance, followed by the hierarchical feature regression. The subset selection algorithms achieve relatively good results, while the penalized and latent factor regressions perform worst. All methods improve on the OLS results.
 
 ## A glimpse at the backend
 
 `tidyfit` makes it exceedingly simple to fit different regularized linear regressions. The package ensures that the input and output of the modeling engine, `tidyfit::m` are standardized and model results are comparable. For instance, whenever necessary, features are standardized with the coefficients transformed back to the original scale. Hyperparameter grids are set to reasonable starting values and can be passed manually to `tidyfit::m`.
 
-The package further includes a `tidyfit::classify` method that assumes a binomial or multinomial response. Most of the methods implemented can handle Gaussian and binomial responses. Furthermore, the `tidyfit::regress` and `tidyfit::classify` methods seamlessly integrate with grouped tibbles, making it extremely powerful to estimate a large number of regressions for different data groupings. Groups as well as response distributions are automatically respected by the `predict` method.
-
-## What's the difference to `caret` or `parsnip`
-
-`tidyfit` is focused on the estimation of **regression coefficients** and the efficient handling of **high-volume model estimation** in grouped tibbles. The output is centered on the estimation of comparable regression and classification equations and coefficient vectors. Existing modeling wrappers such as `caret` and `parsnip` focus instead on standardized prediction workflows.
-
+The package further includes a `tidyfit::classify` method that assumes a binomial or multinomial response. Many of the methods implemented can handle Gaussian and binomial responses. Furthermore, the `tidyfit::regress` and `tidyfit::classify` methods seamlessly integrate with grouped tibbles, making it extremely powerful to estimate a large number of regressions for different data groupings. Groups as well as response distributions are automatically respected by the `predict` method.
