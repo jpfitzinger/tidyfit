@@ -74,7 +74,6 @@
   return(estimates)
 }
 
-#' @importFrom pls jack.test
 .coef.mvr <- function(object, self = NULL, ...) {
   beta <- drop(stats::coef(object, intercept = T, ncomp = self$args$ncomp))
   beta <- .coef_rescaler(beta, x_sd = self$fit_info$standard_sd)
@@ -90,9 +89,9 @@
     if (self$args$jackknife) {
       jack_test <- pls::jack.test(object, ncomp = self$args$ncomp)
       estimates <- estimates %>%
-        dplyr::mutate(std.error = drop(jack_test$sd)[term],
-                      statistic = drop(jack_test$tvalues)[term],
-                      p.value = drop(jack_test$pvalues)[term])
+        dplyr::mutate(std.error = drop(jack_test$sd)[.data$term],
+                      statistic = drop(jack_test$tvalues)[.data$term],
+                      p.value = drop(jack_test$pvalues)[.data$term])
     }
   }
 

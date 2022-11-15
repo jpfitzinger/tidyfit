@@ -33,7 +33,7 @@ Results can be viewed using \code{coef}.
 \examples{
 # Load data
 data <- tidyfit::Factor_Industry_Returns
-data <- dplyr::mutate_at(data, vars(-Date, -Industry), ntile, n = 10)
+data <- dplyr::mutate_at(data, dplyr::vars(-Date, -Industry), dplyr::ntile, n = 10)
 
 # Within 'classify' function
 fit <- classify(data, Return ~ ., m("chisq"), .mask = c("Date", "Industry"))

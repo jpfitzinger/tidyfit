@@ -1,4 +1,4 @@
-
+#' @importFrom utils getFromNamespace
 
 .make_cross_val <- function(.data, .cv, .cv_args, gr_vars, .mask, .weights) {
   grps <- .data %>%
@@ -33,7 +33,7 @@
     if (!exists(.cv, asNamespace("rsample"), mode = "function")) {
       stop(paste0("Method '", .cv, "' not exported by 'rsample'."))
     }
-    cv_func <- getFromNamespace(.cv, asNamespace("rsample"))
+    cv_func <- utils::getFromNamespace(.cv, asNamespace("rsample"))
     cv <- do.call(cv_func, append(list(data = mf), .cv_args))
     if (inherits(cv, "rsplit"))
       cv <- dplyr::tibble(splits = list(cv), id = .cv)
