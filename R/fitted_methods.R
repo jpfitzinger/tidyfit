@@ -2,9 +2,16 @@
 
 #' @importFrom dplyr tibble
 
-.fitted.glmnet <- function(object, lambda = NULL, family = NULL, ...) {
+.fitted.default <- function(object, ...) {
+  fitted <- dplyr::tibble(
+    fitted = fitted(object)
+  )
+  return(fitted)
+}
+
+.fitted.glmnet <- function(object, self = NULL, ...) {
   x <- object$call$x
-  pred_mat <- stats::predict(object, x, type = "response", s = lambda)
+  pred_mat <- stats::predict(object, x, type = "response", s = self$args$lambda)
 
   if (length(dim(pred_mat))==3) {
     class_vals <- dimnames(pred_mat)[[2]]
@@ -14,7 +21,7 @@
   pred <- pred_mat %>%
     dplyr::as_tibble() %>%
     dplyr::mutate(row_n = dplyr::row_number())
-  if (family == "multinomial") {
+  if (self$args$family == "multinomial") {
     pred <- pred %>%
       tidyr::pivot_longer(-dplyr::any_of(c("row_n")),
                           names_to = c("class", "grid_id"),
@@ -34,37 +41,9 @@
   return(pred)
 }
 
-.fitted.lm <- function(object, ...) {
+.fitted.mvr <- function(object, self = NULL, ...) {
   fitted <- dplyr::tibble(
-    fitted = fitted(object)
-  )
-  return(fitted)
-}
-
-.fitted.glm <- function(object, ...) {
-  fitted <- dplyr::tibble(
-    fitted = fitted(object)
-  )
-  return(fitted)
-}
-
-.fitted.rq <- function(object, ...) {
-  fitted <- dplyr::tibble(
-    fitted = fitted(object)
-  )
-  return(fitted)
-}
-
-.fitted.rlm <- function(object, ...) {
-  fitted <- dplyr::tibble(
-    fitted = fitted(object)
-  )
-  return(fitted)
-}
-
-.fitted.mvr <- function(object, standard_sd = NULL, ...) {
-  fitted <- dplyr::tibble(
-    fitted = drop(fitted(object))
+    fitted = drop(fitted(object)[,,self$args$ncomp])
   )
   return(fitted)
 }
@@ -76,13 +55,6 @@
   return(fitted)
 }
 
-.fitted.merMod <- function(object, ...) {
-  fitted <- dplyr::tibble(
-    fitted = fitted(object)
-  )
-  return(fitted)
-}
-
 .fitted.shrinkTVP <- function(object, ...) {
   fitted <- dplyr::tibble(
     fitted = colMeans(t(fitted(object)))
@@ -90,7 +62,7 @@
   return(fitted)
 }
 
-.fitted.MSM.lm <- function(object, index_var = NULL, ...) {
+.fitted.MSM.lm <- function(object, self = NULL, ...) {
   condMean <- object@Fit@CondMean
   probs <- object@Fit@smoProb[-1,]
   fitted <- dplyr::tibble(
@@ -99,10 +71,19 @@
   return(fitted)
 }
 
-.fitted.cv.hfr <- function(object, kappa_grid = NULL, ...) {
+.fitted.cv.hfr <- function(object, self = NULL, ...) {
   fitted <- dplyr::tibble(
-    fitted = drop(predict(object, kappa = kappa_grid))
+    fitted = drop(predict(object, kappa = self$args$kappa_grid))
   )
   return(fitted)
 
 }
+
+.fitted.bma <- function(object, ...) {
+  fitted <- dplyr::tibble(
+    fitted = predict(object)
+  )
+  return(fitted)
+}
+
+
