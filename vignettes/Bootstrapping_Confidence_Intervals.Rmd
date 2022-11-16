@@ -23,6 +23,7 @@ if (use_saved_results) {
   library(pls)
   results <- readRDS("vignette_bci.rds")
   estimates <- results$estimates
+  jackknife_estimates <- results$jackknife_estimates
 }
 ```
 
@@ -64,7 +65,6 @@ estimates <- coef(model_frame,
 estimates
 ```
 
-
 The intervals are nested in `model_info`:
 
 ```{r, eval=TRUE}
@@ -79,6 +79,41 @@ And thus, in a concise workflow, we have 95% bootstrap confidence intervals for 
 
 ```{r, fig.width=7, fig.height=3.5, fig.align="center", eval=TRUE}
 estimates %>% 
+  filter(term != "(Intercept)") %>% 
+  ggplot(aes(term, estimate, color = model)) +
+  geom_hline(yintercept = 0) +
+  geom_errorbar(aes(ymin = .lower, ymax = .upper), position = position_dodge()) +
+  theme_bw(8)
+```
+
+## Comparing to built-in jackknife procedure
+
+The `pls`-package includes built-in functionality to jackknife confidence intervals for the coefficients. We can compare these results by passing `jackknife = TRUE` and `validation = "LOO"` to `m()`, and setting `.cv = "none"` (default):
+
+```{r}
+model_frame_jackknife <- data %>% 
+  regress(medv ~ ., m("plsr", ncomp = 5, jackknife = TRUE, validation = "LOO"), 
+          m("pcr", ncomp = 5, jackknife = TRUE, validation = "LOO"))
+
+jackknife_estimates <- coef(model_frame_jackknife)
+```
+
+Now the `coef()` generic method also provides standard errors and $p$-values for the coefficients using `pls::jack.test`:
+
+```{r, eval = TRUE}
+jackknife_estimates <- jackknife_estimates %>% 
+  unnest(model_info) %>% 
+  # Create approximate 95% intervals using 2 standard deviations
+  mutate(.upper = estimate + 2 * std.error, .lower = estimate - 2 * std.error)
+
+jackknife_estimates
+```
+
+The plot is almost exactly identical to the bootstrap results above:
+
+```{r, fig.width=7, fig.height=3.5, fig.align="center", eval=TRUE}
+jackknife_estimates %>% 
+  filter(term != "(Intercept)") %>% 
   ggplot(aes(term, estimate, color = model)) +
   geom_hline(yintercept = 0) +
   geom_errorbar(aes(ymin = .lower, ymax = .upper), position = position_dodge()) +
