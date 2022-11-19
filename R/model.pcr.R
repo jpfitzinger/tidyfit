@@ -63,7 +63,7 @@
   if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
   standard_sd <- apply(x, 2, stats::sd)
 
-  self$set_args(ncomp = 1 + round((NCOL(x) - 1) * self$args$ncomp_pct),
+  self$set_args(ncomp = unique(1 + round((NCOL(x) - 1) * self$args$ncomp_pct)),
                 overwrite = FALSE)
   ctr <- self$args[names(self$args) %in% c(methods::formalArgs(pls::mvr),
                                            "jackknife", "length.seq", "segments",
