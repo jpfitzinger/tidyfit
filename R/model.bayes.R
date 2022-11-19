@@ -45,10 +45,21 @@
     data = NULL
 ) {
 
+  if (self$mode == "regression") {
+    self$set_args(family = gaussian(), overwrite = FALSE)
+  }
+  if (self$mode == "classification") {
+    self$set_args(family = binomial(), overwrite = FALSE)
+    # Response variable must be between 0 and 1 for classification
+    response_var <- all.vars(self$formula)[1]
+    data[[response_var]] <- as.numeric(data[[response_var]]) - 1
+  }
+
   ctr <- self$args[names(self$args) %in% methods::formalArgs(arm::bayesglm)]
   ctr$model <- FALSE
   ctr$x <- FALSE
   ctr$y <- FALSE
+
   eval_fun_ <- function(...) {
     args <- list(...)
     do.call(arm::bayesglm, args)
