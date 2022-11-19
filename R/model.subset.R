@@ -55,6 +55,13 @@
   y <- stats::model.response(mf)
   incl_intercept <- "(Intercept)" %in% colnames(x)
   if (incl_intercept) x <- x[, -1]
+
+  # TODO: Request 'bestglm' maintainers to fix this
+  ctr$weights <- NULL
+  if (!is.null(self$args$weights)) {
+    warning("subset cannot handle weights, weights are ignored")
+  }
+
   Xy <- data.frame(x, y, check.names = FALSE)
   var_names_map <- .names_map(colnames(Xy))
   eval_fun_ <- function(...) {

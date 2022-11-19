@@ -42,6 +42,11 @@
     self,
     data = NULL
 ) {
+
+  if (!is.null(self$args$weights)) {
+    warning("cor cannot handle weights, weights are ignored")
+  }
+
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
   y <- stats::model.response(mf)

@@ -51,6 +51,11 @@
     self,
     data = NULL
 ) {
+
+  if (!is.null(self$args$weights)) {
+    warning("tvp cannot handle weights, weights are ignored")
+  }
+
   idx_col <- self$args$index_col
   if (is.null(self$args$index_col)) {
     idx_var <- 1:nrow(data)

@@ -49,6 +49,11 @@
     self,
     data = NULL
 ) {
+
+  if (!is.null(self$args$weights)) {
+    warning("svm cannot handle weights, weights are ignored")
+  }
+
   self$set_args(kernel = "linear", overwrite = FALSE)
   self$set_args(probability = TRUE)
 

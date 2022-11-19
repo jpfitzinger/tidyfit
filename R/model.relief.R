@@ -51,6 +51,11 @@
     self,
     data = NULL
 ) {
+
+  if (!is.null(self$args$weights)) {
+    warning("relief cannot handle weights, weights are ignored")
+  }
+
   estimator <- ifelse(self$mode=="classification", "ReliefFequalK", "RReliefFequalK")
   self$set_args(estimator = estimator, overwrite = FALSE)
 
