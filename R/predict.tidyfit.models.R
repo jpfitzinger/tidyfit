@@ -45,7 +45,8 @@ predict.tidyfit.models <- function(object, newdata, ..., .keep_grid_id = FALSE) 
   out <- object %>%
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
     purrr::transpose() %>%
-    purrr::map_dfr(function(row){
+    purrr::map_dfr(function(row) {
+      if (is.null(row$newdata)) return(NULL)
       out <- row$model_object$predict(as.data.frame(row$newdata))
       if (is.null(out)) return(NULL)
       out <- out %>%
