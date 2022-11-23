@@ -136,6 +136,7 @@ classify <- function(
                           gr_vars, .mask, .weights
                           ))
   eval_df <- tidyr::expand_grid(model_df, data = df_list)
+  eval_df$return_slices <- .return_slices
 
   p <- progressr::progressor(nrow(eval_df))
   fit_progress <- function(row, ...) {
