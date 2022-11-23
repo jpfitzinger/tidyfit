@@ -99,7 +99,7 @@ Arguments that are meant to be vectors (e.g. weights) are recognized by the func
 ```{r, echo = F}
 library(kableExtra)
 tbl <- data.frame(
-  Method = c("OLS", "Generalized least squares", "Robust regression (e.g. Huber loss)", 
+  Method = c("OLS", "GLS", "Robust regression (e.g. Huber loss)", 
              "Quantile regression", "LASSO", "Ridge", "Adaptive LASSO", "ElasticNet",
              "Gradient boosting regression", "Support vector machine", "Random forest", "Principal components regression", "Partial least squares",
              "Hierarchical feature regression", "Best subset selection", "General-to-specific", "Bayesian regression", "Bayesian model averaging", "Bayesian time-varying parameters regression", "Generalized mixed-effects regression", "Markov-switching regression", "Pearson correlation", "Chi-squared test", "Minimum redundancy, maximum relevance", "ReliefF"),
@@ -109,7 +109,7 @@ tbl <- data.frame(
               "`mboost`", "`e1071`", "`randomForest`", "`pls`", "`pls`", "`hfr`", "`bestglm`", "`gets`", "`arm`", "BMS", "`shrinkTVP`", "`lme4`", "`MSwM`", "`stats`", "`stats`", "`mRMRe`", "`CORElearn`"),
   Regression = c("yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "no", "yes", "yes"),
   Classification = c("no", "yes", "no", "no", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "no", "no", "no", "yes", "no", "yes", "no", "no", "yes", "no", "no", "yes", "yes", "yes"),
-  group = c("Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Regression and classification with L1 and L2 penalties", "Machine Learning", "Machine Learning", "Machine Learning", "Factor regressions", "Factor regressions", "Factor regressions", "Subset selection", "Subset selection", "Bayesian regression", "Bayesian regression", "Bayesian regression", "Mixed-effects modeling", "Specialized time series methods", "Feature selection", "Feature selection", "Feature selection", "Feature selection")
+  group = c("Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Regression or classification with L1 and L2 penalties", "Regression or classification with L1 and L2 penalties", "Regression or classification with L1 and L2 penalties", "Regression or classification with L1 and L2 penalties", "Machine Learning", "Machine Learning", "Machine Learning", "Factor regressions", "Factor regressions", "Factor regressions", "Subset selection", "Subset selection", "Bayesian regression", "Bayesian regression", "Bayesian regression", "Mixed-effects modeling", "Specialized time series methods", "Feature selection", "Feature selection", "Feature selection", "Feature selection")
 )
 
 kbl(tbl[,1:5], align = "lcccc") %>% 
@@ -129,6 +129,7 @@ In this section, a minimal workflow is used to demonstrate how the package works
   - [The flowchart](https://tidyfit.unchartedml.com/articles/Flowchart.html)
   - [Regularized regression](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html) (Boston house price data)
   - [Multinomial classification](https://tidyfit.unchartedml.com/articles/Multinomial_Classification.html) (iris data)
+  - [Feature Selection](https://tidyfit.unchartedml.com/articles/Feature_Selection.html) (macroeconomic data)
   - [Accessing fitted models](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
   - [Rolling window regression for time series](https://tidyfit.unchartedml.com/articles/Rolling_Window_Time_Series_Regression.html) (factor data)
   - [Time-varying parameters](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html) (factor data)

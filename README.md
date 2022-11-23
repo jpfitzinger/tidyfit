@@ -159,7 +159,7 @@ no
 </tr>
 <tr>
 <td style="text-align:left;padding-left: 2em;" indentlevel="1">
-Generalized least squares
+GLS
 </td>
 <td style="text-align:center;">
 glm
@@ -210,7 +210,7 @@ no
 </tr>
 <tr grouplength="4">
 <td colspan="5" style="border-bottom: 1px solid;">
-<strong>Regression and classification with L1 and L2 penalties</strong>
+<strong>Regression or classification with L1 and L2 penalties</strong>
 </td>
 </tr>
 <tr>
@@ -630,6 +630,9 @@ for further reading, follow these links:
 -   [Multinomial
     classification](https://tidyfit.unchartedml.com/articles/Multinomial_Classification.html)
     (iris data)
+-   [Feature
+    Selection](https://tidyfit.unchartedml.com/articles/Feature_Selection.html)
+    (macroeconomic data)
 -   [Accessing fitted
     models](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
 -   [Rolling window regression for time
