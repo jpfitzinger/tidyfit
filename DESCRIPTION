@@ -2,7 +2,7 @@ Package: tidyfit
 Type: Package
 Title: Regularized Linear Modeling with Tidy Data
 Date: 2022-11-25
-Version: 0.5.1
+Version: 0.6.0
 Author: Johann Pfitzinger [aut, cre]
 Maintainer: Johann Pfitzinger <johann.pfitzinger@gmail.com>
 Description: An extension to the 'R' tidy data environment for automated machine learning. The package allows fitting and cross validation of linear regression and classification algorithms on grouped data. 
