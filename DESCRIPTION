@@ -1,7 +1,7 @@
 Package: tidyfit
 Type: Package
 Title: Regularized Linear Modeling with Tidy Data
-Date: 2022-10-24
+Date: 2022-11-25
 Version: 0.5.1
 Author: Johann Pfitzinger [aut, cre]
 Maintainer: Johann Pfitzinger <johann.pfitzinger@gmail.com>
@@ -35,6 +35,10 @@ Imports:
 Suggests:
   arm,
   bestglm,
+  BMS,
+  CORElearn,
+  e1071,
+  gets,
   glmnet,
   hfr,
   kableExtra,
@@ -43,9 +47,11 @@ Suggests:
   lmtest,
   lubridate,
   mboost,
+  mRMRe,
   MSwM,
   pls,
   quantreg,
+  randomForest,
   sandwich,
   shrinkTVP,
   tidyverse,
