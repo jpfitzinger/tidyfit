@@ -47,6 +47,11 @@ fit <- regress(data, Return ~ ., m("rf"))
 tidyr::unnest(coef(fit), model_info)
 
 }
+\references{
+Liaw, A. and Wiener, M. (2002).
+\emph{Classification and Regression by randomForest.}
+R News 2(3), 18--22.
+}
 \seealso{
 \code{\link{.model.svm}}, \code{\link{.model.boost}} and \code{\link{m}} methods
 }

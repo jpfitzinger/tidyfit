@@ -22,6 +22,11 @@
 #'
 #' @author Johann Pfitzinger
 #'
+#' @references
+#' Pretis F, Reade JJ, Sucarrat G (2018).
+#' _Automated General-to-Specific (GETS) Regression Modeling and Indicator Saturation for Outliers and Structural Breaks._
+#' Journal of Statistical Software 86(3), 1-44.
+#'
 #' @examples
 #' # Load data
 #' data <- tidyfit::Factor_Industry_Returns

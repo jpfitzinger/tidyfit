@@ -46,6 +46,11 @@ fit <- regress(data, Return ~ ., m("gets"), .mask = c("Date", "Industry"))
 coef(fit)
 
 }
+\references{
+Pretis F, Reade JJ, Sucarrat G (2018).
+\emph{Automated General-to-Specific (GETS) Regression Modeling and Indicator Saturation for Outliers and Structural Breaks.}
+Journal of Statistical Software 86(3), 1-44.
+}
 \seealso{
 \code{\link{.model.robust}}, \code{\link{.model.glm}} and \code{\link{m}} methods
 }

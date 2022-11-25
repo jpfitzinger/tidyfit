@@ -21,6 +21,11 @@
 #'
 #' @author Johann Pfitzinger
 #'
+#' @references
+#' Liaw, A. and Wiener, M. (2002).
+#' _Classification and Regression by randomForest._
+#' R News 2(3), 18--22.
+#'
 #' @examples
 #' # Load data
 #' data <- tidyfit::Factor_Industry_Returns
