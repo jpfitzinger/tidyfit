@@ -106,7 +106,7 @@
   
   if (self$mode == "regression") {
     pred <- dplyr::tibble(
-      prediction = stats::predict(object, data)[,1],
+      prediction = drop(stats::predict(object, data)),
       truth = truth
     )
   }
@@ -121,4 +121,23 @@
   return(pred)
 }
 
+.fitted.nnet <- function(object, self = NULL, ...) {
+  if (self$mode == "regression"){
+    fitted <- dplyr::tibble(
+      fitted = drop(predict(object))
+    )
+  }
+  if (self$mode == "classification") {
+    fitted <- dplyr::tibble(
+      fitted = predict(object, type="class")
+    )
+  }
+  return(fitted)
+}
 
+.resid.nnet <- function(object, self = NULL, ...) {
+  residuals <- dplyr::tibble(
+    residual = drop(object$residuals)
+  )
+  return(residuals)
+}
