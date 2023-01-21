@@ -41,6 +41,17 @@
       grid$cost <- dials::grid_regular(dials::cost(), levels = 10)$cost
     }
   }
+  if (model_method == "nnet") {
+    if (!"size" %in% args) {
+      grid$size <- c(10, 25, by = 5)
+    }
+    if (!"decay" %in% args) {
+      grid$decay <- c(0, 0.3, 0.6)
+    }
+    if (!"maxit" %in% args) {
+      grid$maxit <- c(100, 200)
+    }
+  }
 
   return(grid)
 

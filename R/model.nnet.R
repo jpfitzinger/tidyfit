@@ -1,0 +1,96 @@
+#' @name .model.nnet
+#' @title Neural Network regression for \code{tidyfit}
+#' @description Fits a single-hidden-layer neural network regression on a 'tidyFit' \code{R6} class. 
+#' The function can be used with \code{\link{regress}} and \code{\link{classify}}.
+#'
+#' @param self a 'tidyFit' R6 class.
+#' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
+#' @return A fitted 'tidyFit' class model.
+#'
+#' @details **Hyperparameters:**
+#'
+#' - \code{size} *(number of units in the hidden layer)*
+#' - \code{decay} *(parameter for weight decay)*
+#' - \code{maxit} *(maximum number of iterations)*
+#'
+#' **Important method arguments (passed to \code{\link{m}})**
+#'
+#' The function provides a wrapper for \code{nnet::nnet.formula}. See \code{?nnet} for more details.
+#'
+#' **Implementation**
+#'
+#' For \code{\link{regress}}, linear output units (\code{linout=True}) are used, while \code{\link{classify}} implements
+#' the default logic of  \code{nnet} (\code{entropy=TRUE} for 2 target classes and \code{softmax=TRUE} for more classes). 
+#'
+#' @author Phil Holzmeister
+#'
+#' @examples
+#' # Load data
+#' data <- tidyfit::Factor_Industry_Returns
+#'
+#' # Stand-alone function
+#' fit <- m("nnet", Return ~ `Mkt-RF` + HML + SMB, data)
+#' fit
+#'
+#' # Within 'regress' function
+#' fit <- regress(data, Return ~ ., m("nnet", decay=0.5, size = 8), 
+#'                .mask = c("Date", "Industry"))
+#' coef(fit)
+#'
+#' # Within 'classify' function
+#' fit <- classify(iris, Species ~ ., m("nnet"))
+#' coef(fit)
+#'
+#' @seealso
+#'
+#' @importFrom purrr safely quietly
+#' @importFrom stats model.frame model.matrix model.response
+#' @importFrom methods formalArgs
+
+.model.nnet <- function(
+  self,
+  data = NULL
+) {
+  
+  # create model matrix to provide defaults for weights and size args
+  # ultimately nnet.formula is called rather than nnet.default as
+  # it handles the factor encoding for classification
+  
+  mf <- stats::model.frame(self$formula, data)
+  x <- stats::model.matrix(self$formula, mf)
+  incl_intercept <- "(Intercept)" %in% colnames(x)
+  if (incl_intercept) x <- x[, -1]
+  
+  if (self$mode == "regression") {
+    self$set_args(linout = TRUE, overwrite = FALSE)
+  }
+  
+  # no default value for hidden layer size argument, 
+  # set to 2x input neurons if not provided
+  self$set_args(size = 2 * ncol(x), overwrite = FALSE)
+  
+  # if missing(weights), nnet defaults to 1; but not for is.null(weights)
+  # so set default values here
+  if (is.null(self$args$weights)) {
+    self$set_args(weights = rep(1, nrow(x)), overwrite = TRUE)
+  }
+  
+  ctr <- self$args[names(self$args) %in% methods::formalArgs(nnet::nnet.default)]
+  
+  # ignore duplicate arguments that nnet.formula passes for nnet.default
+  # if these should be specified via the classify interface, switch to nnet.default
+  # (but requires handing of categorical variable encoding here)
+  ctr <- ctr[!(names(ctr) %in% c("softmax", "entropy"))]
+  
+  eval_fun_ <- function(...) {
+    args <- list(...)
+    do.call(nnet::nnet.formula, args)
+  }
+  eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
+  res <- do.call(eval_fun,
+                 append(list(formula = self$formula, data = data), ctr))
+  .store_on_self(self, res)
+  self$estimator <- "nnet::nnet"
+  invisible(self)
+  
+}
