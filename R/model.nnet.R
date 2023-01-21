@@ -121,6 +121,33 @@
   return(pred)
 }
 
+.coef.nnet <- function(object, self = NULL, ...) {
+  browser()
+  response_var <- all.vars(self$formula)[1]
+  mf <- stats::model.frame(self$formula, object$call$data)
+  mod <- iml::Predictor$new(object, data = mf %>% dplyr::select(-response_var), 
+                       y = mf[[response_var]])
+  imp <- iml::FeatureImp(mod, loss = "mae")
+  
+  if (self$mode == "regression") {
+    estimates <- dplyr::tibble(
+      term = NULL,
+      estimate = NULL
+    )
+  } 
+  
+  if (self$mode == "classification") {
+    estimates <- dplyr::tibble(
+      term = NULL,
+      estimate = NULL,
+      class = NULL
+    )
+  }
+  
+  return(estimates)
+}
+
+
 .fitted.nnet <- function(object, self = NULL, ...) {
   if (self$mode == "regression"){
     fitted <- dplyr::tibble(
