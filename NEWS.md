@@ -46,3 +46,9 @@ This version adds several new methods and enhances functionality & documentation
 - Add a 'lambda' parameter for 1st-stage weighting regression in AdaLasso
 - Minor bug-fixes and performance enhancements
 - Add 'unnest' method for tidyfit.models frame
+
+## tidyfit 0.6.1
+
+- Change method (.model.hfr) for compatibility with upstream package updates
+- Bugfix: unnest.tidyfit.models missing struc
+- Minor adjustments in response to upstream package deprecation warnings
