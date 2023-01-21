@@ -30,7 +30,7 @@ library(tidyverse) # Data wrangling
 library(tidyfit)   # Auto-ML modeling
 ```
 
-Multinomial classification is possible in `tidyfit` using the methods powered by `glmnet`, `e1071` and `randomForest` (LASSO, Ridge, ElasticNet,  AdaLASSO, SVM and Random Forest). Currently, none of the other methods support multinomial classification.^[Feature selection methods such as `relief` or `chisq` can be used with multinomial response variables. I may also add support for multinomial classification with `mboost` in future.] When the response variable contains more than 2 classes, `classify` automatically uses a multinomial response for the above-mentioned methods.
+Multinomial classification is possible in `tidyfit` using the methods powered by `glmnet`, `e1071`, `nnet` and `randomForest` (LASSO, Ridge, ElasticNet,  AdaLASSO, SVM, Neural Network and Random Forest). Currently, none of the other methods support multinomial classification.^[Feature selection methods such as `relief` or `chisq` can be used with multinomial response variables. I may also add support for multinomial classification with `mboost` in future.] When the response variable contains more than 2 classes, `classify` automatically uses a multinomial response for the above-mentioned methods.
 
 Here's an example using the built-in `iris` dataset:
 
@@ -61,6 +61,7 @@ fit <- data_trn %>%
            SVM = m("svm"),
            `Random Forest` = m("rf"),
            `Least Squares` = m("ridge", lambda = 1e-5), 
+           `Neural Net` = m("nnet", size=10, maxit = 200, decay=0.1),
            .cv = "vfold_cv")
 
 pred <- fit %>% 
@@ -87,4 +88,4 @@ metrics %>%
   theme(axis.title.x = element_blank())
 ```
 
-The least squares estimate performs poorest, while the random forest (nonlinear) and the support vector machine (SVM) achieve the best results. The SVM is estimated with a linear kernel by default (use `kernel = <chosen_kernel>` to use a different kernel).
+The least squares estimate performs poorest, while the random forest (nonlinear), neural network and the support vector machine (SVM) achieve the best results. The SVM is estimated with a linear kernel by default (use `kernel = <chosen_kernel>` to use a different kernel).
