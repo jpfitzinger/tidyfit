@@ -19,7 +19,7 @@
       test_samples <- rsample::complement(splits)
       res_row$model_object[[1]]$set_args(weights = wts[train_samples])
       res_row$model_object[[1]]$fit(df_train)
-      if (nrow(df_test) > 0 & !row$return_slices) {
+      if (nrow(df_test) > 0 & !row$return_slices & !is.null(res_row$model_object[[1]]$object)) {
         pred <- predict.tidyfit.models(res_row, df_test, .keep_grid_id = TRUE)
         metrics <- .eval_metrics(pred, res_row$model_object[[1]]$mode, weights = wts[test_samples])
       } else {
