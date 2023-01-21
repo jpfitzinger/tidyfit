@@ -24,8 +24,8 @@
     }
   }
   if (model_method == "hfr") {
-    if (!"kappa_grid" %in% args) {
-      grid$kappa_grid <- seq(0, 1, by = 0.05)
+    if (!"kappa" %in% args) {
+      grid$kappa <- seq(0, 1, by = 0.05)
     }
   }
   if (model_method == "boost") {

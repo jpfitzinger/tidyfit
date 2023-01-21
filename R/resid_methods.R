@@ -45,11 +45,3 @@
   )
   return(residuals)
 }
-
-.resid.cv.hfr <- function(object, self = NULL, ...) {
-  residuals <- dplyr::tibble(
-    residual = object$y - drop(predict(object, kappa = self$args$kappa_grid))
-  )
-  return(residuals)
-
-}

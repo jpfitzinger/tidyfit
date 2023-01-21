@@ -49,6 +49,7 @@
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
   } else {
+    data[, response_var] <- NA
     truth <- NULL
   }
   if (!is.null(self$fit_info$names_map)) data <- data.frame(stats::model.matrix(self$formula, data))
@@ -66,6 +67,7 @@
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
   } else {
+    data[, response_var] <- NA
     truth <- NULL
   }
   if (!is.null(self$fit_info$names_map)) data <- data.frame(stats::model.matrix(self$formula, data))
@@ -198,31 +200,12 @@
   return(pred)
 }
 
-.predict.cv.hfr <- function(object, data, self = NULL, ...) {
-  response_var <- all.vars(self$formula)[1]
-  if (response_var %in% colnames(data)) {
-    truth <- data[, response_var]
-  } else {
-    data[, response_var] <- 1
-    truth <- NULL
-  }
-  mf <- stats::model.frame(self$formula, data)
-  x <- stats::model.matrix(self$formula, mf)
-  if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
-  pred_mat <- sapply(self$args$kappa_grid, function(kap) stats::predict(object, x, kappa = kap))
-  colnames(pred_mat) <- self$inner_grid$grid_id[appr_in(self$inner_grid$kappa_grid, self$args$kappa_grid)]
-  pred <- pred_mat %>%
-    dplyr::as_tibble() %>%
-    dplyr::mutate(truth = truth) %>%
-    tidyr::pivot_longer(-any_of("truth"), names_to = "grid_id", values_to = "prediction")
-  return(pred)
-}
-
 .predict.bma <- function(object, data, self = NULL, ...) {
   response_var <- all.vars(self$formula)[1]
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
   } else {
+    data[, response_var] <- NA
     truth <- NULL
   }
   mf <- stats::model.frame(self$formula, data)

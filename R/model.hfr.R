@@ -4,7 +4,7 @@
 #'
 #' @details **Hyperparameters:**
 #'
-#' - kappa_grid (*proportional size of regression graph*)
+#' - kappa (*proportional size of regression graph*)
 #'
 #' **Important method arguments (passed to \code{\link{m}})**
 #'
@@ -14,7 +14,7 @@
 #'
 #' Features are standardized by default with coefficients transformed to the original scale.
 #'
-#' If no hyperparameter grid is provided (\code{is.null(control$kappa_grid)}), the default is \code{seq(0, 1, by = 0.1)}.
+#' If no hyperparameter grid is provided (\code{is.null(control$kappa)}), the default is \code{seq(0, 1, by = 0.1)}.
 #'
 #' @param self a 'tidyFit' R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
@@ -30,11 +30,11 @@
 #' data <- tidyfit::Factor_Industry_Returns
 #'
 #' # Stand-alone function
-#' fit <- m("hfr", Return ~ ., data, kappa_grid = 0.5)
+#' fit <- m("hfr", Return ~ ., data, kappa = 0.5)
 #' fit
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("hfr", kappa_grid = c(0.1, 0.5)),
+#' fit <- regress(data, Return ~ ., m("hfr", kappa = c(0.1, 0.5)),
 #'                .mask = c("Date", "Industry"))
 #' coef(fit)
 #'
@@ -64,9 +64,61 @@
                  append(list(x = x, y = y, nfolds = 1, intercept = incl_intercept), ctr))
   .store_on_self(self, res)
   self$inner_grid <- data.frame(
-    grid_id = paste(substring(self$grid_id, 1, 4), formatC(1:length(self$args$kappa_grid), 2, flag = "0"), sep = "|"),
-    kappa_grid = self$args$kappa_grid
+    grid_id = paste(substring(self$grid_id, 1, 4), formatC(1:length(self$args$kappa), 2, flag = "0"), sep = "|"),
+    kappa = self$args$kappa
   )
   self$estimator <- "hfr::cv.hfr"
   invisible(self)
+}
+
+.coef.cv.hfr <- function(object, self = NULL, ...) {
+
+  coefs <- stats::coef(object)
+  colnames(coefs) <- self$inner_grid$grid_id
+  kappaSel <- self$args$kappa
+  estimates <- coefs %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(term = rownames(coefs)) %>%
+    tidyr::pivot_longer(names_to = "grid_id", values_to = "estimate", -.data$term) %>%
+    dplyr::mutate(kappa = self$inner_grid[match(.data$grid_id, self$inner_grid$grid_id), "kappa"]) %>%
+    dplyr::filter(appr_in(.data$kappa, kappaSel))
+
+  return(estimates)
+
+}
+
+.predict.cv.hfr <- function(object, data, self = NULL, ...) {
+  response_var <- all.vars(self$formula)[1]
+  if (response_var %in% colnames(data)) {
+    truth <- data[, response_var]
+  } else {
+    data[, response_var] <- 1
+    truth <- NULL
+  }
+  mf <- stats::model.frame(self$formula, data)
+  x <- stats::model.matrix(self$formula, mf)
+  if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
+  pred_mat <- sapply(self$args$kappa, function(kap) stats::predict(object, x, kappa = kap))
+  if (is.null(dim(pred_mat)))
+    pred_mat <- matrix(pred_mat, nrow = 1)
+  colnames(pred_mat) <- self$inner_grid$grid_id[appr_in(self$inner_grid$kappa, self$args$kappa)]
+  pred <- pred_mat %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(truth = truth) %>%
+    tidyr::pivot_longer(-any_of("truth"), names_to = "grid_id", values_to = "prediction")
+  return(pred)
+}
+
+.fitted.cv.hfr <- function(object, self = NULL, ...) {
+  fitted <- dplyr::tibble(
+    fitted = drop(predict(object, kappa = self$args$kappa))
+  )
+  return(fitted)
+}
+
+.resid.cv.hfr <- function(object, self = NULL, ...) {
+  residuals <- dplyr::tibble(
+    residual = object$y - drop(predict(object, kappa = self$args$kappa))
+  )
+  return(residuals)
 }

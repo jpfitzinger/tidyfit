@@ -21,8 +21,8 @@
   if (!is.null(control$lambda) & model_method %in% c("lasso", "enet", "ridge", "adalasso")) {
     control$lambda <- list(control$lambda)
   }
-  if (!is.null(control$kappa_grid) & model_method == "hfr") {
-    control$kappa_grid <- list(control$kappa_grid)
+  if (!is.null(control$kappa) & model_method == "hfr") {
+    control$kappa <- list(control$kappa)
   }
   if (model_method %in% c("pcr", "plsr")) {
     if (!is.null(control[["ncomp"]])) {
