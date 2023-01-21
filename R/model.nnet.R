@@ -94,3 +94,31 @@
   invisible(self)
   
 }
+
+
+.predict.nnet <- function(object, data, self = NULL, ...) {
+  response_var <- all.vars(self$formula)[1]
+  if (response_var %in% colnames(data)) {
+    truth <- data[, response_var]
+  } else {
+    truth <- NULL
+  }
+  
+  if (self$mode == "regression") {
+    pred <- dplyr::tibble(
+      prediction = stats::predict(object, data)[,1],
+      truth = truth
+    )
+  }
+  
+  if (self$mode == "classification") {
+    pred <- stats::predict(object, data) %>%  dplyr::as_tibble() %>% 
+      dplyr::mutate(truth = truth) %>% 
+      tidyr::pivot_longer(-truth, names_to = "class", values_to = "prediction") %>%
+      dplyr::select(class, prediction, truth)
+  }
+
+  return(pred)
+}
+
+
