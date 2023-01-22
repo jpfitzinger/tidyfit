@@ -41,22 +41,19 @@ for classification models reported for each class). \emph{Calculation of feature
 }
 \examples{
 # Load data
-data <- tidyfit::Factor_Industry_Returns \%>\% 
-  dplyr::mutate(Return = Return - RF,
-                MktDiff = `Mkt-RF`) \%>\% 
-  dplyr::select(-RF, -`Mkt-RF`)
+data <- tidyfit::Factor_Industry_Returns
 
 # Stand-alone function
 fit <- m("nnet", Return ~ ., data)
 fit
 
 # Within 'regress' function
-fit <- regress(data, Return ~ ., m("nnet", decay=0.5, size = 8), 
+fit <- regress(data, Return ~ ., m("nnet", decay=0.5, size = 8),
                .mask = c("Date", "Industry"))
 coef(fit)
 
 # Within 'classify' function
-fit <- classify(iris, Species ~ ., m("nnet"))
+fit <- classify(iris, Species ~ ., m("nnet", decay=0.5, size = 8))
 coef(fit)
 
 
