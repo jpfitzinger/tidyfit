@@ -57,6 +57,7 @@
   ctr$importance <- TRUE
   var_names_map <- .names_map(colnames(data))
   data <- data.frame(data)
+  self$formula <- .fix_names(self$formula, var_names_map)
   eval_fun_ <- function(...) {
     args <- list(...)
     do.call(randomForest::randomForest, args)
@@ -105,6 +106,8 @@
 }
 
 .predict.randomForest <- function(object, data, self = NULL, ...) {
+  # sanitize names
+  data <- data.frame(data)
   response_var <- all.vars(self$formula)[1]
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]

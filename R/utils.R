@@ -1,10 +1,10 @@
 # Internal helper functions
 
 #' @importFrom purrr cross safely quietly map_dfr transpose
-#' @importFrom dplyr rename mutate select relocate any_of summarise ungroup pull group_nest row_number across
+#' @importFrom dplyr rename mutate select relocate any_of summarise ungroup pull group_nest row_number across sym
 #' @importFrom tibble enframe
 #' @importFrom tidyr unnest nest pivot_wider
-#' @importFrom stats model.frame model.matrix model.response
+#' @importFrom stats model.frame model.matrix model.response setNames
 #' @importFrom utils object.size
 #' @importFrom rlang .data
 
@@ -85,6 +85,14 @@
   names(names_vec) <- names_chk
   names_vec["(Intercept)"] <- "(Intercept)"
   return(names_vec)
+}
+
+.fix_names <- function(formula, names_map) {
+  names_map <- stats::setNames(names(names_map), names_map)
+  names_map <- lapply(names_map, dplyr::sym)
+  formula <- do.call("substitute", list(formula, names_map))
+  class(formula) <- "formula"
+  return(formula)
 }
 
 .make_model_cols <- function(df) {
