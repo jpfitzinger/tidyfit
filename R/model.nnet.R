@@ -20,16 +20,23 @@
 #' **Implementation**
 #'
 #' For \code{\link{regress}}, linear output units (\code{linout=True}) are used, while \code{\link{classify}} implements
-#' the default logic of  \code{nnet} (\code{entropy=TRUE} for 2 target classes and \code{softmax=TRUE} for more classes). 
+#' the default logic of  \code{nnet} (\code{entropy=TRUE} for 2 target classes and \code{softmax=TRUE} for more classes).
+#' 
+#' \code{coef()} does not return model coefficients, but the relative feature importance as implemented in the \code{iml} package.
+#' (\code{compare="ratio"} of \code{loss="mae"} for regression models, and \code{compare="difference"} of \code{loss="ce"} 
+#' for classification models reported for each class). *Calculation of feature importance only works for syntactic feature names.*
 #'
 #' @author Phil Holzmeister
 #'
 #' @examples
 #' # Load data
-#' data <- tidyfit::Factor_Industry_Returns
+#' data <- tidyfit::Factor_Industry_Returns %>% 
+#'   dplyr::mutate(Return = Return - RF,
+#'                 MktDiff = `Mkt-RF`) %>% 
+#'   dplyr::select(-RF, -`Mkt-RF`)
 #'
 #' # Stand-alone function
-#' fit <- m("nnet", Return ~ `Mkt-RF` + HML + SMB, data)
+#' fit <- m("nnet", Return ~ ., data)
 #' fit
 #'
 #' # Within 'regress' function
@@ -41,7 +48,6 @@
 #' fit <- classify(iris, Species ~ ., m("nnet"))
 #' coef(fit)
 #'
-#' @seealso
 #'
 #' @importFrom purrr safely quietly
 #' @importFrom stats model.frame model.matrix model.response
@@ -122,26 +128,35 @@
 }
 
 .coef.nnet <- function(object, self = NULL, ...) {
-  browser()
   response_var <- all.vars(self$formula)[1]
   mf <- stats::model.frame(self$formula, object$call$data)
-  mod <- iml::Predictor$new(object, data = mf %>% dplyr::select(-response_var), 
-                       y = mf[[response_var]])
-  imp <- iml::FeatureImp(mod, loss = "mae")
   
   if (self$mode == "regression") {
-    estimates <- dplyr::tibble(
-      term = NULL,
-      estimate = NULL
-    )
+    mod <- iml::Predictor$new(object, data = mf %>% dplyr::select(-response_var), 
+                              y = mf[[response_var]])
+    imp <- iml::FeatureImp$new(mod, loss = "mae")
+    estimates <- imp$results %>% 
+      dplyr::select(term = feature, 
+                    estimate = importance) %>% 
+      dplyr::as_tibble()
   } 
   
   if (self$mode == "classification") {
-    estimates <- dplyr::tibble(
-      term = NULL,
-      estimate = NULL,
-      class = NULL
-    )
+    # separately calculate permutation feature importance for each class
+    estimates <- purrr::map_dfr(unique(mf[[response_var]]), 
+                                function(cls) {
+      
+      mf_class <- mf %>% dplyr::filter(!!sym(response_var) == cls)
+      mod <- iml::Predictor$new(object, data = mf_class %>% dplyr::select(-response_var), 
+                         y = mf_class[[response_var]], type = "raw")
+      imp <- iml::FeatureImp$new(mod, loss = "ce", compare = "difference")
+      imp$results %>% 
+        dplyr::select(term = feature, 
+                      estimate = importance) %>%
+        dplyr::mutate(class = cls) %>% 
+        dplyr::as_tibble()
+    })
+    
   }
   
   return(estimates)
