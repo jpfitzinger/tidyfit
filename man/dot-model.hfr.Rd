@@ -20,7 +20,7 @@ Fits a hierarchical feature regression on a 'tidyFit' \code{R6} class. The funct
 \details{
 \strong{Hyperparameters:}
 \itemize{
-\item kappa_grid (\emph{proportional size of regression graph})
+\item kappa (\emph{proportional size of regression graph})
 }
 
 \strong{Important method arguments (passed to \code{\link{m}})}
@@ -31,18 +31,18 @@ The hierarchical feature regression is estimated using the \code{hfr::cv.hfr} fu
 
 Features are standardized by default with coefficients transformed to the original scale.
 
-If no hyperparameter grid is provided (\code{is.null(control$kappa_grid)}), the default is \code{seq(0, 1, by = 0.1)}.
+If no hyperparameter grid is provided (\code{is.null(control$kappa)}), the default is \code{seq(0, 1, by = 0.1)}.
 }
 \examples{
 # Load data
 data <- tidyfit::Factor_Industry_Returns
 
 # Stand-alone function
-fit <- m("hfr", Return ~ ., data, kappa_grid = 0.5)
+fit <- m("hfr", Return ~ ., data, kappa = 0.5)
 fit
 
 # Within 'regress' function
-fit <- regress(data, Return ~ ., m("hfr", kappa_grid = c(0.1, 0.5)),
+fit <- regress(data, Return ~ ., m("hfr", kappa = c(0.1, 0.5)),
                .mask = c("Date", "Industry"))
 coef(fit)
 

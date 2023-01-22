@@ -24,7 +24,10 @@
 #'
 #' @export
 
-predict.tidyfit.models <- function(object, newdata, ..., .keep_grid_id = FALSE) {
+predict.tidyfit.models <- function(object,
+                                   newdata,
+                                   ...,
+                                   .keep_grid_id = FALSE) {
 
   gr_vars <- attr(object, "structure")$groups
   .mask <- attr(object, "structure")$mask
@@ -55,7 +58,7 @@ predict.tidyfit.models <- function(object, newdata, ..., .keep_grid_id = FALSE) 
     })
 
   if ("grid_id" %in% colnames(out)) {
-    out <- dplyr::select(out, -.data$grid_id_)
+    out <- dplyr::select(out, - "grid_id_")
   } else {
     out <- dplyr::rename(out, grid_id = .data$grid_id_)
   }
@@ -69,9 +72,9 @@ predict.tidyfit.models <- function(object, newdata, ..., .keep_grid_id = FALSE) 
     dplyr::mutate(nids = length(unique(.data$grid_id)))
 
   if (all(out$nids==1) & !.keep_grid_id) {
-    out <- dplyr::select(out, -.data$grid_id)
+    out <- dplyr::select(out, - "grid_id")
   }
-  out <- dplyr::select(out, -.data$nids)
+  out <- dplyr::select(out, - "nids")
 
   return(out)
 

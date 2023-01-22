@@ -70,15 +70,15 @@ coef.tidyfit.models <- function(
       dplyr::do(interval = .make_rsample_bootstraps(.)) %>%
       tidyr::unnest(.data$interval)
     out <- out %>%
-      dplyr::select(-.data$estimate, -.data$slice_id) %>%
+      dplyr::select(- "estimate", - "slice_id") %>%
       dplyr::distinct() %>%
       dplyr::left_join(intervals, by = c(gr_vars, "model", "grid_id", "term"))
   }
 
   if (all(out$nids==1) & !.keep_grid_id) {
-    out <- dplyr::select(out, -.data$grid_id)
+    out <- dplyr::select(out, - "grid_id")
   }
-  out <- dplyr::select(out, -.data$nids)
+  out <- dplyr::select(out, - "nids")
 
   col_ord <- c(gr_vars, "model", "term", "class", "estimate", "grid_id", "slice_id")
   out <- out %>%

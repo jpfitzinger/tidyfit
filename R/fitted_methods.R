@@ -71,14 +71,6 @@
   return(fitted)
 }
 
-.fitted.cv.hfr <- function(object, self = NULL, ...) {
-  fitted <- dplyr::tibble(
-    fitted = drop(predict(object, kappa = self$args$kappa_grid))
-  )
-  return(fitted)
-
-}
-
 .fitted.bma <- function(object, ...) {
   fitted <- dplyr::tibble(
     fitted = predict(object)

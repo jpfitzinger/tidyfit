@@ -3,14 +3,14 @@
                           .mask, .weights, gr_vars) {
   if (!.return_slices & .cv == "none") {
     df <- df %>%
-      dplyr::select(-.data$slice_id)
+      dplyr::select(-"slice_id")
   }
 
   if (.cv != "none") {
     # Select optimal hyperparameter setting
     df_no_cv <- df %>%
       dplyr::filter(!sapply(df$model_object, function(mod) mod$cv)) %>%
-      dplyr::select(-.data$slice_id)
+      dplyr::select(-"slice_id")
 
     df <- df %>%
       dplyr::filter(sapply(df$model_object, function(mod) mod$cv))
@@ -29,24 +29,24 @@
       if (!all(is.na(df_slices$metric))) {
         df_slices <- df_slices %>%
           dplyr::group_by(.data$model, .data$grid_id, .add = TRUE) %>%
-          dplyr::mutate(metric = mean(.data$metric)) %>%
+          dplyr::mutate(metric = mean(.data$metric, na.rm = TRUE)) %>%
           dplyr::ungroup(.data$grid_id) %>%
-          dplyr::filter(.data$metric == min(.data$metric)) %>%
+          dplyr::filter(.data$metric == min(.data$metric, na.rm = TRUE)) %>%
           dplyr::filter(.data$grid_id == unique(.data$grid_id)[1])
       }
 
       if (.return_slices) {
         df <- df_slices %>%
           dplyr::bind_rows(df_no_cv) %>%
-          dplyr::select(-.data$metric)
+          dplyr::select(-"metric")
       } else {
         df <- df_slices %>%
           dplyr::ungroup() %>%
-          dplyr::select(!!gr_vars, .data$grid_id, .data$model) %>%
+          dplyr::select(!!gr_vars, "grid_id", "model") %>%
           dplyr::distinct() %>%
           dplyr::left_join(df %>% dplyr::ungroup() %>% dplyr::filter(.data$slice_id == "FULL"), by = c(gr_vars, "grid_id", "model")) %>%
           dplyr::bind_rows(df_no_cv) %>%
-          dplyr::select(-.data$metric, -.data$slice_id)
+          dplyr::select(-"metric", -"slice_id")
       }
     }
   }

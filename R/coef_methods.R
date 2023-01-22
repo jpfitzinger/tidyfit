@@ -180,21 +180,6 @@
   return(estimates)
 }
 
-.coef.cv.hfr <- function(object, self = NULL, ...) {
-
-  coefs <- stats::coef(object)
-  colnames(coefs) <- self$inner_grid$grid_id
-  kappa_gridSel <- self$args$kappa_grid
-  estimates <- coefs %>%
-    dplyr::as_tibble() %>%
-    dplyr::mutate(term = rownames(coefs)) %>%
-    tidyr::pivot_longer(names_to = "grid_id", values_to = "estimate", -.data$term) %>%
-    dplyr::filter(appr_in(self$inner_grid[match(.data$grid_id, self$inner_grid$grid_id), "kappa_grid"], kappa_gridSel))
-
-  return(estimates)
-
-}
-
 .coef.bma <- function(object, ...) {
   raw_estimates <- coef(object, include.constant = TRUE)
   estimates <- dplyr::tibble(
