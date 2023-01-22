@@ -61,7 +61,7 @@ fit <- data_trn %>%
            SVM = m("svm"),
            `Random Forest` = m("rf"),
            `Least Squares` = m("ridge", lambda = 1e-5), 
-           `Neural Net` = m("nnet", size=10, maxit = 200, decay=0.1),
+           `Neural Net` = m("nnet", size = 10, maxit = 200, decay = 0.1),
            .cv = "vfold_cv")
 
 pred <- fit %>% 
@@ -81,7 +81,8 @@ metrics <- pred %>%
   yardstick::mn_log_loss(truth, setosa:virginica)
 
 metrics %>% 
-  mutate(model = str_wrap(model, 11)) %>% 
+  arrange(desc(.estimate)) %>%
+  mutate(model = as_factor(str_wrap(model, 11))) %>%
   ggplot(aes(model, .estimate)) +
   geom_col(fill = "darkblue") +
   theme_bw() +

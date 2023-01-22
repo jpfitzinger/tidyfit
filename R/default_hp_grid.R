@@ -43,10 +43,10 @@
   }
   if (model_method == "nnet") {
     if (!"size" %in% args) {
-      grid$size <- c(10, 25, by = 5)
+      grid$size <- c(10, 30, by = 10)
     }
     if (!"decay" %in% args) {
-      grid$decay <- c(0, 0.3, 0.6)
+      grid$decay <- c(0, 0.1, 0.5)
     }
     if (!"maxit" %in% args) {
       grid$maxit <- c(100, 200)
