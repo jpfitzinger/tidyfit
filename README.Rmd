@@ -60,15 +60,27 @@ All 3 of these functions return a `tidyfit.models` frame, which is a data frame 
 
 [See the flowchart](https://tidyfit.residualmetrics.com/articles/Flowchart.html)
 
-The basic usage is as follows:
+To illustrate basic usage, suppose we would like to fit a financial factor regression for 10 industries with exponential weighting, comparing a WLS and a weighted LASSO regression:
 
 ```{r, eval=F}
-regress(
-  .data, 
-  formula = y ~ x1 + x2, 
-  mod1 = m(<args for underlying method>), mod2 = m(), ...,   # Pass multiple model wrappers
-  .cv = "vfold_cv", .weights = "weight_col"                  # Examples of additional settings
-)
+progressr::handlers(global=TRUE)
+
+tidyfit::Factor_Industry_Returns %>% 
+  group_by(Industry) %>%                       # Ensures that a model is fitted for each industry
+  mutate(Weight = 0.96^seq(n(), 1)) %>%        # Exponential weights
+  
+  # 'regress' allows flexible standardized regression analysis in a single line of code
+  regress(
+    Return ~ .,                                # Uses normal formula syntax
+    m("lasso"),                                # LASSO regression wrapper, 'lambda' grid set to default
+    m("lm"),                                   # OLS wrapper (can add as many wrappers as necessary here)
+    .cv = "initial_time_split",                # Cross-validation method for optimal 'lambda' in LASSO
+    .mask = "Date",                            # 'Date' columns should be excluded
+    .weights = "Weight"                        # Specifies the weights column
+  ) -> models_df
+
+# Get coefficients frame
+coef(models_df)
 ```
 
 The syntax is identical for `classify`.
