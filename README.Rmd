@@ -58,7 +58,7 @@ library(tidyfit)
 
 All 3 of these functions return a `tidyfit.models` frame, which is a data frame containing information about fitted regression and classification models. `regress` and `classify` perform regression and classification on tidy data. The functions ingest a `tibble`, prepare input data for the models by splitting groups, partitioning cross validation slices and handling any necessary adjustments and transformations. The data is ultimately passed to the model wrapper `m()` which fits the models. 
 
-[See the flowchart](https://tidyfit.unchartedml.com/articles/Flowchart.html)
+[See the flowchart](https://tidyfit.residualmetrics.com/articles/Flowchart.html)
 
 The basic usage is as follows:
 
@@ -126,14 +126,14 @@ It is important to note that the above list is not complete, since some of the m
 
 In this section, a minimal workflow is used to demonstrate how the package works. For more detailed guides of specialized topics, or simply for further reading, follow these links:
 
-  - [The flowchart](https://tidyfit.unchartedml.com/articles/Flowchart.html)
-  - [Regularized regression](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html) (Boston house price data)
-  - [Multinomial classification](https://tidyfit.unchartedml.com/articles/Multinomial_Classification.html) (iris data)
-  - [Feature Selection](https://tidyfit.unchartedml.com/articles/Feature_Selection.html) (macroeconomic data)
-  - [Accessing fitted models](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
-  - [Rolling window regression for time series](https://tidyfit.unchartedml.com/articles/Rolling_Window_Time_Series_Regression.html) (factor data)
-  - [Time-varying parameters](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html) (factor data)
-  - [Bootstrap confidence intervals](https://tidyfit.unchartedml.com/articles/Bootstrapping_Confidence_Intervals.html)
+  - [The flowchart](https://tidyfit.residualmetrics.com/articles/Flowchart.html)
+  - [Regularized regression](https://tidyfit.residualmetrics.com/articles/Predicting_Boston_House_Prices.html) (Boston house price data)
+  - [Multinomial classification](https://tidyfit.residualmetrics.com/articles/Multinomial_Classification.html) (iris data)
+  - [Feature Selection](https://tidyfit.residualmetrics.com/articles/Feature_Selection.html) (macroeconomic data)
+  - [Accessing fitted models](https://tidyfit.residualmetrics.com/articles/Accessing_Fitted_Model_Objects.html)
+  - [Rolling window regression for time series](https://tidyfit.residualmetrics.com/articles/Rolling_Window_Time_Series_Regression.html) (factor data)
+  - [Time-varying parameters](https://tidyfit.residualmetrics.com/articles/Time-varying_parameters_vs_rolling_windows.html) (factor data)
+  - [Bootstrap confidence intervals](https://tidyfit.residualmetrics.com/articles/Bootstrapping_Confidence_Intervals.html)
 
 `tidyfit` includes a data set of financial Fama-French factor returns freely available [here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html). The data set includes monthly industry returns for 10 industries, as well as monthly factor returns for 5 factors:
 
@@ -198,7 +198,7 @@ The `tidyfit.models` frame can be used to access additional information. Specifi
   3. Access a data frame of estimated parameters
   4. Use additional generics
 
-The **fitted tidyFit models** are stored as an `R6` class in the `model_object` column and can be addressed directly with generics such as `coef` or `summary`. The underlying object (e.g. an `lm` class fitted model) is given in `...$object` (see [here](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html) for another example):
+The **fitted tidyFit models** are stored as an `R6` class in the `model_object` column and can be addressed directly with generics such as `coef` or `summary`. The underlying object (e.g. an `lm` class fitted model) is given in `...$object` (see [here](https://tidyfit.residualmetrics.com/articles/Accessing_Fitted_Model_Objects.html) for another example):
 
 ```{r}
 subset_mod_frame %>% 
@@ -241,4 +241,4 @@ model_frame %>%
 
 The ElasticNet performs a little better (unsurprising really, given the small data set).
 
-A **more detailed regression analysis of Boston house price data** using a panel of regularized regression estimators can be found [here](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html).
+A **more detailed regression analysis of Boston house price data** using a panel of regularized regression estimators can be found [here](https://tidyfit.residualmetrics.com/articles/Predicting_Boston_House_Prices.html).
