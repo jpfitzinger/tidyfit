@@ -5,7 +5,7 @@
 ## tidyfit 0.2.0
 
 - The release adds multinomial classification to the package:
-  - Automatic detect classes, check if method can handle multinomial classification and fit appropriately
+  - Automatically detect classes, check if method can handle multinomial classification and fit appropriately
   - Coefficients returned for each class
   - Prediction and cross validation handle multi-class results
 - More efficient and flexible handling of prediction and performance evaluation for cross validation
@@ -55,4 +55,4 @@ This version adds several new methods and enhances functionality & documentation
 
 ## tidyfit 0.6.2 (dev)
 
-- Bugfix: add 'index' and 'group' columns for 'sliding_index' cv and 'group_*' cv methods to mask vector
+- Bugfix: add 'index' and 'group' columns for 'sliding_index' cv and 'group_*' cv methods to mask vector. This ensures that the columns are automatically removed from the regression.
