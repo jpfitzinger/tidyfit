@@ -52,3 +52,7 @@ This version adds several new methods and enhances functionality & documentation
 - Change method (.model.hfr) for compatibility with upstream package updates
 - Bugfix: unnest.tidyfit.models missing struc
 - Minor adjustments in response to upstream package deprecation warnings
+
+## tidyfit 0.6.2 (dev)
+
+- Bugfix: add 'index' and 'group' columns for 'sliding_index' cv and 'group_*' cv methods to mask vector

@@ -5,6 +5,10 @@
   data <- row$data$mf
   wts <- row$data$wts
   cv <- row$data$cv
+  mask <- row$data$mask
+
+  data <- data %>%
+    dplyr::select(-!!mask)
 
   if (!is.null(cv) & row$model_object$cv) {
     cv_res <- furrr::future_pmap_dfr(cv, function(splits, id) {
@@ -13,8 +17,10 @@
         grid_id = row$grid_id,
         model_object = list(row$model_object$clone())
       )
-      df_train <- rsample::training(splits)
-      df_test <- rsample::testing(splits)
+      df_train <- rsample::training(splits) %>%
+        dplyr::select(-!!mask)
+      df_test <- rsample::testing(splits) %>%
+        dplyr::select(-!!mask)
       train_samples <- splits$in_id
       test_samples <- rsample::complement(splits)
       res_row$model_object[[1]]$set_args(weights = wts[train_samples])
