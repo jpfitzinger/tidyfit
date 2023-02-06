@@ -40,7 +40,8 @@
   }
 
   control <- .func_to_list(control)
-  grid <- purrr::cross(control)
+  grid <- tidyr::expand_grid(!!! control) %>%
+    purrr::transpose()
   if (length(grid)==0) grid <- list(grid)
   return(grid)
 
