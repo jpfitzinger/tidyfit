@@ -49,7 +49,7 @@
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
   } else {
-    data[, response_var] <- NA
+    data[, response_var] <- 0
     truth <- NULL
   }
   if (!is.null(self$fit_info$names_map)) data <- data.frame(stats::model.matrix(self$formula, data))
