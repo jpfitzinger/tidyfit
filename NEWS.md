@@ -56,3 +56,6 @@ This version adds several new methods and enhances functionality & documentation
 ## tidyfit 0.6.2 (dev)
 
 - Bugfix: add 'index' and 'group' columns for 'sliding_index' cv and 'group_*' cv methods to mask vector. This ensures that the columns are automatically removed from the regression.
+- Add resid() method for BMA regression
+- Minor adjustments in response to upstream package deprecation warnings
+- Unit testing with testthat
