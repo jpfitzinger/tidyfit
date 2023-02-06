@@ -16,6 +16,13 @@
   return(residuals)
 }
 
+.resid.bma <- function(object, self = NULL, ...) {
+  residuals <- dplyr::tibble(
+    residual = object$arguments$X.data[,1] - predict(object)
+  )
+  return(residuals)
+}
+
 .resid.mvr <- function(object, self = NULL, ...) {
   residuals <- dplyr::tibble(
     residual = drop(resid(object)[,,self$args$ncomp])
