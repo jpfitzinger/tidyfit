@@ -60,7 +60,7 @@ predict.tidyfit.models <- function(object,
   if ("grid_id" %in% colnames(out)) {
     out <- dplyr::select(out, - "grid_id_")
   } else {
-    out <- dplyr::rename(out, grid_id = .data$grid_id_)
+    out <- dplyr::rename(out, grid_id = "grid_id_")
   }
 
   col_ord <- c(gr_vars, "model", "grid_id", "slice_id", "class", "prediction", "truth")

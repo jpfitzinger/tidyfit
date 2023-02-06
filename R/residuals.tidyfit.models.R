@@ -37,7 +37,7 @@ residuals.tidyfit.models <- function(object, ...) {
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
     dplyr::mutate(residual = purrr::map(.data$model_object, ~.$resid())) %>%
     dplyr::select(- "model_object") %>%
-    tidyr::unnest(.data$residual)
+    tidyr::unnest("residual")
 
   col_ord <- c(gr_vars, "model", "grid_id", "slice_id", "class", "residual")
   out <- out %>%

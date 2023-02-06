@@ -33,11 +33,11 @@
       tidyr::gather("grid_id", "prediction", -dplyr::any_of(c("truth", "row_n")))
   }
   pred <- pred %>%
-    dplyr::select(-.data$row_n)
+    dplyr::select(-"row_n")
   if (length(class_vals)==2) {
     pred <- pred %>%
       dplyr::filter(.data$class == sort(class_vals)[2]) %>%
-      dplyr::select(-.data$class)
+      dplyr::select(-"class")
   }
   return(pred)
 }
@@ -205,7 +205,7 @@
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
   } else {
-    data[, response_var] <- NA
+    data[, response_var] <- 0
     truth <- NULL
   }
   mf <- stats::model.frame(self$formula, data)

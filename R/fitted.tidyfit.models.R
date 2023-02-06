@@ -31,7 +31,7 @@ fitted.tidyfit.models <- function(object, ...) {
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
     dplyr::mutate(fitted = purrr::map(.data$model_object, ~.$fitted())) %>%
     dplyr::select(- "model_object") %>%
-    tidyr::unnest(.data$fitted)
+    tidyr::unnest("fitted")
 
   col_ord <- c(gr_vars, "model", "grid_id", "slice_id", "class", "fitted")
   out <- out %>%
