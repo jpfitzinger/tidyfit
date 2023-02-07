@@ -446,7 +446,7 @@ yes
 no
 </td>
 </tr>
-<tr grouplength="3">
+<tr grouplength="5">
 <td colspan="5" style="border-bottom: 1px solid;">
 <strong>Bayesian regression</strong>
 </td>
@@ -466,6 +466,40 @@ yes
 </td>
 <td style="text-align:center;">
 yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Bayesian Ridge
+</td>
+<td style="text-align:center;">
+bridge
+</td>
+<td style="text-align:center;">
+`monomvn`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Bayesian Lasso
+</td>
+<td style="text-align:center;">
+blasso
+</td>
+<td style="text-align:center;">
+`monomvn`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
 </td>
 </tr>
 <tr>
