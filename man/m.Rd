@@ -74,6 +74,10 @@ The function can fit various regression or classification models and returns the
 
 \code{"bayes"} performs a Bayesian generalized regression or classification using \code{arm::bayesglm}. See \code{\link{.model.bayes}} for details.
 
+\code{"bridge"} performs a Bayesian ridge regression using \code{monomvn::bridge}. See \code{\link{.model.bridge}} for details.
+
+\code{"blasso"} performs a Bayesian Lasso regression using \code{monomvn::blasso}. See \code{\link{.model.blasso}} for details.
+
 \code{"bma"} performs a Bayesian model averaging regression using \code{BMS::bms}. See \code{\link{.model.bma}} for details.
 
 \code{"tvp"} performs a Bayesian time-varying parameter regression using \code{shrinkTVP::shrinkTVP}. See \code{\link{.model.tvp}} for details.
