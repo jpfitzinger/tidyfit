@@ -15,6 +15,7 @@
 
   if (length(dim(pred_mat))==3) {
     class_vals <- dimnames(pred_mat)[[2]]
+    dimnames(pred_mat)[[2]]  <- class_vals <- self$fit_info$class_names_map[class_vals]
   } else {
     class_vals <- NULL
   }

@@ -13,6 +13,7 @@
   dimnames(pred_mat)[[length(dim(pred_mat))]] <- self$inner_grid$grid_id[appr_in(self$inner_grid$lambda, self$args$lambda)]
   if (length(dim(pred_mat))==3) {
     class_vals <- dimnames(pred_mat)[[2]]
+    dimnames(pred_mat)[[2]]  <- class_vals <- self$fit_info$class_names_map[class_vals]
   } else {
     class_vals <- NULL
   }
