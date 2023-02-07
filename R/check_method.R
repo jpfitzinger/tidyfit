@@ -20,11 +20,11 @@
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor",
-                "chisq", "rf", "bridge"),
+                "chisq", "rf", "bridge", "blasso"),
     message = "'%s' is not a valid method. See '?m' for details"
   ),
   cv = list(
-    methods = c("lasso", "ridge", "enet", "adalasso", "pcr", "plsr", "hfr", "boost", "svm", "rf", "bridge"),
+    methods = c("lasso", "ridge", "enet", "adalasso", "pcr", "plsr", "hfr", "boost", "svm", "rf", "bridge", "blasso"),
     message = "'%s' has no hyperparameters. Use '.force_cv = TRUE' to perform a cross validation"
   ),
   uses_index = list(
@@ -34,7 +34,7 @@
   regress = list(
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
-                "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor", "rf", "bridge"),
+                "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor", "rf", "bridge", "blasso"),
     message = "'%s' cannot be used for regression"
   ),
   classify = list(

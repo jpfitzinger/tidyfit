@@ -4,41 +4,37 @@
 #'
 #' @details **Hyperparameters:**
 #'
-#' - \code{lambda} *(L2 penalty)*
+#' *None. Cross validation not applicable.*
 #'
 #' **Important method arguments (passed to \code{\link{m}})**
 #'
-#' The ridge regression is estimated using \code{glmnet::glmnet} with \code{alpha = 0}. See \code{?glmnet} for more details. For classification pass \code{family = "binomial"} to \code{...} in \code{\link{m}} or use \code{\link{classify}}.
+#' The function provides a wrapper for \code{monomvn::bridge}. See \code{?bridge} for more details.
 #'
 #' **Implementation**
 #'
-#' If the response variable contains more than 2 classes, a multinomial response is used automatically.
-#'
 #' Features are standardized by default with coefficients transformed to the original scale.
-#'
-#' If no hyperparameter grid is passed (\code{is.null(control$lambda)}), \code{dials::grid_regular()} is used to determine a sensible default grid. The grid size is 100. Note that the grid selection tools provided by \code{glmnet::glmnet} cannot be used (e.g. \code{dfmax}). This is to guarantee identical grids across groups in the tibble.
 #'
 #' @param self a tidyFit R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
 #' @return A fitted tidyFit class model.
 #' @author Johann Pfitzinger
 #' @references
-#' Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software, 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/.
+#' Gramacy RB, (qpgen2/quadprog) wFcfCMaubBAT (2023). _monomvn: Estimation for MVN and Student-t Data with Monotone Missingness_. R package version 1.9-17, <https://CRAN.R-project.org/package=monomvn>.
 #'
 #' @examples
 #' # Load data
 #' data <- tidyfit::Factor_Industry_Returns
 #'
 #' # Stand-alone function
-#' fit <- m("ridge", Return ~ ., data, lambda = 0.5)
+#' fit <- m("bridge", Return ~ ., data)
 #' fit
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("bridge", lambda = c(0.1, 0.5)),
+#' fit <- regress(data, Return ~ ., m("bridge"),
 #'                .mask = c("Date", "Industry"))
 #' coef(fit)
 #'
-#' @seealso \code{\link{.model.lasso}}, \code{\link{.model.adalasso}}, \code{\link{.model.enet}} and \code{\link{m}} methods
+#' @seealso \code{\link{.model.ridge}}, \code{\link{.model.blasso}} and \code{\link{m}} methods
 #'
 #' @importFrom purrr safely quietly
 #' @importFrom stats model.frame model.matrix model.response
@@ -72,63 +68,4 @@
   self$fit_info <- list(var_names = colnames(x))
   invisible(self)
 
-}
-.coef.blasso <- function(object, self = NULL, ...) {
-  burnin <- c(1:round(T/2))
-  beta_int <- apply(object$beta[-burnin,], 2, quantile, c(0.05, 0.95))
-  beta_mean <- apply(object$beta[-burnin,], 2, mean)
-  mu_int <- quantile(object$mu[-burnin], c(0.05, 0.95))
-  mu_mean <- mean(object$mu[-burnin])
-  estimates <- tidyr::tibble(
-    term = c("(Intercept)", self$fit_info$var_names),
-    estimate = c(mu_mean, beta_mean),
-    upper = c(mu_int[2], beta_int[2,]),
-    lower = c(mu_int[1], beta_int[1,])
-  )
-  return(estimates)
-}
-.predict.blasso <- function(object, data, self, ...) {
-  response_var <- all.vars(self$formula)[1]
-  if (response_var %in% colnames(data)) {
-    truth <- data[, response_var]
-  } else {
-    data[, response_var] <- 0
-    truth <- NULL
-  }
-  burnin <- c(1:round(T/2))
-  mf <- stats::model.frame(self$formula, data)
-  x <- stats::model.matrix(self$formula, mf)
-  prediction <- x %*% t(cbind(object$mu[-burnin], object$beta[-burnin,]))
-  pred <- dplyr::tibble(
-    prediction = rowMeans(prediction),
-    truth = truth
-  )
-  return(pred)
-}
-.fitted.blasso <- function(object, self, ...) {
-  burnin <- c(1:round(T/2))
-  response_var <- all.vars(self$formula)[1]
-  data <- as.data.frame(object$X)
-  data[, response_var] <- object$y
-  mf <- stats::model.frame(self$formula, data)
-  x <- stats::model.matrix(self$formula, mf)
-  prediction <- x %*% t(cbind(object$mu[-burnin], object$beta[-burnin,]))
-  fit <- dplyr::tibble(
-    fitted = rowMeans(prediction)
-  )
-  return(fit)
-}
-.resid.blasso <- function(object, self, ...) {
-  burnin <- c(1:round(T/2))
-  response_var <- all.vars(self$formula)[1]
-  data <- as.data.frame(object$X)
-  data[, response_var] <- object$y
-  mf <- stats::model.frame(self$formula, data)
-  x <- stats::model.matrix(self$formula, mf)
-  y <- stats::model.response(mf)
-  prediction <- x %*% t(cbind(object$mu[-burnin], object$beta[-burnin,]))
-  residual <- dplyr::tibble(
-    residual = y - rowMeans(prediction)
-  )
-  return(residual)
 }
