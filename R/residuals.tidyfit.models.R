@@ -26,6 +26,8 @@ residuals.tidyfit.models <- function(object, ...) {
   .mask <- attr(object, "structure")$mask
   .weights <- attr(object, "structure")$weights
 
+  object <- .warn_and_remove_errors(object)
+
   # Check mode
   modes <- object$model_object %>%
     purrr::map(~.$mode)

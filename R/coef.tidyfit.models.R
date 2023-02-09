@@ -41,6 +41,8 @@ coef.tidyfit.models <- function(
     .bootstrap_alpha = 0.05,
     .keep_grid_id = FALSE) {
 
+  object <- .warn_and_remove_errors(object)
+
   sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
   gr_vars <- attr(object, "structure")$groups
   out <- object %>%

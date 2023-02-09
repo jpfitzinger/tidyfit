@@ -147,3 +147,13 @@ appr_in <- function(a, b) {
   return(rescaled_coefs)
 
 }
+
+.warn_and_remove_errors <- function(object) {
+  object <- object %>%
+    dplyr::filter(as.logical(map(.data$model_object, function(obj) {
+      if (is.null(obj$object))
+        warning(paste0("No model fitted for '", obj$method, "'. Check errors."))
+      return(!is.null(obj$object))
+    })))
+  return(object)
+}

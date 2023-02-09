@@ -33,6 +33,8 @@ predict.tidyfit.models <- function(object,
   .mask <- attr(object, "structure")$mask
   .weights <- attr(object, "structure")$weights
 
+  object <- .warn_and_remove_errors(object)
+
   newdata <- newdata %>%
     dplyr::select(-any_of(c(.mask, .weights))) %>%
     tidyr::nest(newdata = -any_of(gr_vars))
