@@ -56,6 +56,8 @@
     warning("bma cannot handle weights, weights are ignored")
   }
 
+  self$set_args(user.int = FALSE, overwrite = FALSE)
+
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
   y <- stats::model.response(mf)
