@@ -113,9 +113,9 @@
     truth <- NULL
   }
   if (self$mode == "regression") {
-    pred_mat <- stats::predict(object, newdata = data)
+    pred_mat <- stats::predict(object, newdata = data.frame(data))
   } else {
-    pred_mat <- stats::predict(object, newdata = data, type = "prob")
+    pred_mat <- stats::predict(object, newdata = data.frame(data), type = "prob")
     if (ncol(pred_mat) > 2) {
       pred <- pred_mat %>%
         dplyr::as_tibble() %>%
