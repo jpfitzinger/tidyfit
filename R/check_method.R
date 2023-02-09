@@ -24,7 +24,7 @@
     message = "'%s' is not a valid method. See '?m' for details"
   ),
   cv = list(
-    methods = c("lasso", "ridge", "enet", "adalasso", "pcr", "plsr", "hfr", "boost", "svm", "rf", "bridge", "blasso"),
+    methods = c("lasso", "ridge", "enet", "adalasso", "pcr", "plsr", "hfr", "boost", "svm", "rf"),
     message = "'%s' has no hyperparameters. Use '.force_cv = TRUE' to perform a cross validation"
   ),
   uses_index = list(
