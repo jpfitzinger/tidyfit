@@ -60,3 +60,4 @@ This version adds several new methods and enhances functionality & documentation
 - Add resid() method for BMA regression
 - Minor adjustments in response to upstream package deprecation warnings
 - Unit testing with testthat
+- Improved error handling
