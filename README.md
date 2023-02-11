@@ -53,9 +53,9 @@ library(tidyfit)
 
 `tidyfit` includes 3 deceptively simple functions:
 
--   `regress()`
--   `classify()`
--   `m()`
+- `regress()`
+- `classify()`
+- `m()`
 
 All 3 of these functions return a `tidyfit.models` frame, which is a
 data frame containing information about fitted regression and
@@ -67,17 +67,31 @@ transformations. The data is ultimately passed to the model wrapper
 `m()` which fits the models.
 
 [See the
-flowchart](https://tidyfit.unchartedml.com/articles/Flowchart.html)
+flowchart](https://tidyfit.residualmetrics.com/articles/Flowchart.html)
 
-The basic usage is as follows:
+To illustrate basic usage, suppose we would like to fit a financial
+factor regression for 10 industries with exponential weighting,
+comparing a WLS and a weighted LASSO regression:
 
 ``` r
-regress(
-  .data, 
-  formula = y ~ x1 + x2, 
-  mod1 = m(<args for underlying method>), mod2 = m(), ...,   # Pass multiple model wrappers
-  .cv = "vfold_cv", .weights = "weight_col"                  # Examples of additional settings
-)
+progressr::handlers(global=TRUE)
+
+tidyfit::Factor_Industry_Returns %>% 
+  group_by(Industry) %>%                       # Ensures that a model is fitted for each industry
+  mutate(Weight = 0.96^seq(n(), 1)) %>%        # Exponential weights
+  
+  # 'regress' allows flexible standardized regression analysis in a single line of code
+  regress(
+    Return ~ .,                                # Uses normal formula syntax
+    m("lasso"),                                # LASSO regression wrapper, 'lambda' grid set to default
+    m("lm"),                                   # OLS wrapper (can add as many wrappers as necessary here)
+    .cv = "initial_time_split",                # Cross-validation method for optimal 'lambda' in LASSO
+    .mask = "Date",                            # 'Date' columns should be excluded
+    .weights = "Weight"                        # Specifies the weights column
+  ) -> models_df
+
+# Get coefficients frame
+coef(models_df)
 ```
 
 The syntax is identical for `classify`.
@@ -98,14 +112,14 @@ An important feature of `m()` is that all arguments can be passed as
 vectors, allowing generalized hyperparameter tuning or scenario analysis
 for any method:
 
--   Passing a hyperparameter grid:
-    `m("lasso", lambda = seq(0, 1, by = 0.1))`
--   Different algorithms for robust regression:
-    `m("robust", method = c("M", "MM"))`
--   Forward vs. backward selection:
-    `m("subset", method = c("forward", "backward"))`
--   Logit vs. Probit models:
-    `m("glm", family = list(binomial(link="logit"), binomial(link="probit")))`
+- Passing a hyperparameter grid:
+  `m("lasso", lambda = seq(0, 1, by = 0.1))`
+- Different algorithms for robust regression:
+  `m("robust", method = c("M", "MM"))`
+- Forward vs. backward selection:
+  `m("subset", method = c("forward", "backward"))`
+- Logit vs. Probit models:
+  `m("glm", family = list(binomial(link="logit"), binomial(link="probit")))`
 
 Arguments that are meant to be vectors (e.g. weights) are recognized by
 the function and not interpreted as grids.
@@ -432,7 +446,7 @@ yes
 no
 </td>
 </tr>
-<tr grouplength="3">
+<tr grouplength="5">
 <td colspan="5" style="border-bottom: 1px solid;">
 <strong>Bayesian regression</strong>
 </td>
@@ -452,6 +466,40 @@ yes
 </td>
 <td style="text-align:center;">
 yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Bayesian Ridge
+</td>
+<td style="text-align:center;">
+bridge
+</td>
+<td style="text-align:center;">
+`monomvn`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Bayesian Lasso
+</td>
+<td style="text-align:center;">
+blasso
+</td>
+<td style="text-align:center;">
+`monomvn`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
 </td>
 </tr>
 <tr>
@@ -622,27 +670,27 @@ In this section, a minimal workflow is used to demonstrate how the
 package works. For more detailed guides of specialized topics, or simply
 for further reading, follow these links:
 
--   [The
-    flowchart](https://tidyfit.unchartedml.com/articles/Flowchart.html)
--   [Regularized
-    regression](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html)
-    (Boston house price data)
--   [Multinomial
-    classification](https://tidyfit.unchartedml.com/articles/Multinomial_Classification.html)
-    (iris data)
--   [Feature
-    Selection](https://tidyfit.unchartedml.com/articles/Feature_Selection.html)
-    (macroeconomic data)
--   [Accessing fitted
-    models](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
--   [Rolling window regression for time
-    series](https://tidyfit.unchartedml.com/articles/Rolling_Window_Time_Series_Regression.html)
-    (factor data)
--   [Time-varying
-    parameters](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html)
-    (factor data)
--   [Bootstrap confidence
-    intervals](https://tidyfit.unchartedml.com/articles/Bootstrapping_Confidence_Intervals.html)
+- [The
+  flowchart](https://tidyfit.residualmetrics.com/articles/Flowchart.html)
+- [Regularized
+  regression](https://tidyfit.residualmetrics.com/articles/Predicting_Boston_House_Prices.html)
+  (Boston house price data)
+- [Multinomial
+  classification](https://tidyfit.residualmetrics.com/articles/Multinomial_Classification.html)
+  (iris data)
+- [Feature
+  Selection](https://tidyfit.residualmetrics.com/articles/Feature_Selection.html)
+  (macroeconomic data)
+- [Accessing fitted
+  models](https://tidyfit.residualmetrics.com/articles/Accessing_Fitted_Model_Objects.html)
+- [Rolling window regression for time
+  series](https://tidyfit.residualmetrics.com/articles/Rolling_Window_Time_Series_Regression.html)
+  (factor data)
+- [Time-varying
+  parameters](https://tidyfit.residualmetrics.com/articles/Time-varying_parameters_vs_rolling_windows.html)
+  (factor data)
+- [Bootstrap confidence
+  intervals](https://tidyfit.residualmetrics.com/articles/Bootstrapping_Confidence_Intervals.html)
 
 `tidyfit` includes a data set of financial Fama-French factor returns
 freely available
@@ -765,7 +813,7 @@ The **fitted tidyFit models** are stored as an `R6` class in the
 `model_object` column and can be addressed directly with generics such
 as `coef` or `summary`. The underlying object (e.g. an `lm` class fitted
 model) is given in `...$object` (see
-[here](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
+[here](https://tidyfit.residualmetrics.com/articles/Accessing_Fitted_Model_Objects.html)
 for another example):
 
 ``` r
@@ -876,4 +924,4 @@ small data set).
 
 A **more detailed regression analysis of Boston house price data** using
 a panel of regularized regression estimators can be found
-[here](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html).
+[here](https://tidyfit.residualmetrics.com/articles/Predicting_Boston_House_Prices.html).

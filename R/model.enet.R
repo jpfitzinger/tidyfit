@@ -62,7 +62,9 @@
   }
   if (self$mode == "classification") {
     self$set_args(family = "multinomial", overwrite = FALSE)
-    y <- as.factor(y)
+    class_names_map <- levels(y)
+    names(class_names_map) <- 1:length(levels(y))
+    y <- as.numeric(as.factor(y))
   }
   ctr <- self$args[names(self$args) %in% methods::formalArgs(glmnet::glmnet)]
 
@@ -83,6 +85,9 @@
     grid_id = paste(substring(self$grid_id, 1, 4), formatC(1:length(self$args$lambda), 2, flag = "0"), sep = "|"),
     lambda = self$args$lambda
   )
+  if (self$mode == "classification") {
+    self$fit_info <- list(class_names_map = class_names_map)
+  }
   invisible(self)
 
 }

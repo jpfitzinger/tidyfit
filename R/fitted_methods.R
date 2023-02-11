@@ -15,6 +15,7 @@
 
   if (length(dim(pred_mat))==3) {
     class_vals <- dimnames(pred_mat)[[2]]
+    dimnames(pred_mat)[[2]]  <- class_vals <- self$fit_info$class_names_map[class_vals]
   } else {
     class_vals <- NULL
   }
@@ -32,11 +33,11 @@
       tidyr::gather("grid_id", "fitted", -dplyr::any_of(c("row_n")))
   }
   pred <- pred %>%
-    dplyr::select(-.data$row_n, -.data$grid_id)
+    dplyr::select(-"row_n", -"grid_id")
   if (length(class_vals)==2) {
     pred <- pred %>%
       dplyr::filter(.data$class == sort(class_vals)[2]) %>%
-      dplyr::select(-.data$class)
+      dplyr::select(-"class")
   }
   return(pred)
 }
@@ -50,7 +51,7 @@
 
 .fitted.glmboost <- function(object, ...) {
   fitted <- dplyr::tibble(
-    fitted = drop(fitted(object))
+    fitted = drop(fitted(object, type = "response"))
   )
   return(fitted)
 }

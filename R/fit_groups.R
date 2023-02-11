@@ -1,20 +1,33 @@
 #' @importFrom furrr future_pmap_dfr furrr_options
 
 .fit_groups <- function(row) {
-  mod <- row$model_object
+  mod <- row$model_object$clone()
   data <- row$data$mf
   wts <- row$data$wts
   cv <- row$data$cv
+  mask <- row$data$mask
+
+  data <- data %>%
+    dplyr::select(-!!mask)
+
+  # Fit on full sample
+  out_row <- dplyr::tibble(
+    model = row$model,
+    grid_id = row$grid_id,
+    model_object = list(mod$set_args(weights = wts)$fit(data))
+  )
 
   if (!is.null(cv) & row$model_object$cv) {
     cv_res <- furrr::future_pmap_dfr(cv, function(splits, id) {
       res_row <- dplyr::tibble(
         model = row$model,
         grid_id = row$grid_id,
-        model_object = list(row$model_object$clone())
+        model_object = list(mod$clone()$clear())
       )
-      df_train <- rsample::training(splits)
-      df_test <- rsample::testing(splits)
+      df_train <- rsample::training(splits) %>%
+        dplyr::select(-!!mask)
+      df_test <- rsample::testing(splits) %>%
+        dplyr::select(-!!mask)
       train_samples <- splits$in_id
       test_samples <- rsample::complement(splits)
       res_row$model_object[[1]]$set_args(weights = wts[train_samples])
@@ -35,11 +48,6 @@
     cv_res <- NULL
   }
 
-  out_row <- dplyr::tibble(
-    model = row$model,
-    grid_id = row$grid_id,
-    model_object = list(mod$clone()$set_args(weights = wts)$fit(data))
-  )
   out_row <- .unnest_args(out_row)
   out_row <- out_row %>%
     dplyr::mutate(slice_id = "FULL")

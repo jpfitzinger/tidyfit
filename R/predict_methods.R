@@ -13,6 +13,7 @@
   dimnames(pred_mat)[[length(dim(pred_mat))]] <- self$inner_grid$grid_id[appr_in(self$inner_grid$lambda, self$args$lambda)]
   if (length(dim(pred_mat))==3) {
     class_vals <- dimnames(pred_mat)[[2]]
+    dimnames(pred_mat)[[2]]  <- class_vals <- self$fit_info$class_names_map[class_vals]
   } else {
     class_vals <- NULL
   }
@@ -33,11 +34,11 @@
       tidyr::gather("grid_id", "prediction", -dplyr::any_of(c("truth", "row_n")))
   }
   pred <- pred %>%
-    dplyr::select(-.data$row_n)
+    dplyr::select(-"row_n")
   if (length(class_vals)==2) {
     pred <- pred %>%
       dplyr::filter(.data$class == sort(class_vals)[2]) %>%
-      dplyr::select(-.data$class)
+      dplyr::select(-"class")
   }
   return(pred)
 }
@@ -49,7 +50,7 @@
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
   } else {
-    data[, response_var] <- NA
+    data[, response_var] <- 0
     truth <- NULL
   }
   if (!is.null(self$fit_info$names_map)) data <- data.frame(stats::model.matrix(self$formula, data))
@@ -205,7 +206,7 @@
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
   } else {
-    data[, response_var] <- NA
+    data[, response_var] <- 0
     truth <- NULL
   }
   mf <- stats::model.frame(self$formula, data)

@@ -33,6 +33,8 @@ predict.tidyfit.models <- function(object,
   .mask <- attr(object, "structure")$mask
   .weights <- attr(object, "structure")$weights
 
+  object <- .warn_and_remove_errors(object)
+
   newdata <- newdata %>%
     dplyr::select(-any_of(c(.mask, .weights))) %>%
     tidyr::nest(newdata = -any_of(gr_vars))
@@ -60,7 +62,7 @@ predict.tidyfit.models <- function(object,
   if ("grid_id" %in% colnames(out)) {
     out <- dplyr::select(out, - "grid_id_")
   } else {
-    out <- dplyr::rename(out, grid_id = .data$grid_id_)
+    out <- dplyr::rename(out, grid_id = "grid_id_")
   }
 
   col_ord <- c(gr_vars, "model", "grid_id", "slice_id", "class", "prediction", "truth")

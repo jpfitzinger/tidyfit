@@ -41,19 +41,21 @@ coef.tidyfit.models <- function(
     .bootstrap_alpha = 0.05,
     .keep_grid_id = FALSE) {
 
+  object <- .warn_and_remove_errors(object)
+
   sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
   gr_vars <- attr(object, "structure")$groups
   out <- object %>%
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
-    dplyr::rename(grid_id_ = .data$grid_id) %>%
+    dplyr::rename(grid_id_ = "grid_id") %>%
     dplyr::mutate(coefs = purrr::map(.data$model_object, ~.$coef())) %>%
-    dplyr::select(-.data$model_object) %>%
-    tidyr::unnest(.data$coefs)
+    dplyr::select(-"model_object") %>%
+    tidyr::unnest("coefs")
 
   if ("grid_id" %in% colnames(out)) {
-    out <- dplyr::select(out, -.data$grid_id_)
+    out <- dplyr::select(out, -"grid_id_")
   } else {
-    out <- dplyr::rename(out, grid_id = .data$grid_id_)
+    out <- dplyr::rename(out, grid_id = "grid_id_")
   }
 
   out <- out %>%
@@ -68,7 +70,7 @@ coef.tidyfit.models <- function(
     intervals <- out %>%
       dplyr::group_by(.data$grid_id, .add = TRUE) %>%
       dplyr::do(interval = .make_rsample_bootstraps(.)) %>%
-      tidyr::unnest(.data$interval)
+      tidyr::unnest("interval")
     out <- out %>%
       dplyr::select(- "estimate", - "slice_id") %>%
       dplyr::distinct() %>%

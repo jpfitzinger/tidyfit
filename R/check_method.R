@@ -20,7 +20,7 @@
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor",
-                "chisq", "rf", "nnet"),
+                "chisq", "rf", "nnet", "bridge", "blasso"),
     message = "'%s' is not a valid method. See '?m' for details"
   ),
   cv = list(
@@ -34,7 +34,8 @@
   regress = list(
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
-                "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor", "rf", "nnet"),
+                "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", 
+                "cor", "rf", "nnet", "bridge", "blasso"),
     message = "'%s' cannot be used for regression"
   ),
   classify = list(

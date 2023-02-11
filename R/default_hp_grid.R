@@ -9,7 +9,7 @@
 
   if (model_method %in% c("lasso", "ridge", "enet", "adalasso")) {
     if (!"lambda" %in% args) {
-      grid$lambda <- dials::grid_regular(dials::penalty(), levels = 100)$penalty
+      grid$lambda <- NULL
     }
   }
   if (model_method == "enet") {
@@ -18,7 +18,6 @@
     }
   }
   if (model_method %in% c("pcr", "plsr")) {
-    #nvars <- length(labels(stats::terms(formula, data = data)))
     if (!any(c("ncomp_pct", "ncomp") %in% args)) {
       grid$ncomp_pct <- seq(0, 1, length.out = 20)
     }

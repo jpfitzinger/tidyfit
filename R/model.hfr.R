@@ -79,7 +79,7 @@
   estimates <- coefs %>%
     dplyr::as_tibble() %>%
     dplyr::mutate(term = rownames(coefs)) %>%
-    tidyr::pivot_longer(names_to = "grid_id", values_to = "estimate", -.data$term) %>%
+    tidyr::pivot_longer(names_to = "grid_id", values_to = "estimate", -"term") %>%
     dplyr::mutate(kappa = self$inner_grid[match(.data$grid_id, self$inner_grid$grid_id), "kappa"]) %>%
     dplyr::filter(appr_in(.data$kappa, kappaSel))
 

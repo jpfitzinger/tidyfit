@@ -58,17 +58,29 @@ library(tidyfit)
 
 All 3 of these functions return a `tidyfit.models` frame, which is a data frame containing information about fitted regression and classification models. `regress` and `classify` perform regression and classification on tidy data. The functions ingest a `tibble`, prepare input data for the models by splitting groups, partitioning cross validation slices and handling any necessary adjustments and transformations. The data is ultimately passed to the model wrapper `m()` which fits the models. 
 
-[See the flowchart](https://tidyfit.unchartedml.com/articles/Flowchart.html)
+[See the flowchart](https://tidyfit.residualmetrics.com/articles/Flowchart.html)
 
-The basic usage is as follows:
+To illustrate basic usage, suppose we would like to fit a financial factor regression for 10 industries with exponential weighting, comparing a WLS and a weighted LASSO regression:
 
 ```{r, eval=F}
-regress(
-  .data, 
-  formula = y ~ x1 + x2, 
-  mod1 = m(<args for underlying method>), mod2 = m(), ...,   # Pass multiple model wrappers
-  .cv = "vfold_cv", .weights = "weight_col"                  # Examples of additional settings
-)
+progressr::handlers(global=TRUE)
+
+tidyfit::Factor_Industry_Returns %>% 
+  group_by(Industry) %>%                       # Ensures that a model is fitted for each industry
+  mutate(Weight = 0.96^seq(n(), 1)) %>%        # Exponential weights
+  
+  # 'regress' allows flexible standardized regression analysis in a single line of code
+  regress(
+    Return ~ .,                                # Uses normal formula syntax
+    m("lasso"),                                # LASSO regression wrapper, 'lambda' grid set to default
+    m("lm"),                                   # OLS wrapper (can add as many wrappers as necessary here)
+    .cv = "initial_time_split",                # Cross-validation method for optimal 'lambda' in LASSO
+    .mask = "Date",                            # 'Date' columns should be excluded
+    .weights = "Weight"                        # Specifies the weights column
+  ) -> models_df
+
+# Get coefficients frame
+coef(models_df)
 ```
 
 The syntax is identical for `classify`.
@@ -102,14 +114,14 @@ tbl <- data.frame(
   Method = c("OLS", "GLS", "Robust regression (e.g. Huber loss)", 
              "Quantile regression", "LASSO", "Ridge", "Adaptive LASSO", "ElasticNet",
              "Gradient boosting regression", "Support vector machine", "Random forest", "Principal components regression", "Partial least squares",
-             "Hierarchical feature regression", "Best subset selection", "General-to-specific", "Bayesian regression", "Bayesian model averaging", "Bayesian time-varying parameters regression", "Generalized mixed-effects regression", "Markov-switching regression", "Pearson correlation", "Chi-squared test", "Minimum redundancy, maximum relevance", "ReliefF"),
+             "Hierarchical feature regression", "Best subset selection", "General-to-specific", "Bayesian regression", "Bayesian Ridge", "Bayesian Lasso", "Bayesian model averaging", "Bayesian time-varying parameters regression", "Generalized mixed-effects regression", "Markov-switching regression", "Pearson correlation", "Chi-squared test", "Minimum redundancy, maximum relevance", "ReliefF"),
   Name = c("lm", "glm", "robust", "quantile", "lasso", "ridge", "adalasso", "enet", "boost", "svm", "rf", "pcr", "plsr", 
-           "hfr", "subset", "gets", "bayes", "bma", "tvp", "glmm", "mslm", "cor", "chisq", "mrmr", "relief"),
+           "hfr", "subset", "gets", "bayes", "bridge", "blasso", "bma", "tvp", "glmm", "mslm", "cor", "chisq", "mrmr", "relief"),
   Package = c("`stats`", "`stats`", "`MASS`", "`quantreg`", "`glmnet`", "`glmnet`", "`glmnet`", "`glmnet`",
-              "`mboost`", "`e1071`", "`randomForest`", "`pls`", "`pls`", "`hfr`", "`bestglm`", "`gets`", "`arm`", "BMS", "`shrinkTVP`", "`lme4`", "`MSwM`", "`stats`", "`stats`", "`mRMRe`", "`CORElearn`"),
-  Regression = c("yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "no", "yes", "yes"),
-  Classification = c("no", "yes", "no", "no", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "no", "no", "no", "yes", "no", "yes", "no", "no", "yes", "no", "no", "yes", "yes", "yes"),
-  group = c("Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Regression or classification with L1 and L2 penalties", "Regression or classification with L1 and L2 penalties", "Regression or classification with L1 and L2 penalties", "Regression or classification with L1 and L2 penalties", "Machine Learning", "Machine Learning", "Machine Learning", "Factor regressions", "Factor regressions", "Factor regressions", "Subset selection", "Subset selection", "Bayesian regression", "Bayesian regression", "Bayesian regression", "Mixed-effects modeling", "Specialized time series methods", "Feature selection", "Feature selection", "Feature selection", "Feature selection")
+              "`mboost`", "`e1071`", "`randomForest`", "`pls`", "`pls`", "`hfr`", "`bestglm`", "`gets`", "`arm`", "`monomvn`", "`monomvn`", "BMS", "`shrinkTVP`", "`lme4`", "`MSwM`", "`stats`", "`stats`", "`mRMRe`", "`CORElearn`"),
+  Regression = c("yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "no", "yes", "yes"),
+  Classification = c("no", "yes", "no", "no", "yes", "yes", "yes", "yes", "yes", "yes", "yes", "no", "no", "no", "yes", "no", "yes", "no", "no", "no", "no", "yes", "no", "no", "yes", "yes", "yes"),
+  group = c("Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Linear (generalized) regression or classification", "Regression or classification with L1 and L2 penalties", "Regression or classification with L1 and L2 penalties", "Regression or classification with L1 and L2 penalties", "Regression or classification with L1 and L2 penalties", "Machine Learning", "Machine Learning", "Machine Learning", "Factor regressions", "Factor regressions", "Factor regressions", "Subset selection", "Subset selection", "Bayesian regression", "Bayesian regression", "Bayesian regression", "Bayesian regression", "Bayesian regression", "Mixed-effects modeling", "Specialized time series methods", "Feature selection", "Feature selection", "Feature selection", "Feature selection")
 )
 
 kbl(tbl[,1:5], align = "lcccc") %>% 
@@ -126,14 +138,14 @@ It is important to note that the above list is not complete, since some of the m
 
 In this section, a minimal workflow is used to demonstrate how the package works. For more detailed guides of specialized topics, or simply for further reading, follow these links:
 
-  - [The flowchart](https://tidyfit.unchartedml.com/articles/Flowchart.html)
-  - [Regularized regression](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html) (Boston house price data)
-  - [Multinomial classification](https://tidyfit.unchartedml.com/articles/Multinomial_Classification.html) (iris data)
-  - [Feature Selection](https://tidyfit.unchartedml.com/articles/Feature_Selection.html) (macroeconomic data)
-  - [Accessing fitted models](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html)
-  - [Rolling window regression for time series](https://tidyfit.unchartedml.com/articles/Rolling_Window_Time_Series_Regression.html) (factor data)
-  - [Time-varying parameters](https://tidyfit.unchartedml.com/articles/Time-varying_parameters_vs_rolling_windows.html) (factor data)
-  - [Bootstrap confidence intervals](https://tidyfit.unchartedml.com/articles/Bootstrapping_Confidence_Intervals.html)
+  - [The flowchart](https://tidyfit.residualmetrics.com/articles/Flowchart.html)
+  - [Regularized regression](https://tidyfit.residualmetrics.com/articles/Predicting_Boston_House_Prices.html) (Boston house price data)
+  - [Multinomial classification](https://tidyfit.residualmetrics.com/articles/Multinomial_Classification.html) (iris data)
+  - [Feature Selection](https://tidyfit.residualmetrics.com/articles/Feature_Selection.html) (macroeconomic data)
+  - [Accessing fitted models](https://tidyfit.residualmetrics.com/articles/Accessing_Fitted_Model_Objects.html)
+  - [Rolling window regression for time series](https://tidyfit.residualmetrics.com/articles/Rolling_Window_Time_Series_Regression.html) (factor data)
+  - [Time-varying parameters](https://tidyfit.residualmetrics.com/articles/Time-varying_parameters_vs_rolling_windows.html) (factor data)
+  - [Bootstrap confidence intervals](https://tidyfit.residualmetrics.com/articles/Bootstrapping_Confidence_Intervals.html)
 
 `tidyfit` includes a data set of financial Fama-French factor returns freely available [here](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html). The data set includes monthly industry returns for 10 industries, as well as monthly factor returns for 5 factors:
 
@@ -198,7 +210,7 @@ The `tidyfit.models` frame can be used to access additional information. Specifi
   3. Access a data frame of estimated parameters
   4. Use additional generics
 
-The **fitted tidyFit models** are stored as an `R6` class in the `model_object` column and can be addressed directly with generics such as `coef` or `summary`. The underlying object (e.g. an `lm` class fitted model) is given in `...$object` (see [here](https://tidyfit.unchartedml.com/articles/Accessing_Fitted_Model_Objects.html) for another example):
+The **fitted tidyFit models** are stored as an `R6` class in the `model_object` column and can be addressed directly with generics such as `coef` or `summary`. The underlying object (e.g. an `lm` class fitted model) is given in `...$object` (see [here](https://tidyfit.residualmetrics.com/articles/Accessing_Fitted_Model_Objects.html) for another example):
 
 ```{r}
 subset_mod_frame %>% 
@@ -241,4 +253,4 @@ model_frame %>%
 
 The ElasticNet performs a little better (unsurprising really, given the small data set).
 
-A **more detailed regression analysis of Boston house price data** using a panel of regularized regression estimators can be found [here](https://tidyfit.unchartedml.com/articles/Predicting_Boston_House_Prices.html).
+A **more detailed regression analysis of Boston house price data** using a panel of regularized regression estimators can be found [here](https://tidyfit.residualmetrics.com/articles/Predicting_Boston_House_Prices.html).

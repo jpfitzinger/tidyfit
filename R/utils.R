@@ -40,7 +40,8 @@
   }
 
   control <- .func_to_list(control)
-  grid <- purrr::cross(control)
+  grid <- tidyr::expand_grid(!!! control) %>%
+    purrr::transpose()
   if (length(grid)==0) grid <- list(grid)
   return(grid)
 
@@ -153,4 +154,14 @@ appr_in <- function(a, b) {
 
   return(rescaled_coefs)
 
+}
+
+.warn_and_remove_errors <- function(object) {
+  object <- object %>%
+    dplyr::filter(as.logical(map(.data$model_object, function(obj) {
+      if (is.null(obj$object))
+        warning(paste0("No model fitted for '", obj$method, "'. Check errors."))
+      return(!is.null(obj$object))
+    })))
+  return(object)
 }

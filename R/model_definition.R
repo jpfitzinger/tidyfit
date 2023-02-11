@@ -68,6 +68,15 @@ model_definition <- R6::R6Class(
         )
       }
       invisible(self)
+    },
+    clear = function(...) {
+      self$object = NULL
+      self$error = NULL
+      self$warnings = NULL
+      self$messages = NULL
+      self$fit_info = NULL
+      self$inner_grid = NULL
+      invisible(self)
     }
   ),
   private = list(

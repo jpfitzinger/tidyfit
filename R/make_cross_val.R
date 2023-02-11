@@ -5,7 +5,7 @@
     dplyr::select(!!gr_vars) %>%
     dplyr::distinct()
   .data <- .data %>%
-    dplyr::select(-!!gr_vars, -!!.mask)
+    dplyr::select(-!!gr_vars)
 
   if (!is.null(.weights)) {
     wts <- .data %>%
@@ -42,9 +42,10 @@
       adj_id <- adj_id[(length(adj_id) - nrow(cv) + 1):length(adj_id)]
       cv$id <- as.character(mf[adj_id, .cv_args$index])
     }
+    .mask = unique(append(.mask, c(.cv_args$index, .cv_args$group)))
   } else {
     cv <- NULL
   }
 
-  return(list(mf = mf, cv = cv, wts = wts, grps = grps))
+  return(list(mf = mf, cv = cv, wts = wts, grps = grps, mask = .mask))
 }
