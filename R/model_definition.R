@@ -46,6 +46,10 @@ model_definition <- R6::R6Class(
       all_args <- list(object = self$object, self = self)
       do.call(.fitted, all_args)
     },
+    varimp = function(...) {
+      all_args <- list(object = self$object, self = self)
+      do.call(.varimp, all_args)
+    },
     print = function(...) {
       cat("<tidyFit> object\n", crayon::italic("method:"),
           crayon::bold(self$method), "|",

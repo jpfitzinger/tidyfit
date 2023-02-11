@@ -22,9 +22,8 @@
 #' For \code{\link{regress}}, linear output units (\code{linout=True}) are used, while \code{\link{classify}} implements
 #' the default logic of  \code{nnet} (\code{entropy=TRUE} for 2 target classes and \code{softmax=TRUE} for more classes).
 #'
-#' \code{coef()} does not return model coefficients, but the relative feature importance as implemented in the \code{iml} package.
-#' (\code{compare="ratio"} of \code{loss="mae"} for regression models, and \code{compare="difference"} of \code{loss="ce"}
-#' for classification models reported for each class). *Calculation of feature importance only works for syntactic feature names.*
+#' \code{coef()} does not return model coefficients, but the relative feature importance from \code{varimp()}
+#' 
 #'
 #' @author Phil Holzmeister
 #'
@@ -40,10 +39,11 @@
 #' fit <- regress(data, Return ~ ., m("nnet", decay=0.5, size = 8),
 #'                .mask = c("Date", "Industry"))
 #' coef(fit)
+#' varimp(fit)
 #'
 #' # Within 'classify' function
 #' fit <- classify(iris, Species ~ ., m("nnet", decay=0.5, size = 8))
-#' coef(fit)
+#' varimp(fit)
 #'
 #'
 #' @importFrom purrr safely quietly
@@ -135,45 +135,23 @@
 }
 
 .coef.nnet <- function(object, self = NULL, ...) {
-  response_var <- all.vars(self$formula)[1]
-  data <- object$call$data
-  data <- data.frame(data)
-  mf <- stats::model.frame(self$formula, data)
-
-  if (self$mode == "regression") {
-    mod <- iml::Predictor$new(object, data = mf %>% dplyr::select(-all_of(response_var)),
-                              y = mf[[response_var]])
-    imp <- iml::FeatureImp$new(mod, loss = "mae")
-    estimates <- imp$results %>%
-      dplyr::select(term = "feature",
-                    estimate = "importance") %>%
-      dplyr::as_tibble()
-  }
-
-  if (self$mode == "classification") {
-    # separately calculate permutation feature importance for each class
-    estimates <- purrr::map_dfr(unique(mf[[response_var]]),
-                                function(cls) {
-
-      mf_class <- mf %>% dplyr::filter(!!dplyr::sym(response_var) == cls)
-      mod <- iml::Predictor$new(object, data = mf_class %>% dplyr::select(-all_of(response_var)),
-                         y = mf_class[[response_var]], type = "raw")
-      imp <- iml::FeatureImp$new(mod, loss = "ce", compare = "difference")
-      imp$results %>%
-        dplyr::select(term = "feature",
-                      estimate = "importance") %>%
-        dplyr::mutate(class = cls) %>%
-        dplyr::as_tibble()
-    })
-
-  }
-
-  estimates <- estimates %>%
-    dplyr::mutate(term = self$fit_info$names_map[.data$term])
+  
+  estimates <- .varimp.nnet(object, self, ...)
 
   return(estimates)
 }
 
+.varimp.nnet <- function(object, self = NULL, ...) {
+  
+  if (self$mode == "regression"){
+    estimates <- .varimp.default(object, self, ...)
+  }
+  if (self$mode == "classification") {
+    estimates <- .varimp.default(object, self, type = "raw", ...)
+  }
+  
+  return(estimates)
+}
 
 .fitted.nnet <- function(object, self = NULL, ...) {
   if (self$mode == "regression"){

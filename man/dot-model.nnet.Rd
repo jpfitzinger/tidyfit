@@ -35,9 +35,7 @@ The function provides a wrapper for \code{nnet::nnet.formula}. See \code{?nnet} 
 For \code{\link{regress}}, linear output units (\code{linout=True}) are used, while \code{\link{classify}} implements
 the default logic of  \code{nnet} (\code{entropy=TRUE} for 2 target classes and \code{softmax=TRUE} for more classes).
 
-\code{coef()} does not return model coefficients, but the relative feature importance as implemented in the \code{iml} package.
-(\code{compare="ratio"} of \code{loss="mae"} for regression models, and \code{compare="difference"} of \code{loss="ce"}
-for classification models reported for each class). \emph{Calculation of feature importance only works for syntactic feature names.}
+\code{coef()} does not return model coefficients, but the relative feature importance from \code{varimp()}
 }
 \examples{
 # Load data
@@ -51,10 +49,11 @@ fit
 fit <- regress(data, Return ~ ., m("nnet", decay=0.5, size = 8),
                .mask = c("Date", "Industry"))
 coef(fit)
+varimp(fit)
 
 # Within 'classify' function
 fit <- classify(iris, Species ~ ., m("nnet", decay=0.5, size = 8))
-coef(fit)
+varimp(fit)
 
 
 }

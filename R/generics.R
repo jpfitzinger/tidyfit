@@ -1,6 +1,7 @@
 # tidyFit generics
 
 #' @importFrom stats coef predict resid fitted
+#' @importFrom generics var_imp
 #' @importFrom broom tidy glance
 
 #' @export
@@ -41,4 +42,9 @@ tidy.tidyFit <- function(object, ...) {
 #' @export
 glance.tidyFit <- function(object, ...) {
   broom::glance(object$object, ...)
+}
+
+#' @export
+var_imp.tidyFit <- function(object, ...) {
+  generics::var_imp(object$object, ...)
 }
