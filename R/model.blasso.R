@@ -26,11 +26,11 @@
 #' data <- tidyfit::Factor_Industry_Returns
 #'
 #' # Stand-alone function
-#' fit <- m("blasso", Return ~ ., data)
+#' fit <- m("blasso", Return ~ ., data, T = 100)
 #' fit
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("blasso"),
+#' fit <- regress(data, Return ~ ., m("blasso", T = 100),
 #'                .mask = c("Date", "Industry"))
 #' coef(fit)
 #'

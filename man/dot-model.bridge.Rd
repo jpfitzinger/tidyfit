@@ -35,11 +35,11 @@ Features are standardized by default with coefficients transformed to the origin
 data <- tidyfit::Factor_Industry_Returns
 
 # Stand-alone function
-fit <- m("bridge", Return ~ ., data)
+fit <- m("bridge", Return ~ ., data, T = 100)
 fit
 
 # Within 'regress' function
-fit <- regress(data, Return ~ ., m("bridge"),
+fit <- regress(data, Return ~ ., m("bridge", T = 100),
                .mask = c("Date", "Industry"))
 coef(fit)
 
