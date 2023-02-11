@@ -127,7 +127,7 @@
     pred <- stats::predict(object, data) %>%  dplyr::as_tibble() %>%
       dplyr::mutate(truth = truth) %>%
       tidyr::pivot_longer(-truth, names_to = "class", values_to = "prediction") %>%
-      dplyr::select(all_of(c("class", "prediction", "truth")))
+      dplyr::select(any_of(c("class", "prediction", "truth")))
   }
 
   return(pred)
