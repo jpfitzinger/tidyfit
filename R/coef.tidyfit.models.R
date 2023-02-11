@@ -59,7 +59,7 @@ coef.tidyfit.models <- function(
   }
 
   out <- out %>%
-    dplyr::group_by(across(any_of(c(gr_vars, "model")))) %>%
+    dplyr::group_by(across(.cols = any_of(c(gr_vars, "model")))) %>%
     dplyr::mutate(nids = length(unique(.data$grid_id)))
 
   if (.add_bootstrap_interval) {

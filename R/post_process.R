@@ -20,7 +20,7 @@
     } else {
       if (.tune_each_group) {
         df <- df %>%
-          dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars)))
+          dplyr::group_by(dplyr::across(.cols = dplyr::all_of(gr_vars)))
       }
 
       df_slices <- df %>%

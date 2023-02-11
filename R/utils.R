@@ -67,7 +67,7 @@
     args <- .func_to_list(mod$args)
     settings <- tibble::enframe(args) %>%
       tidyr::pivot_wider() %>%
-      dplyr::summarise(across(.fns = ~ if(length(unlist(.)) == 1) unlist(.) else .))
+      dplyr::summarise(across(.cols = dplyr::everything(), .fns = ~ if(length(unlist(.)) == 1) {unlist(.)} else {.}))
     if (!is.null(mod$inner_grid)) {
       settings <- settings %>%
         dplyr::select(-any_of(colnames(mod$inner_grid))) %>%

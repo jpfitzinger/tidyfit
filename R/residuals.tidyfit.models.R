@@ -46,7 +46,7 @@ residuals.tidyfit.models <- function(object, ...) {
     dplyr::relocate(any_of(col_ord))
 
   out <- out %>%
-    dplyr::group_by(across(any_of(c(gr_vars, "model")))) %>%
+    dplyr::group_by(across(.cols = any_of(c(gr_vars, "model")))) %>%
     dplyr::mutate(nids = length(unique(.data$grid_id)))
 
   if (all(out$nids==1)) {
