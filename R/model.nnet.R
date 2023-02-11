@@ -111,22 +111,23 @@
 
   response_var <- all.vars(self$formula)[1]
   if (response_var %in% colnames(data)) {
-    truth <- data[, response_var]
+    truth_vec <- data[, response_var]
   } else {
-    truth <- NULL
+    truth_vec <- NULL
   }
 
   if (self$mode == "regression") {
     pred <- dplyr::tibble(
       prediction = drop(stats::predict(object, data)),
-      truth = truth
+      truth = truth_vec
     )
   }
 
   if (self$mode == "classification") {
-    pred <- stats::predict(object, data) %>%  dplyr::as_tibble() %>%
-      dplyr::mutate(truth = truth) %>%
-      tidyr::pivot_longer(-truth, names_to = "class", values_to = "prediction") %>%
+    pred <- stats::predict(object, data) %>%  
+      dplyr::as_tibble(.name_repair = ~ vctrs::vec_as_names(..., repair = "unique", quiet = TRUE)) %>%
+      dplyr::mutate(truth = truth_vec) %>%
+      tidyr::pivot_longer(-any_of("truth"), names_to = "class", values_to = "prediction") %>%
       dplyr::select(any_of(c("class", "prediction", "truth")))
   }
 
@@ -140,7 +141,7 @@
   mf <- stats::model.frame(self$formula, data)
 
   if (self$mode == "regression") {
-    mod <- iml::Predictor$new(object, data = mf %>% dplyr::select(-response_var),
+    mod <- iml::Predictor$new(object, data = mf %>% dplyr::select(-all_of(response_var)),
                               y = mf[[response_var]])
     imp <- iml::FeatureImp$new(mod, loss = "mae")
     estimates <- imp$results %>%
@@ -155,7 +156,7 @@
                                 function(cls) {
 
       mf_class <- mf %>% dplyr::filter(!!dplyr::sym(response_var) == cls)
-      mod <- iml::Predictor$new(object, data = mf_class %>% dplyr::select(-response_var),
+      mod <- iml::Predictor$new(object, data = mf_class %>% dplyr::select(-all_of(response_var)),
                          y = mf_class[[response_var]], type = "raw")
       imp <- iml::FeatureImp$new(mod, loss = "ce", compare = "difference")
       imp$results %>%
