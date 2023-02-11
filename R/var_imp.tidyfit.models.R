@@ -45,8 +45,8 @@ var_imp.tidyfit.models <- function(
     out <- dplyr::rename(out, grid_id = "grid_id_")
   }
 
-  out <- out %>%
-    dplyr::group_by(across(.cols = any_of(c(gr_vars, "model")))) %>%
+  out <- out |>
+    dplyr::group_by(across(.cols = any_of(c(gr_vars, "model")))) |>
     dplyr::mutate(nids = length(unique(.data$grid_id)))
 
   if (all(out$nids==1) & !.keep_grid_id) {

@@ -147,7 +147,7 @@
     estimates <- .varimp.default(object, self, ...)
   }
   if (self$mode == "classification") {
-    estimates <- .varimp.default(object, self, type = "raw", ...)
+    estimates <- .varimp.default(object, self, prediction_type = "raw", ...)
   }
   
   return(estimates)

@@ -3,7 +3,7 @@
 }
 
 
-.varimp.default <- function(object, self = NULL, type = "prob", ...) {
+.varimp.default <- function(object, self = NULL, prediction_type = "prob", ...) {
   response_var <- all.vars(self$formula)[1]
   data <- object$call$data
   data <- data.frame(data)
@@ -26,7 +26,7 @@
                                   
                                   mf_class <- mf |> dplyr::filter(!!dplyr::sym(response_var) == cls)
                                   mod <- iml::Predictor$new(object, data = mf_class |> dplyr::select(-all_of(response_var)),
-                                                            y = mf_class[[response_var]], type = type)
+                                                            y = mf_class[[response_var]], type = prediction_type)
                                   imp <- iml::FeatureImp$new(mod, loss = "ce", compare = "difference")
                                   imp$results |>
                                     dplyr::select(term = "feature",
