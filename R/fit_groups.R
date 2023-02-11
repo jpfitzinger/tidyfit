@@ -1,7 +1,7 @@
 #' @importFrom furrr future_pmap_dfr furrr_options
 
 .fit_groups <- function(row) {
-  mod <- row$model_object
+  mod <- row$model_object$clone()
   data <- row$data$mf
   wts <- row$data$wts
   cv <- row$data$cv
@@ -22,7 +22,7 @@
       res_row <- dplyr::tibble(
         model = row$model,
         grid_id = row$grid_id,
-        model_object = list(row$model_object$clone()$clear())
+        model_object = list(mod$clone()$clear())
       )
       df_train <- rsample::training(splits) %>%
         dplyr::select(-!!mask)
