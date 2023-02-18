@@ -15,7 +15,8 @@
 
   pred <- dplyr::group_by(pred, across(any_of(c("grid_id", "class"))))
   if(is.null(weights)) {
-    pred <- dplyr::mutate(pred, weights = 1)
+    if (!"weights" %in% colnames(pred))
+      pred <- dplyr::mutate(pred, weights = 1)
   } else {
     pred <- dplyr::mutate(pred, weights = weights)
   }
@@ -34,7 +35,9 @@
         dplyr::mutate(metric = .data$.estimate)
     } else {
       metrics <- pred %>%
-        yardstick::mn_log_loss(.data$truth, .data$prediction, case_weights = .data$weights) %>%
+        yardstick::mn_log_loss(.data$truth, .data$prediction,
+                               case_weights = .data$weights,
+                               event_level = "second") %>%
         dplyr::mutate(metric = .data$.estimate)
     }
   }
