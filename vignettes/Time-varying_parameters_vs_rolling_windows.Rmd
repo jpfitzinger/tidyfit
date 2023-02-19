@@ -28,7 +28,8 @@ if (use_saved_results) {
 In this tutorial, I compare the coefficients estimated using a rolling window regression to those estimated using a Bayesian time-varying parameter model. For a primer on how to fit rolling window regressions using `tidyfit`, please see [here](https://tidyfit.unchartedml.com/articles/Rolling_Window_Time_Series_Regression.html). This articles follows directly from the linked primer, but focuses on only one industry.
 
 ```{r, eval=TRUE}
-library(tidyverse)   # Data wrangling
+library(dplyr); library(tidyr); library(purrr) # Data wrangling
+library(ggplot2); library(stringr) # Plotting
 library(lubridate)   # Date calculations
 library(tidyfit)     # Model fitting
 ```

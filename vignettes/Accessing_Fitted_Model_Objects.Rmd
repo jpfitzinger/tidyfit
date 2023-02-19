@@ -18,8 +18,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r}
-library(tidyverse) # Data wrangling
-library(tidyfit)   # Auto-ML modeling
+library(dplyr); library(tidyr); library(purrr) # Data wrangling
+library(tidyfit) # Auto-ML modeling
 ```
 
 The fitted model object is contained in `tidyfit.models` frame in the `model_object` column as an `R6` class. The `tidyFit` `R6` class contains both the underlying model (`...$object`) as well as additional information generated during fitting and needed to obtain predictions or coefficients.

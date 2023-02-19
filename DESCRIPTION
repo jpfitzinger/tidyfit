@@ -39,6 +39,7 @@ Suggests:
   CORElearn,
   e1071,
   gets,
+  ggplot2,
   glmnet,
   hfr,
   kableExtra,
@@ -55,7 +56,7 @@ Suggests:
   randomForest,
   sandwich,
   shrinkTVP,
-  tidyverse,
+  stringr,
   rmarkdown,
   testthat (>= 3.0.0)
 Roxygen: list(markdown=TRUE)

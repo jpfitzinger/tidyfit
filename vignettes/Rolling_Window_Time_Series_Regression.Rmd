@@ -28,7 +28,8 @@ if (use_saved_results) {
 In this short tutorial, I show how to calculate a rolling regression on grouped time series data using `tidyfit`. With very few lines of code, we will be able to estimate and analyze a large number of regressions. As usual, begin by loading necessary libraries:
 
 ```{r, eval=TRUE}
-library(tidyverse)   # Data wrangling
+library(dplyr); library(tidyr); library(purrr) # Data wrangling
+library(ggplot2); library(stringr) # Plotting
 library(lubridate)   # Date calculations
 library(tidyfit)     # Model fitting
 ```

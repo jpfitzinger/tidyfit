@@ -29,8 +29,9 @@ if (use_saved_results) {
 ```
 
 ```{r, eval=TRUE, class.source = "fold-hide"}
-library(tidyverse)   # Data wrangling
-library(tidyfit)     # Model fitting
+library(dplyr); library(tidyr); library(purrr) # Data wrangling
+library(ggplot2); library(stringr) # Plotting
+library(tidyfit) # Model fitting
 
 # Max model size
 MODEL_SIZE <- 10
@@ -290,7 +291,7 @@ boot_df %>%
   mutate(model = str_wrap(model, 10)) %>% 
   mutate(model = factor(model, levels = str_wrap(unique(model_df$model), 10))) %>% 
   ggplot(aes(model)) +
-  geom_errorbar(aes(ymin = lower, ymax = upper), size = 0.25, width = 0.25) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), linewidth = 0.25, width = 0.25) +
   theme_bw(8, "Arial") +
   xlab(element_blank()) + ylab("R2 statistic")
 ```
