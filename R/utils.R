@@ -62,19 +62,12 @@
 
 }
 
-.control_to_settings <- function(mod) {
+.args_to_frame <- function(mod) {
   if (length(mod$args) > 0) {
     args <- .func_to_list(mod$args)
     settings <- tibble::enframe(args) %>%
       tidyr::pivot_wider() %>%
-      dplyr::summarise(across(.fns = ~ if(length(unlist(.)) == 1) unlist(.) else .))
-    if (!is.null(mod$inner_grid)) {
-      settings <- settings %>%
-        dplyr::select(-any_of(colnames(mod$inner_grid))) %>%
-        dplyr::bind_cols(mod$inner_grid)
-    }
-    settings <- settings %>%
-      tidyr::nest(settings = dplyr::everything())
+      dplyr::summarise(across(.cols = dplyr::everything(), .fns = ~ if(length(unlist(.)) == 1) unlist(.) else .))
   } else {
     settings <- NULL
   }

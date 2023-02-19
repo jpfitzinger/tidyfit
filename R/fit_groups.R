@@ -1,4 +1,5 @@
 #' @importFrom furrr future_pmap_dfr furrr_options
+#' @importFrom dplyr left_join
 
 .fit_groups <- function(row) {
   mod <- row$model_object$clone()
@@ -17,33 +18,90 @@
     model_object = list(mod$set_args(weights = wts)$fit(data))
   )
 
+  # Get model parameters as dataframe
+  model_args <- .args_to_frame(mod)
+
   if (!is.null(cv) & row$model_object$cv) {
+
+    # Cross-validation mapper
     cv_res <- furrr::future_pmap_dfr(cv, function(splits, id) {
+
+      # Model for current slice
       res_row <- dplyr::tibble(
         model = row$model,
         grid_id = row$grid_id,
         model_object = list(mod$clone()$clear())
       )
+
+      # Define train and test data for slice
       df_train <- rsample::training(splits) %>%
         dplyr::select(-!!mask)
       df_test <- rsample::testing(splits) %>%
         dplyr::select(-!!mask)
       train_samples <- splits$in_id
       test_samples <- rsample::complement(splits)
+
+      # Train model
       res_row$model_object[[1]]$set_args(weights = wts[train_samples])
       res_row$model_object[[1]]$fit(df_train)
-      if (nrow(df_test) > 0 & !row$return_slices & !is.null(res_row$model_object[[1]]$object)) {
-        pred <- predict.tidyfit.models(res_row, df_test, .keep_grid_id = TRUE)
-        metrics <- .eval_metrics(pred, res_row$model_object[[1]]$mode, weights = wts[test_samples])
-      } else {
-        metrics <- dplyr::tibble(metric = NA, grid_id = NA)
-      }
-      res_row <- .unnest_args(res_row)
+
       res_row <- res_row %>%
-        dplyr::mutate(slice_id = id) %>%
-        dplyr::left_join(metrics, by = "grid_id")
+        dplyr::mutate(slice_id = id)
+
+      # Store test data
+      if (nrow(df_test) > 0) {
+        res_row <- res_row %>%
+          dplyr::bind_cols(tidyr::nest(df_test, df_test = everything()))
+      } else {
+        res_row <- res_row %>%
+          dplyr::mutate(df_test = NA)
+      }
+
+      # Store weights
+      if (!is.null(wts)) {
+        test_weights <- tibble(weights = wts[test_samples])
+        res_row <- res_row %>%
+          dplyr::bind_cols(tidyr::nest(test_weights, weights = everything()))
+      }
+
       return(res_row)
+
     }, .options = furrr::furrr_options(seed = TRUE))
+
+    # Only generate predictions, if CV slices are not returned
+    if (!row$return_slices) {
+
+      # Out-of-sample predictions
+      pred <- cv_res %>%
+        purrr::transpose() %>%
+        purrr::map_dfr(function(row) {
+          if (is.null(row$df_test) | is.null(row$model_object$object))
+            return(NULL)
+          out <- row$model_object$predict(as.data.frame(row$df_test))
+          if (is.null(out))
+            return(NULL)
+          if (!"grid_id" %in% colnames(out)) {
+            out <- out %>%
+              dplyr::mutate(grid_id = row[["grid_id"]])
+          }
+          out <- out %>%
+            dplyr::group_by(.data$grid_id) %>%
+            dplyr::mutate(weights = row$weights$weights)
+          return(out)
+        })
+      metrics <- .eval_metrics(pred, mod$mode)
+    } else {
+      metrics <- dplyr::tibble(metric = NA, grid_id = NA)
+    }
+
+    # Unnest hyperparameters and join metrics
+    cv_res <- cv_res %>%
+      dplyr::select(-any_of(c("weights", "df_test"))) %>%
+      dplyr::group_nest(dplyr::row_number()) %>%
+      dplyr::pull(.data$data) %>%
+      purrr::map_dfr(.unnest_args, model_args) %>%
+      dplyr::left_join(metrics, by = c("grid_id"))
+
   } else {
     cv_res <- NULL
   }
