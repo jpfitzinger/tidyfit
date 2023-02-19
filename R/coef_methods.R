@@ -205,7 +205,8 @@
   estimates <- dplyr::tibble(
     term = names(raw_estimates),
     estimate = raw_estimates
-  )
+  ) %>%
+    dplyr::mutate(term = self$fit_info$names_map[.data$term])
 
   return(estimates)
 
