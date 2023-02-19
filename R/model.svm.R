@@ -62,6 +62,8 @@
                    "shrinking", "cross", "probability", "fitted", "subset",
                    "na.action")
   ctr <- self$args[names(self$args) %in% formal_args]
+  var_names_map <- .names_map(colnames(data))
+  data <- data.frame(data)
   eval_fun_ <- function(...) {
     args <- list(...)
     do.call(e1071::svm, args)
@@ -70,6 +72,7 @@
   res <- do.call(eval_fun,
                  append(list(formula = self$formula, data = data), ctr))
   .store_on_self(self, res)
+  self$fit_info <- list(names_map = var_names_map)
   self$estimator <- "e1071::svm"
   invisible(self)
 }
