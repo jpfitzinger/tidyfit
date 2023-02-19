@@ -53,11 +53,11 @@ This version adds several new methods and enhances functionality & documentation
 - Bugfix: unnest.tidyfit.models missing struc
 - Minor adjustments in response to upstream package deprecation warnings
 
-## tidyfit 0.6.2 (dev)
+## tidyfit 0.6.2
 
 - Add new regression methods: Bayesian ridge and Bayesian lasso (using 'monomvn'-package). 
-- Bugfix: add 'index' and 'group' columns for 'sliding_index' cv and 'group_*' cv methods to mask vector. This ensures that the columns are automatically removed from the regression.
+- Bugfix: add 'index' and 'group' columns to 'mask' vector for 'sliding_index' CV and 'group_*' CV methods. This ensures that the columns are automatically removed from the regression.
 - Add resid() method for BMA regression
 - Minor adjustments in response to upstream package deprecation warnings
 - Unit testing with testthat
-- Improved error handling
+- Improved error handling and CV efficiency
