@@ -34,11 +34,11 @@ summary.tidyFit <- function(object, ...) {
 }
 
 #' @export
-tidy.tidyFit <- function(object, ...) {
-  broom::tidy(object$object, ...)
+tidy.tidyFit <- function(x, ...) {
+  broom::tidy(x$object, ...)
 }
 
 #' @export
-glance.tidyFit <- function(object, ...) {
-  broom::glance(object$object, ...)
+glance.tidyFit <- function(x, ...) {
+  broom::glance(x$object, ...)
 }
