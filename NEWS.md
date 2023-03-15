@@ -62,3 +62,7 @@ This version adds new regression methods: Bayesian ridge and Bayesian lasso (usi
 - Minor adjustments in response to upstream package deprecation warnings.
 - Unit testing with testthat.
 - Improved error handling and CV efficiency.
+
+## tidyfit 0.6.3
+
+- Update generic methods for changes in 'broom' package
