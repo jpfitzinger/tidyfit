@@ -12,31 +12,31 @@
 .args_to_grid <- function(model_method, control) {
 
   # Exceptions for vectors that are handled at a lower level
-  if (!is.null(control$weights)) {
-    control$weights <- list(control$weights)
+  if (!is.null(control[["weights"]])) {
+    control$weights <- list(control[["weights"]])
   }
-  if (!is.null(control$index_col)) {
-    control$index_col <- list(control$index_col)
+  if (!is.null(control[["index_col"]])) {
+    control$index_col <- list(control[["index_col"]])
   }
-  if (!is.null(control$lambda) & model_method %in% c("lasso", "enet", "ridge", "adalasso")) {
-    control$lambda <- list(control$lambda)
+  if (!is.null(control[["lambda"]]) & model_method %in% c("lasso", "enet", "ridge", "adalasso")) {
+    control$lambda <- list(control[["lambda"]])
   }
-  if (!is.null(control$kappa) & model_method == "hfr") {
-    control$kappa <- list(control$kappa)
+  if (!is.null(control[["kappa"]]) & model_method == "hfr") {
+    control$kappa <- list(control[["kappa"]])
   }
   if (model_method %in% c("pcr", "plsr")) {
     if (!is.null(control[["ncomp"]])) {
-      control$ncomp <- list(control$ncomp)
+      control$ncomp <- list(control[["ncomp"]])
     }
     if (!is.null(control[["ncomp_pct"]])) {
-      control$ncomp_pct <- list(control$ncomp_pct)
+      control$ncomp_pct <- list(control[["ncomp_pct"]])
     }
   }
-  if (!is.null(control$sw) & model_method == "mslm") {
-    control$sw <- list(control$sw)
+  if (!is.null(control[["sw"]]) & model_method == "mslm") {
+    control$sw <- list(control[["sw"]])
   }
-  if (!is.null(control$control) & model_method == "mslm") {
-    control$control <- list(control$control)
+  if (!is.null(control[["control"]]) & model_method == "mslm") {
+    control$control <- list(control[["control"]])
   }
 
   control <- .func_to_list(control)

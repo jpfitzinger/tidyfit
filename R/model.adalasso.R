@@ -86,7 +86,7 @@
   }
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
 
-  control_ <- within(ctr, rm("lambda", "alpha"))
+  control_ <- ctr[!names(ctr) %in% c("lambda", "alpha", "dfmax", "pmax")]
   penalty_mod <- do.call(eval_fun, append(list(x = x, y = y, alpha = 0,
                                                lambda = lambda_ridge, intercept = incl_intercept), control_))
   if (is.null(penalty_mod$error)) {
@@ -96,6 +96,7 @@
       cf <- cf[-1]
       cf <- abs(cf)^(-1)
       cf[is.infinite(cf) | is.na(cf)] <- 0
+      cf <- pmin(cf, 1e4)
       cf <- cf + 1e-8
       return(cf)
     })
