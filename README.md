@@ -407,7 +407,7 @@ yes
 no
 </td>
 </tr>
-<tr grouplength="2">
+<tr grouplength="3">
 <td colspan="5" style="border-bottom: 1px solid;">
 <strong>Subset selection</strong>
 </td>
@@ -431,6 +431,23 @@ yes
 </tr>
 <tr>
 <td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Genetic Algorithm
+</td>
+<td style="text-align:center;">
+genetic
+</td>
+<td style="text-align:center;">
+`gaselect`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 General-to-specific
 </td>
 <td style="text-align:center;">
@@ -446,7 +463,7 @@ yes
 no
 </td>
 </tr>
-<tr grouplength="5">
+<tr grouplength="6">
 <td colspan="5" style="border-bottom: 1px solid;">
 <strong>Bayesian regression</strong>
 </td>
@@ -510,13 +527,30 @@ Bayesian model averaging
 bma
 </td>
 <td style="text-align:center;">
-BMS
+`BMS`
 </td>
 <td style="text-align:center;">
 yes
 </td>
 <td style="text-align:center;">
 no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Bayesian Spike and Slab
+</td>
+<td style="text-align:center;">
+spikeslab
+</td>
+<td style="text-align:center;">
+`BoomSpikeSlab`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
 </td>
 </tr>
 <tr>
@@ -720,7 +754,7 @@ data
 #>  8 196402 NoDur      1.61     1.54  0.3   2.74 -0.05  0.9 
 #>  9 196403 NoDur      2.77     1.41  1.36  3.36 -2.21  3.19
 #> 10 196404 NoDur     -0.77     0.1  -1.59 -0.58 -1.27 -1.04
-#> # … with 7,070 more rows
+#> # ℹ 7,070 more rows
 ```
 
 We will only use a subset of the data to keep things simple:
@@ -776,13 +810,13 @@ subset_mod_frame <- model_frame %>%
   filter(Industry %in% unique(Industry)[1:2])
 subset_mod_frame
 #> # A tibble: 4 × 8
-#>   Industry model  estimator_fct  `size (MB)` grid_id  model_o…¹ settings warni…²
-#>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>    <list>   <chr>  
-#> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|004 <tidyFit> <tibble> <NA>   
-#> 2 Utils    enet   glmnet::glmnet      1.21   #001|001 <tidyFit> <tibble> <NA>   
-#> 3 Enrgy    robust MASS::rlm           0.0639 #0010000 <tidyFit> <tibble> <NA>   
-#> 4 Utils    robust MASS::rlm           0.0638 #0010000 <tidyFit> <tibble> <NA>   
-#> # … with abbreviated variable names ¹​model_object, ²​warnings
+#>   Industry model  estimator_fct  `size (MB)` grid_id  model_object settings
+#>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>       <list>  
+#> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|100 <tidyFit>    <tibble>
+#> 2 Shops    enet   glmnet::glmnet      1.21   #001|049 <tidyFit>    <tibble>
+#> 3 Enrgy    robust MASS::rlm           0.0639 #0010000 <tidyFit>    <tibble>
+#> 4 Shops    robust MASS::rlm           0.0638 #0010000 <tidyFit>    <tibble>
+#> # ℹ 1 more variable: warnings <chr>
 ```
 
 Let’s unnest the settings columns:
@@ -790,15 +824,15 @@ Let’s unnest the settings columns:
 ``` r
 subset_mod_frame %>% 
   tidyr::unnest(settings, keep_empty = TRUE)
-#> # A tibble: 4 × 12
-#>   Industry model  estimat…¹ size …² grid_id model_o…³ alpha family lambda method
-#>   <chr>    <chr>  <chr>       <dbl> <chr>   <list>    <dbl> <chr>   <dbl> <chr> 
-#> 1 Enrgy    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  0.498 <NA>  
-#> 2 Utils    enet   glmnet::…  1.21   #001|0… <tidyFit>     0 gauss…  1     <NA>  
-#> 3 Enrgy    robust MASS::rlm  0.0639 #00100… <tidyFit>    NA <NA>   NA     MM    
-#> 4 Utils    robust MASS::rlm  0.0638 #00100… <tidyFit>    NA <NA>   NA     MM    
-#> # … with 2 more variables: psi <list>, warnings <chr>, and abbreviated variable
-#> #   names ¹​estimator_fct, ²​`size (MB)`, ³​model_object
+#> # A tibble: 4 × 13
+#>   Industry model  estimator_fct  `size (MB)` grid_id  model_object alpha weights
+#>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>       <dbl> <list> 
+#> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|100 <tidyFit>        0 <NULL> 
+#> 2 Shops    enet   glmnet::glmnet      1.21   #001|049 <tidyFit>        0 <NULL> 
+#> 3 Enrgy    robust MASS::rlm           0.0639 #0010000 <tidyFit>       NA <NULL> 
+#> 4 Shops    robust MASS::rlm           0.0638 #0010000 <tidyFit>       NA <NULL> 
+#> # ℹ 5 more variables: family <chr>, lambda <dbl>, method <chr>, psi <list>,
+#> #   warnings <chr>
 ```
 
 The `tidyfit.models` frame can be used to access additional information.
@@ -820,14 +854,13 @@ for another example):
 subset_mod_frame %>% 
   mutate(fitted_model = map(model_object, ~.$object))
 #> # A tibble: 4 × 9
-#>   Industry model  estimator…¹ size …² grid_id model_o…³ settings warni…⁴ fitte…⁵
-#>   <chr>    <chr>  <chr>         <dbl> <chr>   <list>    <list>   <chr>   <list> 
-#> 1 Enrgy    enet   glmnet::gl…  1.21   #001|0… <tidyFit> <tibble> <NA>    <elnet>
-#> 2 Utils    enet   glmnet::gl…  1.21   #001|0… <tidyFit> <tibble> <NA>    <elnet>
-#> 3 Enrgy    robust MASS::rlm    0.0639 #00100… <tidyFit> <tibble> <NA>    <rlm>  
-#> 4 Utils    robust MASS::rlm    0.0638 #00100… <tidyFit> <tibble> <NA>    <rlm>  
-#> # … with abbreviated variable names ¹​estimator_fct, ²​`size (MB)`,
-#> #   ³​model_object, ⁴​warnings, ⁵​fitted_model
+#>   Industry model  estimator_fct  `size (MB)` grid_id  model_object settings
+#>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>       <list>  
+#> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|100 <tidyFit>    <tibble>
+#> 2 Shops    enet   glmnet::glmnet      1.21   #001|049 <tidyFit>    <tibble>
+#> 3 Enrgy    robust MASS::rlm           0.0639 #0010000 <tidyFit>    <tibble>
+#> 4 Shops    robust MASS::rlm           0.0638 #0010000 <tidyFit>    <tibble>
+#> # ℹ 2 more variables: warnings <chr>, fitted_model <list>
 ```
 
 To **predict**, we need data with the same columns as the input data and
@@ -841,17 +874,17 @@ predict(subset_mod_frame, data)
 #> # Groups:   Industry, model [4]
 #>    Industry model prediction truth
 #>    <chr>    <chr>      <dbl> <dbl>
-#>  1 Enrgy    enet      -3.82   2.02
-#>  2 Enrgy    enet       3.92   3.69
-#>  3 Enrgy    enet      -2.42  -3.91
-#>  4 Enrgy    enet      -3.34  -0.61
-#>  5 Enrgy    enet       0.785 -1.43
-#>  6 Enrgy    enet      -0.292  4.36
-#>  7 Enrgy    enet       3.72   4.54
+#>  1 Enrgy    enet      -3.77   2.02
+#>  2 Enrgy    enet       3.90   3.69
+#>  3 Enrgy    enet      -2.40  -3.91
+#>  4 Enrgy    enet      -3.30  -0.61
+#>  5 Enrgy    enet       0.762 -1.43
+#>  6 Enrgy    enet      -0.293  4.36
+#>  7 Enrgy    enet       3.68   4.54
 #>  8 Enrgy    enet       2.31   0.8 
-#>  9 Enrgy    enet       7.32   1.09
-#> 10 Enrgy    enet      -2.58   3.74
-#> # … with 2,822 more rows
+#>  9 Enrgy    enet       7.26   1.09
+#> 10 Enrgy    enet      -2.53   3.74
+#> # ℹ 2,822 more rows
 ```
 
 Finally, we can obtain a **tidy frame of the coefficients** using the
@@ -864,17 +897,17 @@ estimates
 #> # Groups:   Industry, model [4]
 #>    Industry model term        estimate model_info      
 #>    <chr>    <chr> <chr>          <dbl> <list>          
-#>  1 Enrgy    enet  (Intercept)  -0.968  <tibble [1 × 4]>
-#>  2 Enrgy    enet  Mkt-RF        1.21   <tibble [1 × 4]>
-#>  3 Enrgy    enet  SMB           0.705  <tibble [1 × 4]>
-#>  4 Enrgy    enet  HML          -0.0133 <tibble [1 × 4]>
-#>  5 Enrgy    enet  RMW          -0.619  <tibble [1 × 4]>
-#>  6 Enrgy    enet  CMA           1.35   <tibble [1 × 4]>
-#>  7 Utils    enet  (Intercept)   0.798  <tibble [1 × 4]>
-#>  8 Utils    enet  Mkt-RF        0.230  <tibble [1 × 4]>
-#>  9 Utils    enet  SMB           0.311  <tibble [1 × 4]>
-#> 10 Utils    enet  HML          -0.0229 <tibble [1 × 4]>
-#> # … with 14 more rows
+#>  1 Enrgy    enet  (Intercept) -0.955   <tibble [1 × 4]>
+#>  2 Enrgy    enet  Mkt-RF       1.20    <tibble [1 × 4]>
+#>  3 Enrgy    enet  SMB          0.703   <tibble [1 × 4]>
+#>  4 Enrgy    enet  HML         -0.00208 <tibble [1 × 4]>
+#>  5 Enrgy    enet  RMW         -0.622   <tibble [1 × 4]>
+#>  6 Enrgy    enet  CMA          1.32    <tibble [1 × 4]>
+#>  7 Shops    enet  (Intercept)  1.03    <tibble [1 × 4]>
+#>  8 Shops    enet  Mkt-RF       0.0849  <tibble [1 × 4]>
+#>  9 Shops    enet  SMB          0.0353  <tibble [1 × 4]>
+#> 10 Shops    enet  HML         -0.0149  <tibble [1 × 4]>
+#> # ℹ 14 more rows
 ```
 
 The estimates contain additional method-specific information that is
@@ -887,17 +920,17 @@ tidyr::unnest(estimates, model_info)
 #> # Groups:   Industry, model [4]
 #>    Industry model term        estimate lambda dev.ratio std.error statistic
 #>    <chr>    <chr> <chr>          <dbl>  <dbl>     <dbl>     <dbl>     <dbl>
-#>  1 Enrgy    enet  (Intercept)  -0.968   0.498     0.813        NA        NA
-#>  2 Enrgy    enet  Mkt-RF        1.21    0.498     0.813        NA        NA
-#>  3 Enrgy    enet  SMB           0.705   0.498     0.813        NA        NA
-#>  4 Enrgy    enet  HML          -0.0133  0.498     0.813        NA        NA
-#>  5 Enrgy    enet  RMW          -0.619   0.498     0.813        NA        NA
-#>  6 Enrgy    enet  CMA           1.35    0.498     0.813        NA        NA
-#>  7 Utils    enet  (Intercept)   0.798   1         0.402        NA        NA
-#>  8 Utils    enet  Mkt-RF        0.230   1         0.402        NA        NA
-#>  9 Utils    enet  SMB           0.311   1         0.402        NA        NA
-#> 10 Utils    enet  HML          -0.0229  1         0.402        NA        NA
-#> # … with 14 more rows
+#>  1 Enrgy    enet  (Intercept) -0.955    0.536     0.812        NA        NA
+#>  2 Enrgy    enet  Mkt-RF       1.20     0.536     0.812        NA        NA
+#>  3 Enrgy    enet  SMB          0.703    0.536     0.812        NA        NA
+#>  4 Enrgy    enet  HML         -0.00208  0.536     0.812        NA        NA
+#>  5 Enrgy    enet  RMW         -0.622    0.536     0.812        NA        NA
+#>  6 Enrgy    enet  CMA          1.32     0.536     0.812        NA        NA
+#>  7 Shops    enet  (Intercept)  1.03    50.1       0.173        NA        NA
+#>  8 Shops    enet  Mkt-RF       0.0849  50.1       0.173        NA        NA
+#>  9 Shops    enet  SMB          0.0353  50.1       0.173        NA        NA
+#> 10 Shops    enet  HML         -0.0149  50.1       0.173        NA        NA
+#> # ℹ 14 more rows
 ```
 
 Additional generics such as `fitted` or `resid` can be used to obtain
