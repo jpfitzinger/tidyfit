@@ -1,6 +1,12 @@
 ## Summary of changes
 
-- Update generic methods for changes in 'broom' package
+This version adds two new regression and classification methods:
+
+- Spike & Slab regression and classification ('spikeslab')
+- Genetic algorithm for variable selection in regression ('genetic')
+
+In addition this version fixes a bug with 'adalasso' in conjunction with the 'dfmax' and 'pmax' arguments.
+Finally, the internal '.model' generic is renamed to '.fit'.
 
 ## R CMD check results
 
