@@ -116,8 +116,10 @@
     data[, response_var] <- 0
     truth <- NULL
   }
+  mf <- stats::model.frame(self$formula, data)
+  x <- stats::model.matrix(self$formula, mf)
   pred <- dplyr::tibble(
-    prediction = stats::predict(self$fit_info$fitted_regression, data),
+    prediction = stats::predict(self$fit_info$fitted_regression, as.data.frame(x)),
     truth = truth
   )
   return(pred)
