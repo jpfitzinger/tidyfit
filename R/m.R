@@ -54,6 +54,8 @@
 #'
 #' \code{"blasso"} performs a Bayesian Lasso regression using \code{monomvn::blasso}. See \code{\link{.model.blasso}} for details.
 #'
+#' \code{"spikeslab"} performs a Bayesian Spike and Slab regression using \code{BoomSpikeSlab::lm.spike}. See \code{\link{.model.spikeslab}} for details.
+#'
 #' \code{"bma"} performs a Bayesian model averaging regression using \code{BMS::bms}. See \code{\link{.model.bma}} for details.
 #'
 #' \code{"tvp"} performs a Bayesian time-varying parameter regression using \code{shrinkTVP::shrinkTVP}. See \code{\link{.model.tvp}} for details.
@@ -75,6 +77,8 @@
 #' \code{"mrmr"} performs a minimum redundancy, maximum relevance features selection routine using \code{mRMRe::mRMR.ensemble}. See \code{\link{.model.mrmr}} for details.
 #'
 #' \code{"relief"} performs a ReliefF feature selection routine using \code{CORElearn::attrEval}. See \code{\link{.model.relief}} for details.
+#'
+#' \code{"genetic"} performs a linear regression with feature selection using the genetic algorithm implemented in \code{gaselect::genAlg}. See \code{\link{.model.genetic}} for details.
 #'
 #' When called without \code{formula} and \code{data} arguments, the function returns a 'tidyfit.models' data frame with unfitted models.
 #'
