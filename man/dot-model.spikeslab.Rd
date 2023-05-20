@@ -2,7 +2,7 @@
 % Please edit documentation in R/model.spikeslab.R
 \name{.model.spikeslab}
 \alias{.model.spikeslab}
-\title{Bayesian Spike and Slab regression for \code{tidyfit}}
+\title{Bayesian Spike and Slab regression or classification for \code{tidyfit}}
 \usage{
 \method{.model}{spikeslab}(self, data = NULL)
 }
@@ -15,7 +15,7 @@
 A fitted tidyFit class model.
 }
 \description{
-Fits a Bayesian Spike and Slab regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}}.
+Fits a Bayesian Spike and Slab regression or classification on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 }
 \details{
 \strong{Hyperparameters:}
@@ -23,18 +23,37 @@ Fits a Bayesian Spike and Slab regression on a 'tidyFit' \code{R6} class. The fu
 \emph{None. Cross validation not applicable.}
 
 \strong{Important method arguments (passed to \code{\link{m}})}
+
+In the case of \strong{regression}, arguments are passed to \code{BoomSpikeSlab::lm.spike} and \code{BoomSpikeSlab::SpikeSlabPrior}. Check those functions for details.
+
+\code{BoomSpikeSlab::SpikeSlabPrior}
 \itemize{
 \item expected.r2
 \item prior.df
 \item expected.model.size
+}
+
+\code{BoomSpikeSlab::lm.spike}
+\itemize{
 \item niter
 }
 
-The function provides a wrapper for \code{BoomSpikeSlab::lm.spike}. See \code{?lm.spike} for more details.
+In the case of \strong{classification}, arguments are passed to \code{BoomSpikeSlab::logit.spike} and \code{BoomSpikeSlab::SpikeSlabGlmPrior}. Check those functions for details.
+
+\code{BoomSpikeSlab::logit.spike}
+\itemize{
+\item niter
+}
+
+I advise against the use of \code{BoomSpikeSlab::SpikeSlabGlmPrior} at the moment, since it appears to be buggy.
+
+The function provides wrappers for \code{BoomSpikeSlab::lm.spike} and \code{BoomSpikeSlab::logit.spike}. See \code{?lm.spike} and \code{?logit.spike} for more details.
 
 \strong{Implementation}
 
-Prior arguments are passed to BoomSpikeSlab::SpikeSlabPrior (the function automatically identifies which arguments are for the prior, and which for BoomSpikeSlab::lm.spike).
+Prior arguments are passed to \code{BoomSpikeSlab::SpikeSlabPrior} and \code{BoomSpikeSlab::SpikeSlabGlmPrior} (the function automatically identifies which arguments are for the prior, and which for \code{BoomSpikeSlab::lm.spike} or \code{BoomSpikeSlab::logit.spike}).
+
+\code{BoomSpikeSlab::logit.spike} is automatically selected when using \code{classify}.
 }
 \examples{
 # Load data

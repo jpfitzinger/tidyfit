@@ -1,6 +1,6 @@
 #' @name .model.spikeslab
-#' @title Bayesian Spike and Slab regression for \code{tidyfit}
-#' @description Fits a Bayesian Spike and Slab regression on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}}.
+#' @title Bayesian Spike and Slab regression or classification for \code{tidyfit}
+#' @description Fits a Bayesian Spike and Slab regression or classification on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} and \code{\link{classify}}.
 #'
 #' @details **Hyperparameters:**
 #'
@@ -8,16 +8,30 @@
 #'
 #' **Important method arguments (passed to \code{\link{m}})**
 #'
+#' In the case of **regression**, arguments are passed to \code{BoomSpikeSlab::lm.spike} and \code{BoomSpikeSlab::SpikeSlabPrior}. Check those functions for details.
+#'
+#' \code{BoomSpikeSlab::SpikeSlabPrior}
 #' - expected.r2
 #' - prior.df
 #' - expected.model.size
+#'
+#' \code{BoomSpikeSlab::lm.spike}
 #' - niter
 #'
-#' The function provides a wrapper for \code{BoomSpikeSlab::lm.spike}. See \code{?lm.spike} for more details.
+#' In the case of **classification**, arguments are passed to \code{BoomSpikeSlab::logit.spike} and \code{BoomSpikeSlab::SpikeSlabGlmPrior}. Check those functions for details.
+#'
+#' \code{BoomSpikeSlab::logit.spike}
+#' - niter
+#'
+#' I advise against the use of \code{BoomSpikeSlab::SpikeSlabGlmPrior} at the moment, since it appears to be buggy.
+#'
+#' The function provides wrappers for \code{BoomSpikeSlab::lm.spike} and \code{BoomSpikeSlab::logit.spike}. See \code{?lm.spike} and \code{?logit.spike} for more details.
 #'
 #' **Implementation**
 #'
-#' Prior arguments are passed to BoomSpikeSlab::SpikeSlabPrior (the function automatically identifies which arguments are for the prior, and which for BoomSpikeSlab::lm.spike).
+#' Prior arguments are passed to \code{BoomSpikeSlab::SpikeSlabPrior} and \code{BoomSpikeSlab::SpikeSlabGlmPrior} (the function automatically identifies which arguments are for the prior, and which for \code{BoomSpikeSlab::lm.spike} or \code{BoomSpikeSlab::logit.spike}).
+#'
+#' \code{BoomSpikeSlab::logit.spike} is automatically selected when using \code{classify}.
 #'
 #' @param self a tidyFit R6 class.
 #' @param data a data frame, data frame extension (e.g. a tibble), or a lazy data frame (e.g. from dbplyr or dtplyr).
@@ -55,23 +69,43 @@
   x <- stats::model.matrix(self$formula, mf)
   y <- stats::model.response(mf)
 
+  if (self$mode == "classification") {
+    class_names_map <- levels(y)
+    names(class_names_map) <- c(0, 1)
+    data[, all.vars(self$formula)[1]] <- ifelse(y == class_names_map[1], 0, 1)
+  }
+
   # Set default arguments
   self$set_args(niter = 1000, overwrite = FALSE)
 
-  prior_args <- self$args[names(self$args) %in% methods::formalArgs(BoomSpikeSlab::SpikeSlabPrior)]
-  fit_args <- self$args[names(self$args) %in% methods::formalArgs(BoomSpikeSlab::lm.spike)]
-
-  fit_args[["prior"]] <- do.call(BoomSpikeSlab::SpikeSlabPrior, append(list(x = x, y = y), prior_args))
-
-  eval_fun_ <- function(...) {
-    args <- list(...)
-    do.call(BoomSpikeSlab::lm.spike, args)
+  if (self$mode == "regression") {
+    prior_args <- self$args[names(self$args) %in% methods::formalArgs(BoomSpikeSlab::SpikeSlabPrior)]
+    fit_args <- self$args[names(self$args) %in% methods::formalArgs(BoomSpikeSlab::lm.spike)]
+    if (length(prior_args) > 0)
+      fit_args[["prior"]] <- do.call(BoomSpikeSlab::SpikeSlabPrior, append(list(x = x, y = y), prior_args))
+    eval_fun_ <- function(...) {
+      args <- list(...)
+      do.call(BoomSpikeSlab::lm.spike, args)
+    }
+    estimator <- "BoomSpikeSlab::lm.spike"
   }
+  if (self$mode == "classification") {
+    prior_args <- self$args[names(self$args) %in% methods::formalArgs(BoomSpikeSlab::SpikeSlabGlmPrior)]
+    fit_args <- self$args[names(self$args) %in% methods::formalArgs(BoomSpikeSlab::logit.spike)]
+    if (length(prior_args) > 0)
+      fit_args[["prior"]] <- do.call(BoomSpikeSlab::SpikeSlabGlmPrior, append(list(predictors = x), prior_args))
+    eval_fun_ <- function(...) {
+      args <- list(...)
+      do.call(BoomSpikeSlab::logit.spike, args)
+    }
+    estimator <- "BoomSpikeSlab::logit.spike"
+  }
+
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
   res <- do.call(eval_fun,
                  append(list(formula = self$formula, data = data), fit_args))
   .store_on_self(self, res)
-  self$estimator <- "BoomSpikeSlab::lm.spike"
+  self$estimator <- estimator
   self$fit_info <- list(var_names = colnames(x))
   invisible(self)
 
@@ -104,7 +138,7 @@
 }
 .fitted.lm.spike <- function(object, self, ...) {
   fit <- dplyr::tibble(
-    fitted = rowMeans(stats::predict(object))
+    fitted = rowMeans(stats::predict(object, object$training.data))
   )
   return(fit)
 }
