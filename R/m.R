@@ -6,79 +6,79 @@
 #'
 #' ### Linear (generalized) regression or classification
 #'
-#' \code{"lm"} performs an OLS regression using \code{stats::lm}. See \code{\link{.model.lm}} for details.
+#' \code{"lm"} performs an OLS regression using \code{stats::lm}. See \code{\link{.fit.lm}} for details.
 #'
-#' \code{"glm"} performs a generalized regression or classification using \code{stats::glm}. See \code{\link{.model.glm}} for details.
+#' \code{"glm"} performs a generalized regression or classification using \code{stats::glm}. See \code{\link{.fit.glm}} for details.
 #'
-#' \code{"robust"} performs a robust regression using \code{MASS::rlm}. See \code{\link{.model.robust}} for details.
+#' \code{"robust"} performs a robust regression using \code{MASS::rlm}. See \code{\link{.fit.robust}} for details.
 #'
-#' \code{"quantile"} performs a quantile regression using \code{quantreg::rq}. See \code{\link{.model.quantile}} for details.
+#' \code{"quantile"} performs a quantile regression using \code{quantreg::rq}. See \code{\link{.fit.quantile}} for details.
 #'
 #' ### Regression and classification with L1 and L2 penalties
 #'
-#' \code{"lasso"} performs a linear regression or classification with L1 penalty using \code{glmnet::glmnet}. See \code{\link{.model.lasso}} for details.
+#' \code{"lasso"} performs a linear regression or classification with L1 penalty using \code{glmnet::glmnet}. See \code{\link{.fit.lasso}} for details.
 #'
-#' \code{"ridge"} performs a linear regression or classification with L2 penalty using \code{glmnet::glmnet}. See \code{\link{.model.ridge}} for details.
+#' \code{"ridge"} performs a linear regression or classification with L2 penalty using \code{glmnet::glmnet}. See \code{\link{.fit.ridge}} for details.
 #'
-#' \code{"adalasso"} performs an Adaptive Lasso regression or classification using \code{glmnet::glmnet}. See \code{\link{.model.adalasso}} for details.
+#' \code{"adalasso"} performs an Adaptive Lasso regression or classification using \code{glmnet::glmnet}. See \code{\link{.fit.adalasso}} for details.
 #'
-#' \code{"enet"} performs a linear regression or classification with L1 and L2 penalties using \code{glmnet::glmnet}. See \code{\link{.model.enet}} for details.
+#' \code{"enet"} performs a linear regression or classification with L1 and L2 penalties using \code{glmnet::glmnet}. See \code{\link{.fit.enet}} for details.
 #'
 #' ### Other Machine Learning
 #'
-#' \code{"boost"} performs gradient boosting regression or classification using \code{mboost::glmboost}. See \code{\link{.model.boost}} for details.
+#' \code{"boost"} performs gradient boosting regression or classification using \code{mboost::glmboost}. See \code{\link{.fit.boost}} for details.
 #'
-#' \code{"rf"} performs a random forest regression or classification using \code{randomForest::randomForest}. See \code{\link{.model.rf}} for details.
+#' \code{"rf"} performs a random forest regression or classification using \code{randomForest::randomForest}. See \code{\link{.fit.rf}} for details.
 #'
-#' \code{"svm"} performs a support vector regression or classification using \code{e1071::svm}. See \code{\link{.model.svm}} for details.
+#' \code{"svm"} performs a support vector regression or classification using \code{e1071::svm}. See \code{\link{.fit.svm}} for details.
 #'
 #' ### Factor regressions
 #'
-#' \code{"pcr"} performs a principal components regression using \code{pls::pcr}. See \code{\link{.model.pcr}} for details.
+#' \code{"pcr"} performs a principal components regression using \code{pls::pcr}. See \code{\link{.fit.pcr}} for details.
 #'
-#' \code{"plsr"} performs a partial least squares regression using \code{pls::plsr}. See \code{\link{.model.plsr}} for details.
+#' \code{"plsr"} performs a partial least squares regression using \code{pls::plsr}. See \code{\link{.fit.plsr}} for details.
 #'
-#' \code{"hfr"} performs a hierarchical feature regression using \code{hfr::hfr}. See \code{\link{.model.hfr}} for details.
+#' \code{"hfr"} performs a hierarchical feature regression using \code{hfr::hfr}. See \code{\link{.fit.hfr}} for details.
 #'
 #' ### Best subset selection
 #'
-#' \code{"subset"} performs a best subset regression or classification using \code{bestglm::bestglm} (wrapper for \code{leaps}). See \code{\link{.model.subset}} for details.
+#' \code{"subset"} performs a best subset regression or classification using \code{bestglm::bestglm} (wrapper for \code{leaps}). See \code{\link{.fit.subset}} for details.
 #'
-#' \code{"gets"} performs a general-to-specific regression using \code{gets::gets}. See \code{\link{.model.gets}} for details.
+#' \code{"gets"} performs a general-to-specific regression using \code{gets::gets}. See \code{\link{.fit.gets}} for details.
 #'
 #' ### Bayesian methods
 #'
-#' \code{"bayes"} performs a Bayesian generalized regression or classification using \code{arm::bayesglm}. See \code{\link{.model.bayes}} for details.
+#' \code{"bayes"} performs a Bayesian generalized regression or classification using \code{arm::bayesglm}. See \code{\link{.fit.bayes}} for details.
 #'
-#' \code{"bridge"} performs a Bayesian ridge regression using \code{monomvn::bridge}. See \code{\link{.model.bridge}} for details.
+#' \code{"bridge"} performs a Bayesian ridge regression using \code{monomvn::bridge}. See \code{\link{.fit.bridge}} for details.
 #'
-#' \code{"blasso"} performs a Bayesian Lasso regression using \code{monomvn::blasso}. See \code{\link{.model.blasso}} for details.
+#' \code{"blasso"} performs a Bayesian Lasso regression using \code{monomvn::blasso}. See \code{\link{.fit.blasso}} for details.
 #'
-#' \code{"spikeslab"} performs a Bayesian Spike and Slab regression using \code{BoomSpikeSlab::lm.spike}. See \code{\link{.model.spikeslab}} for details.
+#' \code{"spikeslab"} performs a Bayesian Spike and Slab regression using \code{BoomSpikeSlab::lm.spike}. See \code{\link{.fit.spikeslab}} for details.
 #'
-#' \code{"bma"} performs a Bayesian model averaging regression using \code{BMS::bms}. See \code{\link{.model.bma}} for details.
+#' \code{"bma"} performs a Bayesian model averaging regression using \code{BMS::bms}. See \code{\link{.fit.bma}} for details.
 #'
-#' \code{"tvp"} performs a Bayesian time-varying parameter regression using \code{shrinkTVP::shrinkTVP}. See \code{\link{.model.tvp}} for details.
+#' \code{"tvp"} performs a Bayesian time-varying parameter regression using \code{shrinkTVP::shrinkTVP}. See \code{\link{.fit.tvp}} for details.
 #'
 #' ### Mixed-effects modeling
 #'
-#' \code{"glmm"} performs a mixed-effects GLM using \code{lme4::glmer}. See \code{\link{.model.glmm}} for details.
+#' \code{"glmm"} performs a mixed-effects GLM using \code{lme4::glmer}. See \code{\link{.fit.glmm}} for details.
 #'
 #' ### Specialized time series methods
 #'
-#' \code{"mslm"} performs a Markov-switching regression using \code{MSwM::msmFit}. See \code{\link{.model.mslm}} for details.
+#' \code{"mslm"} performs a Markov-switching regression using \code{MSwM::msmFit}. See \code{\link{.fit.mslm}} for details.
 #'
 #' ### Feature selection
 #'
-#' \code{"cor"} calculates Pearson's correlation coefficient using \code{stats::cor.test}. See \code{\link{.model.cor}} for details.
+#' \code{"cor"} calculates Pearson's correlation coefficient using \code{stats::cor.test}. See \code{\link{.fit.cor}} for details.
 #'
-#' \code{"chisq"} calculates Pearson's Chi-squared test using \code{stats::chisq.test}. See \code{\link{.model.chisq}} for details.
+#' \code{"chisq"} calculates Pearson's Chi-squared test using \code{stats::chisq.test}. See \code{\link{.fit.chisq}} for details.
 #'
-#' \code{"mrmr"} performs a minimum redundancy, maximum relevance features selection routine using \code{mRMRe::mRMR.ensemble}. See \code{\link{.model.mrmr}} for details.
+#' \code{"mrmr"} performs a minimum redundancy, maximum relevance features selection routine using \code{mRMRe::mRMR.ensemble}. See \code{\link{.fit.mrmr}} for details.
 #'
-#' \code{"relief"} performs a ReliefF feature selection routine using \code{CORElearn::attrEval}. See \code{\link{.model.relief}} for details.
+#' \code{"relief"} performs a ReliefF feature selection routine using \code{CORElearn::attrEval}. See \code{\link{.fit.relief}} for details.
 #'
-#' \code{"genetic"} performs a linear regression with feature selection using the genetic algorithm implemented in \code{gaselect::genAlg}. See \code{\link{.model.genetic}} for details.
+#' \code{"genetic"} performs a linear regression with feature selection using the genetic algorithm implemented in \code{gaselect::genAlg}. See \code{\link{.fit.genetic}} for details.
 #'
 #' When called without \code{formula} and \code{data} arguments, the function returns a 'tidyfit.models' data frame with unfitted models.
 #'
