@@ -24,12 +24,13 @@ model_definition <- R6::R6Class(
       self$formula <- formula
       self$args <- settings
       self$grid_id <- grid_id
-      fitter <- get(paste0(".model.", method))
-      private$fit_ <- fitter
       self$cv <- .check_method(method, "cv")
       self$mode <- "regression"
     },
-    fit = function(...) {private$fit_(self, ...)},
+    fit = function(...) {
+      class(self) <- c(class(self), self$method)
+      .fit(self, ...)
+      },
     predict = function(data) {
       all_args <- list(object = self$object, data = data, self = self)
       do.call(.predict, all_args)
