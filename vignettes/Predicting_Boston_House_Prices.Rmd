@@ -131,11 +131,11 @@ Regularization controls overfit by introducing parameter bias in exchange for a 
 ```{r, echo = F, eval=TRUE}
 library(kableExtra)
 tbl <- data.frame(
-  `Best subset` = c("Exhaustive search (`leaps`)", "Forward selection (`leaps`)", "Backward selection (`leaps`)", "Sequential Replacement (`leaps`)"),
-  `L1/L2 penalized` = c("Lasso (`glmnet`)", "Ridge (`glmnet`)", "ElasticNet (`glmnet`)", "Adaptive Lasso (`glmnet`)"),
-  `Latent factors` = c("Principal components regression (`pls`)", "Partial least squares (`pls`)", "", ""),
-  `Machine Learning` = c("Gradient Boosting (`mboost`)", "Hierarchical feature regression (`hfr`)", "Support vector regression (`e1071`)", ""),
-  `Bayesian` = c("Bayesian regression (`arm`)", "Bayesian model averaging (`BMS`)", "Bayesian Lasso (`monomvn`)", "Bayesian Ridge (`monomvn`)"),
+  `Best subset` = c("Exhaustive search (`leaps`)", "Forward selection (`leaps`)", "Backward selection (`leaps`)", "Sequential Replacement (`leaps`)", "Genetic Algorithm ('gaselect')"),
+  `L1/L2 penalized` = c("Lasso (`glmnet`)", "Ridge (`glmnet`)", "ElasticNet (`glmnet`)", "Adaptive Lasso (`glmnet`)", ""),
+  `Latent factors` = c("Principal components regression (`pls`)", "Partial least squares (`pls`)", "", "", ""),
+  `Machine Learning` = c("Gradient Boosting (`mboost`)", "Hierarchical feature regression (`hfr`)", "Support vector regression (`e1071`)", "", ""),
+  `Bayesian` = c("Bayesian regression (`arm`)", "Bayesian model averaging (`BMS`)", "Bayesian Lasso (`monomvn`)", "Bayesian Ridge (`monomvn`)", "Spike and Slab Regression ('BoomSpikeSlab')"),
   check.names = F
 )
 kbl(tbl, align = "ccccc") %>% 
@@ -143,19 +143,20 @@ kbl(tbl, align = "ccccc") %>%
 
 ```
 
-In the next code chunk, 17 of the available regression techniques are fitted to the data set. Hyperparameters are optimized using a 10-fold cross validation powered by `rsample` in the background. As a practical aside, it is possible to set a `future` plan to ensure hyperparameter tuning is performed on a parallelized backend.^[Parallelizing happens at the level of cross validation slices, so always consider if the overhead of parallel computation is worth it. For instance, parallelizing will likely be very useful with `.cv = "loo_cv"` but can be less useful with `.cv = "vfold_cv"`.] This is done using `plan(multisession(workers = n_workers))`, where `n_workers` is the number of available cores. Furthermore, a progress bar could be activated using `progressr::handlers(global=TRUE)`.
+In the next code chunk, 17 of the available regression techniques are fitted to the data set. Hyperparameters are optimized using a 10-fold cross validation powered by `rsample` in the background. As a practical aside, it is possible to set a `future` plan to ensure hyperparameter tuning is performed on a parallelized backend.^[Parallelizing happens at the level of cross validation slices, so always consider if the overhead of parallel computation is worth it. For instance, parallelizing will likely be very useful with `.cv = "loo_cv"` but can be less useful with `.cv = "vfold_cv"`.] This is done using `plan(multisession(workers = n_workers))`, where `n_workers` is the number of available cores. Furthermore, a progress bar could be activated using `progressr::handlers(global = TRUE)`.
 
 ```{r}
 model_frame_all <- data_trn %>% 
   regress(medv ~ .*., 
           OLS = m("lm"),
           BAYES = m("bayes"),
-          BMA = m("bma", iter = 5000),
+          BMA = m("bma", iter = 10000),
           SEQREP = m("subset", method = "seqrep", IC = "AIC"),
           `FORWARD SELECTION` = m("subset", method = "forward", IC = "AIC"),
           `BACKWARD SELECTION` = m("subset", method = "backward", IC = "AIC"),
           LASSO = m("lasso"),
           BLASSO = m("blasso"),
+          SPIKESLAB = m("spikeslab", niter = 10000),
           RIDGE = m("ridge"),
           BRIDGE = m("bridge"),
           ELASTICNET = m("enet"),
@@ -165,6 +166,7 @@ model_frame_all <- data_trn %>%
           HFR = m("hfr"),
           `GRADIENT BOOSTING` = m("boost"),
           SVR = m("svm"),
+          GENETIC = m("genetic", populationSize = 1000, numGenerations = 50, statistic = "AIC", maxVariables = 20),
           .cv = "vfold_cv", .cv_args = list(v = 10))
 ```
 
@@ -182,7 +184,7 @@ eval_frame %>%
         axis.text.x = element_text(angle = 90))
 ```
 
-The Bayesian regression techniques overwhelmingly outperform the remaining methods, with the exception of the hierarchical feature regression and perhaps the adaptive lasso, both of which achieve relatively high out-of-sample performance. The subset selection algorithms achieve relatively good results, while the penalized and latent factor regressions perform worst. All methods improve on the OLS results.
+The Bayesian regression techniques overwhelmingly outperform the remaining methods, with the exception of the hierarchical feature regression, genetic algorithm and the adaptive lasso, both of which achieve relatively high out-of-sample performance. The subset selection algorithms achieve relatively good results, while the penalized and latent factor regressions perform worst. All methods improve on the OLS results.
 
 ## A glimpse at the backend
 
