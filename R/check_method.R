@@ -20,7 +20,7 @@
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor",
-                "chisq", "rf", "bridge", "blasso"),
+                "chisq", "rf", "bridge", "blasso", "spikeslab", "genetic"),
     message = "'%s' is not a valid method. See '?m' for details"
   ),
   cv = list(
@@ -34,11 +34,13 @@
   regress = list(
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
-                "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor", "rf", "bridge", "blasso"),
+                "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor", "rf", "bridge", "blasso",
+                "spikeslab", "genetic"),
     message = "'%s' cannot be used for regression"
   ),
   classify = list(
-    methods = c("glm", "lasso", "ridge", "enet", "adalasso", "boost", "subset", "bayes", "glmm", "svm", "mrmr", "relief", "chisq", "rf"),
+    methods = c("glm", "lasso", "ridge", "enet", "adalasso", "boost", "subset", "bayes", "glmm", "svm", "mrmr",
+                "relief", "chisq", "rf", "spikeslab"),
     message = "'%s' cannot be used for classification"
   ),
   multinomial = list(
