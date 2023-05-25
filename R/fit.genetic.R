@@ -90,9 +90,9 @@
     )
     colnames(x_subset) <- gsub("`", "", colnames(x_subset))
     if (incl_intercept & (!"(Intercept)" %in% colnames(x_subset))) {
-      res_mod <- stats::lm(target_var ~ 1 + ., data = x_subset)
+      res_mod <- stats::lm(target_var ~ 1 + ., data = x_subset, weights = self$args$weights)
     } else {
-      res_mod <- stats::lm(target_var ~ 0 + ., data = x_subset)
+      res_mod <- stats::lm(target_var ~ 0 + ., data = x_subset, weights = self$args$weights)
     }
 
   } else {
@@ -118,6 +118,7 @@
   }
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
+  colnames(x) <- gsub("`", "", colnames(x))
   pred <- dplyr::tibble(
     prediction = stats::predict(self$fit_info$fitted_regression, as.data.frame(x)),
     truth = truth
