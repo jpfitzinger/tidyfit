@@ -35,7 +35,7 @@
 #' @param .mask optional vector of columns names to ignore. Can be useful when using 'y ~ .' formula syntax.
 #' @param .return_slices logical. Should the output of individual cross validation slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.
 #' @param .tune_each_group logical. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.
-#' @param .force_cv logical. Should models be evaluated across all cross validation slices, even if no hyperparameters are tuned. Default is \code{.force_cv=TRUE}.
+#' @param .force_cv logical. Should models be evaluated across all cross validation slices, even if no hyperparameters are tuned. Default is \code{.force_cv=FALSE}.
 #' @return A \code{tidyfit.models} frame containing model details for each group.
 #'
 #' The **'tidyfit.models' frame** consists of 4 different components:
