@@ -31,8 +31,10 @@ model_definition <- R6::R6Class(
       class(self) <- c(class(self), self$method)
       .fit(self, ...)
       },
-    predict = function(data) {
+    predict = function(data, ...) {
+      data <- data.frame(data)
       all_args <- list(object = self$object, data = data, self = self)
+      all_args <- append(all_args, list(...))
       do.call(.predict, all_args)
     },
     coef = function(...) {
