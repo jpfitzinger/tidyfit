@@ -55,11 +55,6 @@
   return(estimates)
 }
 
-.coef.rq <- function(object, ...) {
-  estimates <- broom::tidy(object)
-  return(estimates)
-}
-
 .coef.rlm <- function(object, self = NULL, ...) {
   if (is.null(self$args$vcov.)) {
     adj_obj <- object

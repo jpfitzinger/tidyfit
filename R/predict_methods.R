@@ -117,22 +117,6 @@
   return(pred)
 }
 
-#' @importFrom dplyr tibble
-#' @importFrom stats predict
-.predict.rq <- function(object, data, self = NULL, ...) {
-  response_var <- all.vars(self$formula)[1]
-  if (response_var %in% colnames(data)) {
-    truth <- data[, response_var]
-  } else {
-    truth <- NULL
-  }
-  pred <- dplyr::tibble(
-    prediction = stats::predict(object, data),
-    truth = truth
-  )
-  return(pred)
-}
-
 #' @importFrom stats model.frame model.matrix model.response
 .predict.glmboost <- function(object, data, self = NULL, ...) {
   response_var <- all.vars(self$formula)[1]

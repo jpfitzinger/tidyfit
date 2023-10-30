@@ -47,6 +47,7 @@
     self,
     data = NULL
 ) {
+  self$set_args(tau = 0.5, overwrite = FALSE)
   ctr <- self$args[names(self$args) %in% methods::formalArgs(quantreg::rq)]
   eval_fun_ <- function(...) {
     args <- list(...)
@@ -56,6 +57,78 @@
   res <- do.call(eval_fun,
                  append(list(formula = self$formula, data = data), ctr))
   .store_on_self(self, res)
-  self$estimator <- "quantile::rq"
+  self$estimator <- "quantreg::rq"
   invisible(self)
+}
+
+.coef.rq <- function(object, ...) {
+  estimates <- broom::tidy(object)
+  return(estimates)
+}
+
+.coef.rqs <- function(object, ...) {
+  estimates <- broom::tidy(object)
+  return(estimates)
+}
+
+#' @importFrom dplyr tibble
+#' @importFrom stats predict
+.predict.rq <- function(object, data, self = NULL, ...) {
+  response_var <- all.vars(self$formula)[1]
+  if (response_var %in% colnames(data)) {
+    truth <- data[, response_var]
+  } else {
+    truth <- NULL
+  }
+  pred <- dplyr::tibble(
+    prediction = stats::predict(object, data),
+    truth = truth,
+    tau = self$args$tau
+  )
+  return(pred)
+}
+
+.predict.rqs <- function(object, data, self = NULL, ...) {
+  response_var <- all.vars(self$formula)[1]
+  if (response_var %in% colnames(data)) {
+    truth <- data[, response_var]
+  } else {
+    truth <- NULL
+  }
+  pred_mat <- stats::predict(object, data)
+  if (length(self$args$tau) == 1) {
+    pred <- dplyr::tibble(prediction = pred_mat, truth = truth, tau = self$args$tau)
+  } else {
+    pred_mat <- data.frame(pred_mat)
+    colnames(pred_mat) <- sort(self$args$tau)
+    pred <- dplyr::tibble(pred_mat) %>%
+      dplyr::mutate(truth = truth) %>%
+      tidyr::gather("tau", "prediction", -.data$truth) %>%
+      dplyr::select(.data$prediction, .data$truth, .data$tau)
+  }
+  return(pred)
+}
+
+.fitted.rq <- function(object, self = NULL, ...) {
+  .predict.rq(object, data = data.frame(self$data), self = self, ...) %>%
+    dplyr::rename(fitted = .data$prediction) %>%
+    dplyr::select(-any_of(c("truth")))
+}
+
+.fitted.rqs <- function(object, self = NULL, ...) {
+  .predict.rqs(object, data = data.frame(self$data), self = self, ...) %>%
+    dplyr::rename(fitted = .data$prediction) %>%
+    dplyr::select(-any_of(c("truth")))
+}
+
+.resid.rq <- function(object, self = NULL, ...) {
+  .predict.rq(object, data = data.frame(self$data), self = self, ...) %>%
+    dplyr::mutate(residual = .data$truth - .data$prediction) %>%
+    dplyr::select(-any_of(c("truth", "prediction")))
+}
+
+.resid.rqs <- function(object, self = NULL, ...) {
+  .predict.rqs(object, data = data.frame(self$data), self = self, ...) %>%
+    dplyr::mutate(residual = .data$truth - .data$prediction) %>%
+    dplyr::select(-any_of(c("truth", "prediction")))
 }
