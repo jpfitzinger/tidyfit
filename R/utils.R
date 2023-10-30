@@ -38,6 +38,9 @@
   if (!is.null(control[["control"]]) & model_method == "mslm") {
     control$control <- list(control[["control"]])
   }
+  if (!is.null(control[["tau"]]) & model_method %in% c("quantile", "quantile_rf")) {
+    control$tau <- list(control[["tau"]])
+  }
 
   control <- .func_to_list(control)
   grid <- tidyr::expand_grid(!!! control) %>%
