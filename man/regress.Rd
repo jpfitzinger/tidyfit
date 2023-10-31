@@ -22,7 +22,7 @@
 
 \item{.tune_each_group}{logical. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.}
 
-\item{.force_cv}{logical. Should models be evaluated across all cross validation slices, even if no hyperparameters are tuned. Default is \code{.force_cv=TRUE}.}
+\item{.force_cv}{logical. Should models be evaluated across all cross validation slices, even if no hyperparameters are tuned. Default is \code{.force_cv=FALSE}.}
 }
 \value{
 A \code{tidyfit.models} frame containing model details for each group.
