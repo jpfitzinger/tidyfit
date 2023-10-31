@@ -84,6 +84,15 @@
   return(names_vec)
 }
 
+.get_names_map_from_data <- function(formula, data) {
+  mf <- stats::model.frame(formula, data)
+  original_names <- .names_map(gsub("`", "", colnames(mf)))
+  x <- stats::model.matrix(formula, mf)
+  transformed_names <- .names_map(gsub("`", "", colnames(x)))
+  names_map <- c(original_names, transformed_names)
+  return(names_map[!duplicated(names_map)])
+}
+
 .make_model_cols <- function(df) {
   make_vector <- function(lst) {
     lst[sapply(lst, is.null)] <- NA
