@@ -118,7 +118,6 @@
   }
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
-  colnames(x) <- gsub("`", "", colnames(x))
   pred <- dplyr::tibble(
     prediction = stats::predict(self$fit_info$fitted_regression, as.data.frame(x)),
     truth = truth
