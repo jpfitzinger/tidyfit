@@ -43,7 +43,7 @@
   }
 
   metrics <- metrics %>%
-    dplyr::select(-.data$.metric, -.data$.estimator, -.data$.estimate)
+    dplyr::select(-".metric", -".estimator", -".estimate")
 
   return(metrics)
 

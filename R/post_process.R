@@ -30,7 +30,7 @@
         df_slices <- df_slices %>%
           dplyr::group_by(.data$model, .data$grid_id, .add = TRUE) %>%
           dplyr::mutate(metric = mean(.data$metric, na.rm = TRUE)) %>%
-          dplyr::ungroup(.data$grid_id) %>%
+          dplyr::ungroup("grid_id") %>%
           dplyr::filter(.data$metric == min(.data$metric, na.rm = TRUE)) %>%
           dplyr::filter(.data$grid_id == unique(.data$grid_id)[1])
       }
