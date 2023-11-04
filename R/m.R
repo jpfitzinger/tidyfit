@@ -119,6 +119,9 @@ m <- function(
 ) {
   if (!is.null(data) & is.null(formula))
     stop("'formula' cannot be missing when 'data' is provided")
+  if (!.check_package_name(model_method))
+    stop(sprintf("Package '%s' is required for method '%s'. Run install.packages('%s').",
+                 .get_package_name(model_method), model_method, .get_package_name(model_method)))
   args <- list(...)
   default_grids <- .default_hp_grid(model_method,
                                     args,
