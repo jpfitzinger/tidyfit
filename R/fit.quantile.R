@@ -111,13 +111,13 @@
 
 .fitted.rq <- function(object, self = NULL, ...) {
   .predict.rq(object, data = data.frame(self$data), self = self, ...) %>%
-    dplyr::rename(fitted = .data$prediction) %>%
+    dplyr::rename(fitted = "prediction") %>%
     dplyr::select(-any_of(c("truth")))
 }
 
 .fitted.rqs <- function(object, self = NULL, ...) {
   .predict.rqs(object, data = data.frame(self$data), self = self, ...) %>%
-    dplyr::rename(fitted = .data$prediction) %>%
+    dplyr::rename(fitted = "prediction") %>%
     dplyr::select(-any_of(c("truth")))
 }
 
