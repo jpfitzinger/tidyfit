@@ -295,7 +295,7 @@ yes
 yes
 </td>
 </tr>
-<tr grouplength="3">
+<tr grouplength="4">
 <td colspan="5" style="border-bottom: 1px solid;">
 <strong>Machine Learning</strong>
 </td>
@@ -349,6 +349,23 @@ yes
 </td>
 <td style="text-align:center;">
 yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Quantile random forest
+</td>
+<td style="text-align:center;">
+quantile_rf
+</td>
+<td style="text-align:center;">
+`quantregForest`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+no
 </td>
 </tr>
 <tr grouplength="3">
