@@ -1,7 +1,7 @@
 # Internal function to check valid usage of methods
 .check_method <- function(
     method,
-    what = c("exists", "cv", "uses_index", "regress", "classify", "multinomial"),
+    what = c("exists", "cv", "uses_index", "regress", "classify", "multinomial", "nonstandard_formula"),
     message = FALSE
     ) {
 
@@ -47,5 +47,9 @@
   multinomial = list(
     methods = c("ridge", "lasso", "enet", "adalasso", "svm", "mrmr", "relief", "chisq", "rf"),
     message = "'%s' cannot be used for multinomial classification"
+  ),
+  nonstandard_formula = list(
+    methods = c("glmm"),
+    message = "'%s' uses non-standard formula syntax"
   )
 )
