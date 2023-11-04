@@ -1,12 +1,14 @@
 ## Summary of changes
 
-This version adds two new regression and classification methods:
+This version adds a new regression method:
 
-- Spike & Slab regression and classification ('spikeslab')
-- Genetic algorithm for variable selection in regression ('genetic')
+- Quantile Random Forest regression ('quantile_rf')
 
-In addition this version fixes a bug with 'adalasso' in conjunction with the 'dfmax' and 'pmax' arguments.
-Finally, the internal '.model' generic is renamed to '.fit'.
+In addition, there a few additional features & fixes:
+
+- Handling of syntactically invalid names is now down generically and not by the individual methods
+- Add observation weights in 'genetic'
+- Bugfixes in 'glmm' classification
 
 ## R CMD check results
 

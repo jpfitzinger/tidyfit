@@ -1,3 +1,15 @@
+## tidyfit 0.6.5
+
+This version adds a new regression method:
+
+- Quantile Random Forest regression ('quantile_rf')
+
+In addition, there a few additional features & fixes:
+
+- Handling of syntactically invalid names is now down generically and not by the individual methods
+- Add observation weights in 'genetic'
+- Bugfixes in 'glmm' classification
+
 ## tidyfit 0.6.4
 
 This version adds two new regression and classification methods:
