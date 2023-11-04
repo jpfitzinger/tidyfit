@@ -188,23 +188,6 @@
   return(estimates)
 }
 
-.coef.svm <- function(object, self = NULL, ...) {
-  if (self$args$kernel != "linear") {
-    warning("No coefficients produced for 'svm' with nonlinear kernel.")
-    return(NULL)
-  }
-  raw_estimates <- stats::coef(object)
-  raw_estimates <- .coef_rescaler(raw_estimates,
-                                  object$x.scale[[1]], object$x.scale[[2]],
-                                  object$y.scale[[1]], object$y.scale[[2]])
-  estimates <- dplyr::tibble(
-    term = names(raw_estimates),
-    estimate = raw_estimates
-  ) %>%
-    dplyr::mutate(term = self$fit_info$names_map[.data$term])
 
-  return(estimates)
-
-}
 
 

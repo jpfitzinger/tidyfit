@@ -54,6 +54,11 @@
     warning("svm cannot handle weights, weights are ignored")
   }
 
+  mf <- stats::model.frame(self$formula, data)
+  x <- stats::model.matrix(self$formula, mf)
+  y <- stats::model.response(mf)
+  x <- x[, colnames(x) != "(Intercept)"]
+
   self$set_args(kernel = "linear", overwrite = FALSE)
   self$set_args(probability = TRUE)
 
@@ -62,17 +67,78 @@
                    "shrinking", "cross", "probability", "fitted", "subset",
                    "na.action")
   ctr <- self$args[names(self$args) %in% formal_args]
-  var_names_map <- .names_map(colnames(data))
-  data <- data.frame(data)
   eval_fun_ <- function(...) {
     args <- list(...)
     do.call(e1071::svm, args)
   }
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
   res <- do.call(eval_fun,
-                 append(list(formula = self$formula, data = data), ctr))
+                 append(list(x = x, y = y), ctr))
   .store_on_self(self, res)
-  self$fit_info <- list(names_map = var_names_map)
   self$estimator <- "e1071::svm"
   invisible(self)
+}
+
+.coef.svm <- function(object, self = NULL, ...) {
+  if (self$args$kernel != "linear") {
+    warning("No coefficients produced for 'svm' with nonlinear kernel.")
+    return(NULL)
+  }
+  raw_estimates <- stats::coef(object)
+  raw_estimates <- .coef_rescaler(raw_estimates,
+                                  object$x.scale[[1]], object$x.scale[[2]],
+                                  object$y.scale[[1]], object$y.scale[[2]])
+  estimates <- dplyr::tibble(
+    term = names(raw_estimates),
+    estimate = raw_estimates
+  )
+
+  return(estimates)
+
+}
+
+.predict.svm <- function(object, data, self = NULL, ...) {
+  response_var <- all.vars(self$formula)[1]
+  if (response_var %in% colnames(data)) {
+    truth <- data[, response_var]
+  } else {
+    data[, response_var] <- 1
+    truth <- NULL
+  }
+  augmented_data <- dplyr::bind_rows(data, self$data)
+  mf <- stats::model.frame(self$formula, augmented_data)
+  x <- stats::model.matrix(self$formula, mf)
+  x <- x[, colnames(x) != "(Intercept)"]
+
+  pred_mat <- stats::predict(object, newdata = x, probability = TRUE)
+
+  pred_mat <- pred_mat[1:nrow(data)]
+
+  if (is.factor(pred_mat)) {
+    pred_mat <- attr(pred_mat, "probabilities")
+    if (ncol(pred_mat) > 2) {
+      pred <- pred_mat %>%
+        dplyr::as_tibble() %>%
+        dplyr::mutate(row_n = dplyr::row_number())
+      if (!is.null(truth)) {
+        pred <- dplyr::mutate(pred, truth = truth)
+      }
+      pred <- pred %>%
+        tidyr::pivot_longer(-dplyr::any_of(c("truth", "row_n")),
+                            names_to = "class",
+                            values_to = "prediction") %>%
+        dplyr::select(-dplyr::any_of("row_n"))
+
+      return(pred)
+    } else {
+      pred_mat <- pred_mat[, 2]
+    }
+  }
+
+  pred <- dplyr::tibble(
+    prediction = pred_mat,
+    truth = truth
+  )
+
+  return(pred)
 }
