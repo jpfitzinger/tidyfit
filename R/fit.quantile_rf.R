@@ -111,7 +111,7 @@
 
 .fitted.quantregForest <- function(object, self = NULL, ...) {
   .predict.quantregForest(object, data = self$data, self = self, ...) %>%
-    dplyr::rename(fitted = .data$prediction) %>%
+    dplyr::rename(fitted = "prediction") %>%
     dplyr::select(-any_of(c("truth")))
 }
 
