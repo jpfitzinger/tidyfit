@@ -51,7 +51,12 @@
   self$set_args(print.searchinfo = FALSE, overwrite = FALSE)
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
-  var_names_map <- .names_map(colnames(x))
+  response_var <- all.vars(self$formula)[1]
+  reg_data <- dplyr::tibble(!!response_var := mf[,1]) |>
+    dplyr::bind_cols(dplyr::as_tibble(x)) |>
+    data.frame()
+
+  formula <- stats::as.formula(paste(make.names(response_var), "~ 0 + ."))
 
   ctr_lm <- self$args[names(self$args) %in% methods::formalArgs(stats::lm)]
   ctr_gets <- self$args[names(self$args) %in% methods::formalArgs(gets::getsm)]
@@ -60,11 +65,10 @@
     do.call(gets::gets, args)
   }
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
-  mod_lm <- do.call(stats::lm, append(list(formula = self$formula, data = data), ctr_lm))
+  mod_lm <- do.call(stats::lm, append(list(formula = formula, data = reg_data), ctr_lm))
   res <- do.call(eval_fun,
                  append(list(x = mod_lm), ctr_gets))
   .store_on_self(self, res)
-  self$fit_info <- list(names_map = var_names_map)
   self$estimator <- "gets::gets"
   invisible(self)
 }
