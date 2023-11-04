@@ -1,4 +1,4 @@
-#' @importFrom utils installed_packages
+#' @importFrom utils installed.packages
 
 .check_package_name <- function(method) {
   return(.get_package_name(method) %in% utils::installed.packages())
