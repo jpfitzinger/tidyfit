@@ -63,7 +63,6 @@
   }
 
   Xy <- data.frame(x, y, check.names = FALSE)
-  var_names_map <- .names_map(colnames(Xy))
   eval_fun_ <- function(...) {
     m <- bestglm::bestglm(...)
     m$BestModel
@@ -79,7 +78,6 @@
     list(Xy = data.frame(Xy), intercept = incl_intercept),
     ctr))
   .store_on_self(self, res)
-  self$fit_info <- list(names_map = var_names_map)
   self$estimator <- "bestglm::bestglm"
   invisible(self)
 }
