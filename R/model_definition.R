@@ -32,7 +32,7 @@ model_definition <- R6::R6Class(
     fit = function(data = NULL, ...) {
       class(self) <- c(class(self), self$method)
       self$data <- data
-      self$names_map <- .get_names_map_from_data(formula = self$formula, data = data)
+      self$names_map <- .get_names_map_from_data(formula = self$formula, data = data, method = self$method)
       .fit(self, data, ...)
       },
     predict = function(data, ...) {

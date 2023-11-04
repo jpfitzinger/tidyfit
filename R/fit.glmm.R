@@ -41,6 +41,13 @@
     self,
     data = NULL
 ) {
+  if (self$mode == "classification") {
+    self$set_args(family = binomial, overwrite = FALSE)
+    response_var <- all.vars(self$formula)[1]
+    class_names_map <- levels(data[,response_var])
+    names(class_names_map) <- c(0, 1)
+    data[,response_var] <- ifelse(data[,response_var]==class_names_map[1], 0, 1)
+  }
   ctr <- self$args[names(self$args) %in% methods::formalArgs(lme4::glmer)]
   eval_fun_ <- function(...) {
     args <- list(...)
@@ -50,6 +57,9 @@
   res <- do.call(eval_fun,
                  append(list(formula = self$formula, data = data), ctr))
   .store_on_self(self, res)
+  if (self$mode == "classification") {
+    self$fit_info <- list(class_names_map = class_names_map)
+  }
   self$estimator <- "lme4::glmer"
   invisible(self)
 }
