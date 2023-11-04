@@ -51,9 +51,6 @@
     data = NULL
 ) {
 
-  var_names_map <- .names_map(colnames(data))
-  data <- data.frame(data)
-
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
   y <- stats::model.response(mf)
@@ -73,13 +70,12 @@
   res <- do.call(eval_fun,
                  append(list(x = x, y = y), ctr))
   .store_on_self(self, res)
-  self$fit_info <- list(names_map = var_names_map)
   self$estimator <- "quantregForest::quantregForest"
   invisible(self)
 }
 
 .predict.quantregForest <- function(object, data, self = NULL, training_context = FALSE, ...) {
-  augmented_data <- dplyr::bind_rows(data, data.frame(self$data))
+  augmented_data <- dplyr::bind_rows(data, self$data)
   response_var <- all.vars(self$formula)[1]
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
@@ -96,7 +92,7 @@
     mf <- stats::model.frame(self$formula, augmented_data)
     x <- stats::model.matrix(self$formula, mf)
     x <- x[1:nrow(data),]
-    pred_mat <- quantregForest:::predict.quantregForest(object, newdata = x, what = tau)
+    pred_mat <- predict(object, newdata = x, what = tau)
     if (length(tau) == 1) {
       pred <- dplyr::tibble(prediction = pred_mat, truth = truth, tau = tau)
     } else {
@@ -114,13 +110,13 @@
 }
 
 .fitted.quantregForest <- function(object, self = NULL, ...) {
-  .predict.quantregForest(object, data = data.frame(self$data), self = self, ...) %>%
+  .predict.quantregForest(object, data = self$data, self = self, ...) %>%
     dplyr::rename(fitted = .data$prediction) %>%
     dplyr::select(-any_of(c("truth")))
 }
 
 .resid.quantregForest <- function(object, self = NULL, ...) {
-  .predict.quantregForest(object, data = data.frame(self$data), self = self, ...) %>%
+  .predict.quantregForest(object, data = self$data, self = self, ...) %>%
     dplyr::mutate(residual = .data$truth - .data$prediction) %>%
     dplyr::select(-any_of(c("truth", "prediction")))
 }
