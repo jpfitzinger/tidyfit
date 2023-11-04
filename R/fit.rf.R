@@ -49,23 +49,25 @@
     self,
     data = NULL
 ) {
+
+  mf <- stats::model.frame(self$formula, data)
+  x <- stats::model.matrix(self$formula, mf)
+  y <- stats::model.response(mf)
+
   valid_args <- c("ntree", "mtry", "weights", "replace", "classwt", "cutoff",
                   "strata", "sampsize", "nodesize", "maxnodes", "importance",
                   "localImp", "nPerm", "proximity", "oob.prox", "norm.votes",
                   "do.trace", "keep.forest", "corr.bias", "keep.inbag")
   ctr <- self$args[names(self$args) %in% valid_args]
   ctr$importance <- TRUE
-  var_names_map <- .names_map(colnames(data))
-  data <- data.frame(data)
   eval_fun_ <- function(...) {
     args <- list(...)
     do.call(randomForest::randomForest, args)
   }
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
   res <- do.call(eval_fun,
-                 append(list(formula = self$formula, data = data), ctr))
+                 append(list(x = x, y = y), ctr))
   .store_on_self(self, res)
-  self$fit_info <- list(names_map = var_names_map)
   self$estimator <- "randomForest::randomForest"
   invisible(self)
 }
@@ -75,8 +77,7 @@
     imp <- object$importance
     estimates <- dplyr::as_tibble(imp) %>%
       dplyr::mutate(term = rownames(imp), estimate = NA) %>%
-      dplyr::mutate(importanceSD = object$importanceSD[.data$term]) %>%
-      dplyr::mutate(term = self$fit_info$names_map[.data$term])
+      dplyr::mutate(importanceSD = object$importanceSD[.data$term])
   } else {
     imp <- object$importance
     imp_MDacc <- imp[, -(ncol(imp)-1):-ncol(imp)]
@@ -98,13 +99,14 @@
     estimatesSD <- dplyr::left_join(estimatesSD, estimatesSD_other, by = "term")
     estimates <- estimates %>%
       dplyr::left_join(estimatesSD, by = c("term", "class")) %>%
-      dplyr::mutate(term = self$fit_info$names_map[.data$term], estimate = NA)
+      dplyr::mutate(estimate = NA)
   }
 
   return(estimates)
 }
 
 .predict.randomForest <- function(object, data, self = NULL, ...) {
+  augmented_data <- dplyr::bind_rows(data, self$data)
   response_var <- all.vars(self$formula)[1]
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
@@ -112,10 +114,13 @@
     data[, response_var] <- 1
     truth <- NULL
   }
+  mf <- stats::model.frame(self$formula, augmented_data)
+  x <- stats::model.matrix(self$formula, mf)
+  x <- x[1:nrow(data),]
   if (self$mode == "regression") {
-    pred_mat <- stats::predict(object, newdata = data.frame(data))
+    pred_mat <- stats::predict(object, newdata = x)
   } else {
-    pred_mat <- stats::predict(object, newdata = data.frame(data), type = "prob")
+    pred_mat <- stats::predict(object, newdata = x, type = "prob")
     if (ncol(pred_mat) > 2) {
       pred <- pred_mat %>%
         dplyr::as_tibble() %>%
