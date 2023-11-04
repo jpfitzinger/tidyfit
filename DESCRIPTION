@@ -55,6 +55,7 @@ Suggests:
   MSwM,
   pls,
   quantreg,
+  quantregForest,
   randomForest,
   sandwich,
   shrinkTVP,
