@@ -33,12 +33,7 @@
 #' data <- dplyr::filter(data, Industry == "HiTec")
 #' data <- dplyr::select(data, -Date, -Industry)
 #'
-#' # Stand-alone function
-#' fit <- m("mrmr", Return ~ ., data, feature_count = 3, solution_count = 5)
-#' coef(fit)
-#'
-#' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("mrmr", feature_count = 3, solution_count = 5))
+#' fit <- regress(data, Return ~ ., m("mrmr", feature_count = 3, solution_count = 2))
 #' coef(fit)
 #'
 #' @seealso \code{\link{m}} methods
