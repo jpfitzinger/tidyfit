@@ -30,14 +30,15 @@
 #' @examples
 #' # Load data
 #' data <- tidyfit::Factor_Industry_Returns
+#' data <- dplyr::filter(data, Industry == "HiTec")
+#' data <- dplyr::select(data, -Date, -Industry)
 #'
 #' # Stand-alone function
 #' fit <- m("mrmr", Return ~ ., data, feature_count = 3)
 #' coef(fit)
 #'
 #' # Within 'regress' function
-#' fit <- regress(data, Return ~ ., m("mrmr", feature_count = 3),
-#'                .mask = c("Date", "Industry"))
+#' fit <- regress(data, Return ~ ., m("mrmr", feature_count = 3))
 #' coef(fit)
 #'
 #' @seealso \code{\link{m}} methods
