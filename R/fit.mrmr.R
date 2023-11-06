@@ -31,9 +31,11 @@
 #' # Load data
 #' data <- tidyfit::Factor_Industry_Returns
 #' data <- dplyr::filter(data, Industry == "HiTec")
-#' data <- dplyr::select(data, -Date, -Industry)
+#' data <- dplyr::select(data, SMB, HML, RMW, CMA, Return)
 #'
-#' fit <- regress(data, Return ~ ., m("mrmr", feature_count = 3, solution_count = 2))
+#' fit <- m("mrmr", Return ~ ., data, feature_count = 2, solution_count = 1)
+#'
+#' # Retrieve selected features
 #' coef(fit)
 #'
 #' @seealso \code{\link{m}} methods
