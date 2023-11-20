@@ -30,11 +30,6 @@
 #' # Load data
 #' data <- tidyfit::Factor_Industry_Returns
 #'
-#' # Stand-alone function
-#' fit <- m("robust", Return ~ `Mkt-RF` + HML + SMB, data)
-#' fit
-#'
-#' # Within 'regress' function
 #' fit <- regress(data, Return ~ ., m("robust"), .mask = c("Date", "Industry"))
 #' coef(fit)
 #'
