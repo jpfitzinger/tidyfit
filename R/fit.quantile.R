@@ -96,11 +96,12 @@
     truth <- NULL
   }
   pred_mat <- stats::predict(object, data)
-  if (length(self$args$tau) == 1) {
-    pred <- dplyr::tibble(prediction = pred_mat, truth = truth, tau = self$args$tau)
+  tau <- self$args$tau[[1]]
+  if (length(tau) == 1) {
+    pred <- dplyr::tibble(prediction = pred_mat, truth = truth, tau = tau)
   } else {
     pred_mat <- data.frame(pred_mat)
-    colnames(pred_mat) <- sort(self$args$tau)
+    colnames(pred_mat) <- sort(tau)
     pred <- dplyr::tibble(pred_mat) %>%
       dplyr::mutate(truth = truth) %>%
       tidyr::gather("tau", "prediction", -.data$truth) %>%
