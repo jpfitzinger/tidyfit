@@ -37,11 +37,6 @@ The function provides a wrapper for \code{quantreg::rq}. See \code{?rq} for more
 # Load data
 data <- tidyfit::Factor_Industry_Returns
 
-# Stand-alone function
-fit <- m("quantile", Return ~ ., data, tau = 0.5)
-fit
-
-# Within 'regress' function
 fit <- regress(data, Return ~ .,
                m("quantile", tau = c(0.1, 0.5, 0.9)),
                .mask = c("Date", "Industry"))

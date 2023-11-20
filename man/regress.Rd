@@ -20,6 +20,8 @@
 
 \item{.return_slices}{logical. Should the output of individual cross validation slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.}
 
+\item{.return_grid}{logical. Should the output of the individual hyperparameter grids be returned or only the best fitting set of hyperparameters. Default is \code{.return_grid=FALSE}.}
+
 \item{.tune_each_group}{logical. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.}
 
 \item{.force_cv}{logical. Should models be evaluated across all cross validation slices, even if no hyperparameters are tuned. Default is \code{.force_cv=FALSE}.}
