@@ -85,10 +85,10 @@
                  append(list(X = x, y = y), fit_args))
   if (!is.null(res$result$result)) {
     x_subset <- cbind(
-      x[, gaselect::subsets(res$result$result, 1, names = TRUE)[[1]]],
+      dplyr::select(as.data.frame(x), all_of(gaselect::subsets(res$result$result, 1, names = TRUE)[[1]])),
       data.frame(target_var = y)
     )
-    colnames(x_subset) <- gsub("`", "", colnames(x_subset))
+    x_subset <- data.frame(x_subset)
     if (incl_intercept & (!"(Intercept)" %in% colnames(x_subset))) {
       res_mod <- stats::lm(target_var ~ 1 + ., data = x_subset, weights = self$args$weights)
     } else {
@@ -101,6 +101,7 @@
   .store_on_self(self, res)
   self$estimator <- "gaselect::genAlg"
   self$fit_info <- list(var_names = colnames(x), fitted_regression = res_mod)
+  self$force_syntactic_names <- TRUE
   invisible(self)
 
 }
@@ -119,7 +120,7 @@
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
   pred <- dplyr::tibble(
-    prediction = stats::predict(self$fit_info$fitted_regression, as.data.frame(x)),
+    prediction = stats::predict(self$fit_info$fitted_regression, data.frame(x)),
     truth = truth
   )
   return(pred)
