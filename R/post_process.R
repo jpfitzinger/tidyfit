@@ -1,5 +1,5 @@
 
-.post_process <- function(df, .return_slices, .cv, .tune_each_group,
+.post_process <- function(df, .return_slices, .return_grid, .cv, .tune_each_group,
                           .mask, .weights, gr_vars) {
   if (!.return_slices & .cv == "none") {
     df <- df %>%
@@ -26,7 +26,7 @@
       df_slices <- df %>%
         dplyr::filter(.data$slice_id != "FULL")
 
-      if (!all(is.na(df_slices$metric))) {
+      if (!all(is.na(df_slices$metric)) & !.return_grid) {
         df_slices <- df_slices %>%
           dplyr::group_by(.data$model, .data$grid_id, .add = TRUE) %>%
           dplyr::mutate(metric = mean(.data$metric, na.rm = TRUE)) %>%

@@ -68,8 +68,8 @@
 
     }, .options = furrr::furrr_options(seed = TRUE))
 
-    # Only generate predictions, if CV slices are not returned
-    if (!row$return_slices) {
+    # Only generate predictions, if CV slices are not returned and the method has a predict method
+    if (!row$return_grid & row$model_object$has_predict_method) {
 
       # Out-of-sample predictions
       pred <- cv_res %>%

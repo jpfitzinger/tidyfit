@@ -34,6 +34,7 @@
 #' @param .weights optional name of column containing sample weights.
 #' @param .mask optional vector of columns names to ignore. Can be useful when using 'y ~ .' formula syntax.
 #' @param .return_slices logical. Should the output of individual cross validation slices be returned or only the final fit. Default is \code{.return_slices=FALSE}.
+#' @param .return_grid logical. Should the output of the individual hyperparameter grids be returned or only the best fitting set of hyperparameters. Default is \code{.return_grid=FALSE}.
 #' @param .tune_each_group logical. Should optimal hyperparameters be selected for each group or once across all groups. Default is \code{.tune_each_group=TRUE}.
 #' @param .force_cv logical. Should models be evaluated across all cross validation slices, even if no hyperparameters are tuned. Default is \code{.force_cv=FALSE}.
 #' @return A \code{tidyfit.models} frame containing model details for each group.
@@ -83,6 +84,7 @@ classify <- function(
     .weights = NULL,
     .mask = NULL,
     .return_slices = FALSE,
+    .return_grid = FALSE,
     .tune_each_group = TRUE,
     .force_cv = FALSE
 ) {
@@ -137,6 +139,7 @@ classify <- function(
                           ))
   eval_df <- tidyr::expand_grid(model_df, data = df_list)
   eval_df$return_slices <- .return_slices
+  eval_df$return_grid <- .return_grid
 
   p <- progressr::progressor(nrow(eval_df))
   fit_progress <- function(row, ...) {
@@ -149,7 +152,7 @@ classify <- function(
     purrr::transpose() %>%
     map_dfr(function(row) fit_progress(row))
 
-  df <- .post_process(df, .return_slices, .cv, .tune_each_group,
+  df <- .post_process(df, .return_slices, .return_grid, .cv, .tune_each_group,
                       .mask, .weights, gr_vars)
   return(df)
 
