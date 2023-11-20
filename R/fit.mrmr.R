@@ -33,10 +33,12 @@
 #' data <- dplyr::filter(data, Industry == "HiTec")
 #' data <- dplyr::select(data, SMB, HML, RMW, CMA, Return)
 #'
-#' fit <- m("mrmr", Return ~ ., data, feature_count = 2, solution_count = 1)
+#' \dontrun{
+#' fit <- m("mrmr", Return ~ ., data, feature_count = 2)
 #'
 #' # Retrieve selected features
 #' coef(fit)
+#' }
 #'
 #' @seealso \code{\link{m}} methods
 #'
