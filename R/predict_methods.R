@@ -53,7 +53,7 @@
     data[, response_var] <- 0
     truth <- NULL
   }
-  if (!is.null(self$fit_info$names_map)) data <- data.frame(stats::model.matrix(self$formula, data))
+  if (self$force_syntactic_names) data <- data.frame(stats::model.matrix(self$formula, data))
   pred <- dplyr::tibble(
     prediction = stats::predict(object, data, type = "response"),
     truth = truth

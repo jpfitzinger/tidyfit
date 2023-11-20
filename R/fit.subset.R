@@ -75,9 +75,10 @@
     eval_fun <- purrr::partial(eval_fun, family = binomial)
   }
   res <- do.call(eval_fun, append(
-    list(Xy = data.frame(Xy), intercept = incl_intercept),
+    list(Xy = Xy, intercept = incl_intercept),
     ctr))
   .store_on_self(self, res)
+  self$force_syntactic_names <- TRUE
   self$estimator <- "bestglm::bestglm"
   invisible(self)
 }
