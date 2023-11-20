@@ -9,10 +9,12 @@ model_definition <- R6::R6Class(
     data = NULL,
     args = NULL,
     cv = NULL,
+    has_predict_method = NULL,
     object = NULL,
     estimator = NULL,
     fit_info = NULL,
     names_map = NULL,
+    force_syntactic_names = FALSE,
     error = NULL,
     warnings = NULL,
     messages = NULL,
@@ -27,6 +29,7 @@ model_definition <- R6::R6Class(
       self$args <- settings
       self$grid_id <- grid_id
       self$cv <- .check_method(method, "cv")
+      self$has_predict_method <- .check_method(method, "has_predict_method")
       self$mode <- "regression"
     },
     fit = function(data = NULL, ...) {
@@ -36,6 +39,10 @@ model_definition <- R6::R6Class(
       .fit(self, data, ...)
       },
     predict = function(data, ...) {
+      if (!self$has_predict_method) {
+        warning(paste0("No prediction method for type '", self$method, "'."))
+        return(NULL)
+      }
       all_args <- list(object = self$object, data = data, self = self)
       all_args <- append(all_args, list(...))
       do.call(.predict, all_args)

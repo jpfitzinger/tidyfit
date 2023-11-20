@@ -1,7 +1,7 @@
 # Internal function to check valid usage of methods
 .check_method <- function(
     method,
-    what = c("exists", "cv", "uses_index", "regress", "classify", "multinomial", "nonstandard_formula"),
+    what = c("exists", "cv", "has_predict_method", "uses_index", "regress", "classify", "multinomial", "nonstandard_formula"),
     message = FALSE
     ) {
 
@@ -27,6 +27,14 @@
   cv = list(
     methods = c("lasso", "ridge", "enet", "adalasso", "pcr", "plsr", "hfr", "boost", "svm", "rf", "quantile_rf"),
     message = "'%s' has no hyperparameters. Use '.force_cv = TRUE' to perform a cross validation"
+  ),
+  has_predict_method = list(
+    methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
+                "pcr", "plsr", "hfr", "boost", "subset", "bayes", "quantile",
+                "glmm", "tvp", "mslm", "bma", "gets", "svm",
+                "rf", "bridge", "blasso", "spikeslab", "genetic",
+                "quantile_rf"),
+    message = "'%s' has no predict method."
   ),
   uses_index = list(
     methods = c("glmm"),
