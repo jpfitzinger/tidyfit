@@ -47,7 +47,7 @@
     data = NULL
 ) {
   ctr <- self$args[names(self$args) %in% methods::formalArgs(stats::lm)]
-  ctr$model <- FALSE
+  ctr$model <- TRUE
   ctr$x <- FALSE
   ctr$y <- FALSE
   eval_fun_ <- function(...) {
@@ -60,4 +60,36 @@
   .store_on_self(self, res)
   self$estimator <- "stats::lm"
   invisible(self)
+}
+
+.var_imp.lm <- function(
+    object,
+    self,
+    method = NULL,
+    ...
+  ) {
+  additional_args <- list(...)
+  if (!is.null(method)) {
+    possible_methods <- c("shapley_reg", "rel_weights")
+    if (!method %in% possible_methods) {
+      stop(sprintf("available 'var_imp' methods for 'lm' objects are: %s", paste(possible_methods, collapse=", ")))
+    }
+  } else {
+    method = "shapley_reg"
+    if (!"type" %in% names(additional_args))
+      warning("the default importance metric for method 'lm' is 'shapley_reg' using `type='lmg'` in `relaimpo` package")
+  }
+  if (!"type" %in% names(additional_args)) {
+    additional_args["type"] = ifelse(method == "shapley_reg", "lmg", "genizi")
+  }
+  args <- list(object = object)
+  args <- append(args, additional_args)
+  result <- do.call(relaimpo::calc.relimp, args)
+  result <- attr(result, additional_args$type)
+  result_df <- tibble(
+    term = names(result),
+    importance = result
+  )
+  return (result_df)
+
 }

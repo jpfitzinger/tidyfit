@@ -62,6 +62,14 @@ model_definition <- R6::R6Class(
       all_args <- list(object = self$object, self = self)
       do.call(.fitted, all_args)
     },
+    var_imp = function(method, additional_args) {
+      all_args <- list(object = self$object, self = self, method = method)
+      all_args <- append(all_args, additional_args)
+      var_imp_df <- do.call(.var_imp, all_args)
+      var_imp_df <- var_imp_df %>%
+        dplyr::mutate(term = dplyr::if_else(.data$term %in% names(self$names_map), self$names_map[.data$term], .data$term))
+      return(var_imp_df)
+    },
     print = function(...) {
       cat("<tidyFit> object\n", crayon::italic("method:"),
           crayon::bold(self$method), "|",

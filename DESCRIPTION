@@ -59,6 +59,7 @@ Suggests:
   quantreg,
   quantregForest,
   randomForest,
+  relaimpo,
   sandwich,
   shrinkTVP,
   stringr,
