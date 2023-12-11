@@ -1,7 +1,8 @@
 # Internal function to check valid usage of methods
 .check_method <- function(
     method,
-    what = c("exists", "cv", "has_predict_method", "uses_index", "regress", "classify", "multinomial", "nonstandard_formula"),
+    what = c("exists", "cv", "has_predict_method", "has_importance_method", "uses_index",
+             "regress", "classify", "multinomial", "nonstandard_formula"),
     message = FALSE
     ) {
 
@@ -59,5 +60,9 @@
   nonstandard_formula = list(
     methods = c("glmm"),
     message = "'%s' uses non-standard formula syntax"
+  ),
+  has_importance_method = list(
+    methods = c("lm", "lasso"),
+    message = "'%s' has no variable importance method"
   )
 )

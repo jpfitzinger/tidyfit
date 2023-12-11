@@ -62,10 +62,14 @@ model_definition <- R6::R6Class(
       all_args <- list(object = self$object, self = self)
       do.call(.fitted, all_args)
     },
-    var_imp = function(method, additional_args) {
+    explain = function(method, additional_args) {
+      if (!.check_method(self$method, "has_importance_method")) {
+        warning(paste0("No explain method for type '", self$method, "'."))
+        return(dplyr::tibble(term = list(), importance = list()))
+      }
       all_args <- list(object = self$object, self = self, method = method)
       all_args <- append(all_args, additional_args)
-      var_imp_df <- do.call(.var_imp, all_args)
+      var_imp_df <- do.call(.explain, all_args)
       var_imp_df <- var_imp_df %>%
         dplyr::mutate(term = dplyr::if_else(.data$term %in% names(self$names_map), self$names_map[.data$term], .data$term))
       return(var_imp_df)
