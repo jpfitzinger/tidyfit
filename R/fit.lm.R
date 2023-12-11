@@ -62,7 +62,7 @@
   invisible(self)
 }
 
-.var_imp.lm <- function(
+.explain.lm <- function(
     object,
     self,
     method = NULL,
@@ -72,7 +72,7 @@
   if (!is.null(method)) {
     possible_methods <- c("shapley_reg", "rel_weights")
     if (!method %in% possible_methods) {
-      stop(sprintf("available 'var_imp' methods for 'lm' objects are: %s", paste(possible_methods, collapse=", ")))
+      stop(sprintf("available 'explain' methods for 'lm' objects are: %s", paste(possible_methods, collapse=", ")))
     }
   } else {
     method = "shapley_reg"
