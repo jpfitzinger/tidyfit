@@ -62,7 +62,7 @@
     message = "'%s' uses non-standard formula syntax"
   ),
   has_importance_method = list(
-    methods = c("lm", "lasso", "ridge", "enet", "adalasso", "rf", "quantile_rf"),
+    methods = c("lm", "lasso", "ridge", "enet", "adalasso", "rf", "quantile_rf", "subset", "gets"),
     message = "'%s' has no variable importance method"
   ),
   has_coef_method = list(
