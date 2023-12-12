@@ -48,6 +48,10 @@ model_definition <- R6::R6Class(
       do.call(.predict, all_args)
     },
     coef = function(...) {
+      if (!.check_method(self$method, "has_coef_method")) {
+        warning(paste0("No coef method for type '", self$method, "'. Try using 'explain()'"))
+        return(NULL)
+      }
       all_args <- list(object = self$object, self = self)
       coef_df <- do.call(.coef, all_args)
       coef_df <- coef_df %>%

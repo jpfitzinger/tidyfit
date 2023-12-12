@@ -2,7 +2,7 @@
 .check_method <- function(
     method,
     what = c("exists", "cv", "has_predict_method", "has_importance_method", "uses_index",
-             "regress", "classify", "multinomial", "nonstandard_formula"),
+             "regress", "classify", "multinomial", "nonstandard_formula", "has_coef_method"),
     message = FALSE
     ) {
 
@@ -62,7 +62,14 @@
     message = "'%s' uses non-standard formula syntax"
   ),
   has_importance_method = list(
-    methods = c("lm", "lasso"),
+    methods = c("lm", "lasso", "ridge", "enet", "adalasso", "rf", "quantile_rf"),
     message = "'%s' has no variable importance method"
+  ),
+  has_coef_method = list(
+    methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
+                "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
+                "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor",
+                "chisq", "bridge", "blasso", "spikeslab", "genetic"),
+    message = "'%s' has not coef method"
   )
 )
