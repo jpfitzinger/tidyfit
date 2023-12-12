@@ -72,12 +72,21 @@
   invisible(self)
 }
 
-.coef.randomForest <- function(object, self = NULL, ...) {
+.explain.randomForest <- function(object, self = NULL, method = NULL, ...) {
+  if (!is.null(method)) {
+    possible_methods <- c("mean_decrease_accuracy")
+    if (!method %in% possible_methods) {
+      stop(sprintf("available 'explain' methods for 'randomForest' objects are: %s", paste(possible_methods, collapse=", ")))
+    }
+  } else {
+    method = "mean_decrease_accuracy"
+  }
   if (self$mode == "regression") {
     imp <- object$importance
     estimates <- dplyr::as_tibble(imp) %>%
-      dplyr::mutate(term = rownames(imp), estimate = NA) %>%
-      dplyr::mutate(importanceSD = object$importanceSD[.data$term])
+      dplyr::mutate(term = rownames(imp)) %>%
+      dplyr::mutate(importanceSD = object$importanceSD[.data$term]) %>%
+      dplyr::rename(importance = "%IncMSE")
   } else {
     imp <- object$importance
     imp_MDacc <- imp[, -(ncol(imp)-1):-ncol(imp)]
@@ -98,8 +107,7 @@
       dplyr::mutate(term = rownames(impSD))
     estimatesSD <- dplyr::left_join(estimatesSD, estimatesSD_other, by = "term")
     estimates <- estimates %>%
-      dplyr::left_join(estimatesSD, by = c("term", "class")) %>%
-      dplyr::mutate(estimate = NA)
+      dplyr::left_join(estimatesSD, by = c("term", "class"))
   }
 
   return(estimates)
