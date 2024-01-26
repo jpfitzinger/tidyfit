@@ -22,7 +22,7 @@
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor",
                 "chisq", "rf", "bridge", "blasso", "spikeslab", "genetic",
-                "quantile_rf"),
+                "quantile_rf", "anova"),
     message = "'%s' is not a valid method. See '?m' for details"
   ),
   cv = list(
@@ -45,12 +45,12 @@
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor", "rf", "bridge", "blasso",
-                "spikeslab", "genetic", "quantile_rf"),
+                "spikeslab", "genetic", "quantile_rf", "anova"),
     message = "'%s' cannot be used for regression"
   ),
   classify = list(
     methods = c("glm", "lasso", "ridge", "enet", "adalasso", "boost", "subset", "bayes", "glmm", "svm", "mrmr",
-                "relief", "chisq", "rf", "spikeslab"),
+                "relief", "chisq", "rf", "spikeslab", "anova"),
     message = "'%s' cannot be used for classification"
   ),
   multinomial = list(
@@ -69,7 +69,7 @@
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor",
-                "chisq", "bridge", "blasso", "spikeslab", "genetic"),
+                "chisq", "bridge", "blasso", "spikeslab", "genetic", "anova"),
     message = "'%s' has not coef method"
   )
 )
