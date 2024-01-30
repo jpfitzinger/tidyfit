@@ -12,6 +12,8 @@
 \item{method}{the variable importance method used to create explanations. See 'Details' for possible options.}
 
 \item{...}{additional arguments passed to the importance method}
+
+\item{.keep_grid_id}{boolean. By default the grid ID column is dropped, if there is only one unique setting per model or group. \code{.keep_grid_id = TRUE} ensures that the column is never dropped.}
 }
 \value{
 A 'tibble'.
