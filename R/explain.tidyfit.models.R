@@ -5,6 +5,7 @@
 #' @param object \code{model.frame} created using \code{\link{regress}}, \code{\link{classify}} or \code{\link{m}}
 #' @param method the variable importance method used to create explanations. See 'Details' for possible options.
 #' @param ... additional arguments passed to the importance method
+#' @param .keep_grid_id boolean. By default the grid ID column is dropped, if there is only one unique setting per model or group. \code{.keep_grid_id = TRUE} ensures that the column is never dropped.
 #'
 #' @return A 'tibble'.
 #'
@@ -33,6 +34,12 @@ explain.tidyfit.models <- function(object,
 
   object <- .warn_and_remove_errors(object)
   additional_args <- list(...)
+
+  # Default method
+  if (is.null(method)) {
+    if (object$model_object[[1]]$method %in% c("lm", "glm")) method <- "lmg"
+    if (object$model_object[[1]]$method %in% c("lasso", "ridge", "enet", "adalasso")) method <- "partition_shap"
+  }
 
   get_explanation <- function(model) {
     model$explain(method = method, additional_args = additional_args)
