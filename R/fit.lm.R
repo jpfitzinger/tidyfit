@@ -65,29 +65,77 @@
 .explain.lm <- function(
     object,
     self,
-    method = NULL,
+    method = c("lmg", "pmvd", "src", "pcc", "johnson", "partition_shap"),
+    explainer_model = NULL,
     ...
-  ) {
+) {
+  # Check packages
+  if (method %in% c("lmg", "pmvd", "src", "pcc", "johnson") &
+      !"sensitivity" %in% utils::installed.packages())
+    stop("Package 'sensitivity' is necessary to explain 'lm' models. Use install.packages('sensitivity') to install it.")
+
+  if (method %in% c("partition_shap") &
+      !"glmnet" %in% utils::installed.packages())
+    stop("Package 'glmnet' is necessary to explain 'lm' models. Use install.packages('glmnet') to install it.")
+
   additional_args <- list(...)
-  if (!is.null(method)) {
-    possible_methods <- c("shapley_reg", "rel_weights")
-    if (!method %in% possible_methods) {
-      stop(sprintf("available 'explain' methods for 'lm' objects are: %s", paste(possible_methods, collapse=", ")))
+  method <- match.arg(method)
+  additional_args$logistic <- self$mode == "classification"
+  if (method == "partition_shap" & is.null(explainer_model))
+    stop("provide an explainer_model, e.g. m('ridge', lambda = 0)")
+
+  mf <- stats::model.frame(self$formula, self$data)
+  x <- stats::model.matrix(self$formula, mf)
+  x <- as.data.frame(x[, colnames(x)!="(Intercept)"])
+  y <- stats::model.response(mf)
+
+  method_fx <- list(
+    lmg = function(...) {
+      args <- list(...)
+      res <- do.call(sensitivity::lmg, args[names(args) %in% methods::formalArgs(sensitivity::lmg)])
+      res$lmg[, "original"]
+    },
+    pmvd = function(...) {
+      args <- list(...)
+      res <- do.call(sensitivity::pmvd, args[names(args) %in% methods::formalArgs(sensitivity::pmvd)])
+      res$pmvd[, "original"]
+    },
+    johnson = function(...) {
+      args <- list(...)
+      res <- do.call(sensitivity::johnson, args[names(args) %in% methods::formalArgs(sensitivity::johnson)])
+      res$johnson[, "original"]
+    },
+    src = function(...) {
+      args <- list(...)
+      res <- do.call(sensitivity::src, args[names(args) %in% methods::formalArgs(sensitivity::src)])
+      rank <- ifelse(!is.null(args$rank), args$rank, FALSE)
+      res <- ifelse(rank, res$SRRC, res$SRC)[[1]]
+      res
+    },
+    pcc = function(...) {
+      args <- list(...)
+      res <- do.call(sensitivity::pcc, args[names(args) %in% methods::formalArgs(sensitivity::pcc)])
+      rank <- ifelse(!is.null(args$rank), args$rank, FALSE)
+      semi <- ifelse(!is.null(args$semi), args$semi, FALSE)
+      if (rank) {
+        res <- ifelse(semi, res$SPRCC, res$PRCC)
+      } else {
+        res <- ifelse(semi, res$SPCC, res$PCC)
+      }
+      res <- res[[1]]
+      res
+    },
+    partition_shap = function(...) {
+      args <- list(...)
+      partition_shap(self, explainer_model_object = args$explainer_model)
     }
-  } else {
-    method = "shapley_reg"
-    if (!"type" %in% names(additional_args))
-      warning("the default importance metric for method 'lm' is 'shapley_reg' using `type='lmg'` in `relaimpo` package")
-  }
-  if (!"type" %in% names(additional_args)) {
-    additional_args["type"] = ifelse(method == "shapley_reg", "lmg", "genizi")
-  }
-  args <- list(object = object)
+  )
+
+  args <- list(X = data.frame(x), y = y)
   args <- append(args, additional_args)
-  result <- do.call(relaimpo::calc.relimp, args)
-  result <- attr(result, additional_args$type)
+  result <- do.call(method_fx[[method]], args)
   result_df <- tibble(
-    term = names(result),
+    term = gsub("`", "", colnames(x)),
     importance = result
   )
   return (result_df)
