@@ -50,7 +50,7 @@ fit
 # Within 'regress' function
 fit <- regress(data, Return ~ .,
                m("quantile_rf", tau = c(0.1, 0.5, 0.9), ntree = 50))
-coef(fit)
+explain(fit)
 
 }
 \references{
