@@ -53,6 +53,8 @@ partition_shap <- function(
     output <- .glmnet.shap_values(explainer_model_object, x, y, grps_list)
   } else if (explainer_model_object$model_object[[1]]$method %in% c("rf")) {
     output <- .randomForest.shap_values(explainer_model_object, x, y, grps_list)
+  } else if (explainer_model_object$model_object[[1]]$method %in% c("nnet")) {
+    output <- .nnet.shap_values(explainer_model_object, x, y, grps_list)
   } else {
     stop("only 'lm' or 'ridge' are currently permitted as explainer models")
   }
@@ -112,6 +114,49 @@ partition_shap <- function(
 }
 
 .randomForest.shap_values <- function(
+    explainer_model_object,
+    x,
+    y,
+    groups
+) {
+  grp_names <- names(groups)
+  obj <- explainer_model_object$model_object[[1]]$clone()
+
+  # calculate full model
+  mf <- data.frame(y = y, x)
+  obj$formula <- as.formula("y ~ .")
+  obj$fit(mf)
+  fit <- obj$fitted()$fitted
+  shap_values <- rep(.get_R2(y, fit)*0.5, 2)
+  fitted_values <- list()
+  for (g in grp_names) {
+    x_i <- x
+    g_other <- grp_names[grp_names != g]
+    x_i[, groups[[g_other]]] <- 0
+    fitted_values[[g]] <- obj$predict(data.frame(x_i))$prediction * 0.5
+  }
+
+  # calculate group models
+  for (i in seq_along(grp_names)) {
+    g <- grp_names[i]
+    i_other <- ifelse(i == 1, 2, 1)
+    mf_i <- data.frame(y = y, x[, groups[[g]]])
+    obj$fit(mf_i)
+    fit_i <- obj$predict(data.frame(mf_i))$prediction
+    R2_i <- .get_R2(y, fit_i)
+    shap_values[i] <- shap_values[i] + R2_i * 0.5
+    shap_values[i_other] <- shap_values[i_other] - R2_i * 0.5
+    fitted_values[[g]] <- fitted_values[[g]] + fit_i*0.5
+  }
+
+  names(shap_values) <- grp_names
+  shap_values <- pmax(shap_values, 0) + 1e-8
+  shap_values <- shap_values / sum(shap_values)
+  return(list(shap_values = shap_values, fitted_values = fitted_values))
+
+}
+
+.nnet.shap_values <- function(
     explainer_model_object,
     x,
     y,

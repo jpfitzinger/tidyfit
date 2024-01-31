@@ -28,6 +28,7 @@
   lm = "stats",
   mrmr = "mRMRe",
   mslm = "MSwM",
+  nnet = "nnet",
   pcr = "pls",
   plsr = "pls",
   quantile_rf = "quantregForest",

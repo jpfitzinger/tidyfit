@@ -22,11 +22,11 @@
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor",
                 "chisq", "rf", "bridge", "blasso", "spikeslab", "genetic",
-                "quantile_rf", "anova"),
+                "quantile_rf", "anova", "nnet"),
     message = "'%s' is not a valid method. See '?m' for details"
   ),
   cv = list(
-    methods = c("lasso", "ridge", "enet", "adalasso", "pcr", "plsr", "hfr", "boost", "svm", "rf", "quantile_rf"),
+    methods = c("lasso", "ridge", "enet", "adalasso", "pcr", "plsr", "hfr", "boost", "svm", "rf", "quantile_rf", "nnet"),
     message = "'%s' has no hyperparameters. Use '.force_cv = TRUE' to perform a cross validation"
   ),
   has_predict_method = list(
@@ -34,7 +34,7 @@
                 "pcr", "plsr", "hfr", "boost", "subset", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm",
                 "rf", "bridge", "blasso", "spikeslab", "genetic",
-                "quantile_rf"),
+                "quantile_rf", "nnet"),
     message = "'%s' has no predict method."
   ),
   uses_index = list(
@@ -45,16 +45,16 @@
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor", "rf", "bridge", "blasso",
-                "spikeslab", "genetic", "quantile_rf", "anova"),
+                "spikeslab", "genetic", "quantile_rf", "anova", "nnet"),
     message = "'%s' cannot be used for regression"
   ),
   classify = list(
     methods = c("glm", "lasso", "ridge", "enet", "adalasso", "boost", "subset", "bayes", "glmm", "svm", "mrmr",
-                "relief", "chisq", "rf", "spikeslab", "anova"),
+                "relief", "chisq", "rf", "spikeslab", "anova", "nnet"),
     message = "'%s' cannot be used for classification"
   ),
   multinomial = list(
-    methods = c("ridge", "lasso", "enet", "adalasso", "svm", "mrmr", "relief", "chisq", "rf"),
+    methods = c("ridge", "lasso", "enet", "adalasso", "svm", "mrmr", "relief", "chisq", "rf", "nnet"),
     message = "'%s' cannot be used for multinomial classification"
   ),
   nonstandard_formula = list(
@@ -62,7 +62,7 @@
     message = "'%s' uses non-standard formula syntax"
   ),
   has_importance_method = list(
-    methods = c("lm", "glm", "lasso", "ridge", "enet", "adalasso", "rf", "quantile_rf", "subset", "gets"),
+    methods = c("lm", "glm", "lasso", "ridge", "enet", "adalasso", "rf", "quantile_rf", "subset", "gets", "nnet"),
     message = "'%s' has no variable importance method"
   ),
   has_coef_method = list(

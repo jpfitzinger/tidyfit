@@ -29,6 +29,8 @@ The function can fit various regression or classification models and returns the
 
 \code{"glm"} performs a generalized regression or classification using \code{stats::glm}. See \code{\link{.fit.glm}} for details.
 
+\code{"anova"} performs analysis of variance using \code{stats::anova}. See \code{\link{.fit.anova}} for details.
+
 \code{"robust"} performs a robust regression using \code{MASS::rlm}. See \code{\link{.fit.robust}} for details.
 
 \code{"quantile"} performs a quantile regression using \code{quantreg::rq}. See \code{\link{.fit.quantile}} for details.
@@ -52,6 +54,8 @@ The function can fit various regression or classification models and returns the
 \code{"rf"} performs a random forest regression or classification using \code{randomForest::randomForest}. See \code{\link{.fit.rf}} for details.
 
 \code{"svm"} performs a support vector regression or classification using \code{e1071::svm}. See \code{\link{.fit.svm}} for details.
+
+\code{"nnet"} performs a neural network regression or classification using \code{nnet::nnet}. See \code{\link{.fit.nnet}} for details.
 }
 
 \subsection{Factor regressions}{

@@ -3,6 +3,9 @@
 This version adds several new features and methods:
 
 - More generic handling of non-syntactic names
+- New methods:
+  - 'anova' for analysis of variance on glm objects
+  - 'nnet' for single-layer neural networks
 
 ## tidyfit 0.6.5
 

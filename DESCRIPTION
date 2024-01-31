@@ -55,6 +55,7 @@ Suggests:
   monomvn,
   mRMRe,
   MSwM,
+  nnet,
   pls,
   quantreg,
   quantregForest,
