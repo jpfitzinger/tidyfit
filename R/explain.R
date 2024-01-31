@@ -22,7 +22,7 @@
 #' @examples
 #' data <- dplyr::group_by(tidyfit::Factor_Industry_Returns, Industry)
 #' fit <- regress(data, Return ~ ., m("lm"), .mask = "Date")
-#' explain(fit, method = "rel_weights")
+#' explain(fit, method = "src")
 #'
 #' @export
 #'

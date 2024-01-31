@@ -15,7 +15,7 @@
 A fitted 'tidyFit' class model.
 }
 \description{
-Performs an Analysis of Variance on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} or \code{\link{classify}}.
+Performs Analysis of Variance on a 'tidyFit' \code{R6} class. The function can be used with \code{\link{regress}} or \code{\link{classify}}.
 }
 \details{
 \strong{Hyperparameters:}

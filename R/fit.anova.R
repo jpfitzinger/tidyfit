@@ -73,8 +73,5 @@
 
 .coef.anova <- function(object, self = NULL, ...) {
   estimates <- broom::tidy(object)
-  if (!is.null(self$fit_info$names_map)) {
-    estimates$term <- self$fit_info$names_map[estimates$term]
-  }
   return(estimates)
 }

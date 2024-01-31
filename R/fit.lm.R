@@ -135,7 +135,7 @@
   args <- append(args, additional_args)
   result <- do.call(method_fx[[method]], args)
   result_df <- tibble(
-    term = gsub("`", "", colnames(x)),
+    term = colnames(x),
     importance = result
   )
   return (result_df)
