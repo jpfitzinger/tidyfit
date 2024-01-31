@@ -1,3 +1,9 @@
+## tidyfit 0.7.0
+
+This version adds several new features and methods:
+
+- More generic handling of non-syntactic names
+
 ## tidyfit 0.6.5
 
 This version adds a new regression method:
