@@ -47,12 +47,19 @@
     class_names_map <- levels(data[,response_var])
     names(class_names_map) <- c(0, 1)
     data[,response_var] <- ifelse(data[,response_var]==class_names_map[1], 0, 1)
+    ctr <- self$args[names(self$args) %in% methods::formalArgs(lme4::glmer)]
+    eval_fun_ <- function(...) {
+      args <- list(...)
+      do.call(lme4::glmer, args)
+    }
+  } else {
+    ctr <- self$args[names(self$args) %in% methods::formalArgs(lme4::lmer)]
+    eval_fun_ <- function(...) {
+      args <- list(...)
+      do.call(lme4::lmer, args)
+    }
   }
-  ctr <- self$args[names(self$args) %in% methods::formalArgs(lme4::glmer)]
-  eval_fun_ <- function(...) {
-    args <- list(...)
-    do.call(lme4::glmer, args)
-  }
+
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
   res <- do.call(eval_fun,
                  append(list(formula = self$formula, data = data), ctr))
@@ -60,6 +67,6 @@
   if (self$mode == "classification") {
     self$fit_info <- list(class_names_map = class_names_map)
   }
-  self$estimator <- "lme4::glmer"
+  self$estimator <- ifelse(self$mode == "classification", "lme4::glmer", "lme4::lmer")
   invisible(self)
 }
