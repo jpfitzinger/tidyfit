@@ -107,7 +107,7 @@ regress <- function(
 
   model_df <- purrr::map_dfr(model_list, ~., .id = "model")
   model_df$model_object <- purrr::map(model_df$model_object, function(mod) {
-    mod$formula <- formula
+    mod$original_formula <- formula
     mod$mode <- "regression"
     if (.force_cv) mod$cv <- TRUE
     mod

@@ -1,10 +1,12 @@
 #' @importFrom crayon bold italic red green yellow
+#' @importFrom stats as.formula setNames
 
 # R6 class for model object
 model_definition <- R6::R6Class(
   "tidyFit",
   public = list(
     method = NULL,
+    original_formula = NULL,
     formula = NULL,
     data = NULL,
     args = NULL,
@@ -25,7 +27,8 @@ model_definition <- R6::R6Class(
     initialize = function(method, formula, settings, grid_id) {
       .check_method(method, "exists", TRUE)
       self$method <- method
-      self$formula <- formula
+      self$original_formula <- formula
+      if (!is.null(formula)) self$formula <- .prepare_formula(formula)
       self$args <- settings
       self$grid_id <- grid_id
       self$cv <- .check_method(method, "cv")
@@ -35,15 +38,18 @@ model_definition <- R6::R6Class(
     fit = function(data = NULL, ...) {
       class(self) <- c(class(self), self$method)
       self$data <- data
-      self$names_map <- .get_names_map_from_data(formula = self$formula, data = data, method = self$method)
+      data <- .prepare_data(self, data, TRUE)
+      if (is.null(self$formula)) self$formula <- .prepare_formula(self$original_formula)
       .fit(self, data, ...)
-      },
+    },
     predict = function(data, ...) {
       if (!self$has_predict_method) {
         warning(paste0("No prediction method for type '", self$method, "'."))
         return(NULL)
       }
-      all_args <- list(object = self$object, data = data, self = self)
+      all_args <- list(object = self$object,
+                       data = .prepare_data(self, data),
+                       self = self)
       all_args <- append(all_args, list(...))
       do.call(.predict, all_args)
     },
@@ -107,4 +113,25 @@ model_definition <- R6::R6Class(
   if (length(model$result$messages)>0) self$messages <- paste(model$result$messages, collapse = " | ")
   if (length(model$result$warnings)>0) self$warnings <- paste(model$result$warnings, collapse = " | ")
   invisible(self)
+}
+
+.prepare_data <- function(self, data, write_names_map = FALSE) {
+  # method to store names mapping and convert names to syntactic terms
+  var_names <- colnames(data)
+  syn_var_names <- make.names(var_names)
+  if (write_names_map)
+    self$names_map <- stats::setNames(var_names, syn_var_names)
+  colnames(data) <- syn_var_names
+  return(data)
+}
+
+.prepare_formula <- function(formula) {
+  # method to convert formula to syntactic terms
+  var_names <- all.vars(formula)
+  syn_var_names <- make.names(var_names)
+  mapper <- stats::setNames(syn_var_names, var_names)
+  mapper <- lapply(mapper, dplyr::sym)
+  new_formula <- do.call("substitute", list(formula, mapper))
+  new_formula <- stats::as.formula(new_formula, env = environment(formula))
+  return(new_formula)
 }
