@@ -77,26 +77,6 @@
   return(settings)
 }
 
-.names_map <- function(names_vec) {
-  names_chk <- make.names(names_vec)
-  names(names_vec) <- names_chk
-  names_vec["(Intercept)"] <- "(Intercept)"
-  return(names_vec)
-}
-
-.get_names_map_from_data <- function(formula, data, method) {
-  if (.check_method(method, "nonstandard_formula")) {
-    names_map <- c(.names_map(gsub("`", "", colnames(data))), .names_map(colnames(data)))
-  } else {
-    mf <- stats::model.frame(formula, data)
-    original_names <- c(.names_map(gsub("`", "", colnames(mf))), .names_map(colnames(mf)))
-    x <- stats::model.matrix(formula, mf)
-    transformed_names <- c(.names_map(gsub("`", "", colnames(x))), .names_map(colnames(x)))
-    names_map <- c(original_names, transformed_names)
-  }
-  return(names_map[!duplicated(names_map)])
-}
-
 .make_model_cols <- function(df) {
   make_vector <- function(lst) {
     lst[sapply(lst, is.null)] <- NA

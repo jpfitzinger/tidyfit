@@ -71,7 +71,6 @@
     data[, response_var] <- NA
     truth <- NULL
   }
-  if (!is.null(self$fit_info$names_map)) data <- data.frame(stats::model.matrix(self$formula, data))
   pred <- dplyr::tibble(
     prediction = stats::predict(object, data, type = "response"),
     truth = truth

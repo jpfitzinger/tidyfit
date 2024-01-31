@@ -41,17 +41,11 @@
     adj_obj <- lmtest::coeftest(object, vcov. = sandwich::vcovOPG(object))
   }
   estimates <- broom::tidy(adj_obj)
-  if (!is.null(self$fit_info$names_map)) {
-    estimates$term <- self$fit_info$names_map[estimates$term]
-  }
   return(estimates)
 }
 
 .coef.glm <- function(object, self = NULL, ...) {
   estimates <- broom::tidy(object)
-  if (!is.null(self$fit_info$names_map)) {
-    estimates$term <- self$fit_info$names_map[estimates$term]
-  }
   return(estimates)
 }
 
