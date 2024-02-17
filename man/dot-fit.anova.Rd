@@ -38,7 +38,7 @@ fit
 
 # Within 'regress' function
 fit <- regress(data, Return ~ ., m("anova"), .mask = c("Date", "Industry"))
-unnest(coef(fit), model_info)
+tidyr::unnest(coef(fit), model_info)
 
 }
 \seealso{

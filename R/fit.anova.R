@@ -28,7 +28,7 @@
 #'
 #' # Within 'regress' function
 #' fit <- regress(data, Return ~ ., m("anova"), .mask = c("Date", "Industry"))
-#' unnest(coef(fit), model_info)
+#' tidyr::unnest(coef(fit), model_info)
 #'
 #' @seealso \code{\link{.fit.lm}}, \code{\link{.fit.glm}} and \code{\link{m}} methods
 #'
