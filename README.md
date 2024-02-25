@@ -149,7 +149,7 @@ Classification
 </tr>
 </thead>
 <tbody>
-<tr grouplength="4">
+<tr grouplength="5">
 <td colspan="5" style="border-bottom: 1px solid;">
 <strong>Linear (generalized) regression or classification</strong>
 </td>
@@ -220,6 +220,23 @@ yes
 </td>
 <td style="text-align:center;">
 no
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+ANOVA
+</td>
+<td style="text-align:center;">
+anova
+</td>
+<td style="text-align:center;">
+`stats`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
 </td>
 </tr>
 <tr grouplength="4">
@@ -295,7 +312,7 @@ yes
 yes
 </td>
 </tr>
-<tr grouplength="4">
+<tr grouplength="5">
 <td colspan="5" style="border-bottom: 1px solid;">
 <strong>Machine Learning</strong>
 </td>
@@ -360,6 +377,23 @@ quantile_rf
 </td>
 <td style="text-align:center;">
 `quantregForest`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Neural Network
+</td>
+<td style="text-align:center;">
+nnet
+</td>
+<td style="text-align:center;">
+`nnet`
 </td>
 <td style="text-align:center;">
 yes
@@ -831,7 +865,7 @@ subset_mod_frame
 #>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>       <list>  
 #> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|100 <tidyFit>    <tibble>
 #> 2 Shops    enet   glmnet::glmnet      1.21   #001|049 <tidyFit>    <tibble>
-#> 3 Enrgy    robust MASS::rlm           0.0639 #0010000 <tidyFit>    <tibble>
+#> 3 Enrgy    robust MASS::rlm           0.0638 #0010000 <tidyFit>    <tibble>
 #> 4 Shops    robust MASS::rlm           0.0638 #0010000 <tidyFit>    <tibble>
 #> # ℹ 1 more variable: warnings <chr>
 ```
@@ -846,7 +880,7 @@ subset_mod_frame %>%
 #>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>       <dbl> <list> 
 #> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|100 <tidyFit>        0 <NULL> 
 #> 2 Shops    enet   glmnet::glmnet      1.21   #001|049 <tidyFit>        0 <NULL> 
-#> 3 Enrgy    robust MASS::rlm           0.0639 #0010000 <tidyFit>       NA <NULL> 
+#> 3 Enrgy    robust MASS::rlm           0.0638 #0010000 <tidyFit>       NA <NULL> 
 #> 4 Shops    robust MASS::rlm           0.0638 #0010000 <tidyFit>       NA <NULL> 
 #> # ℹ 5 more variables: family <chr>, lambda <dbl>, method <chr>, psi <list>,
 #> #   warnings <chr>
@@ -875,7 +909,7 @@ subset_mod_frame %>%
 #>   <chr>    <chr>  <chr>                <dbl> <chr>    <list>       <list>  
 #> 1 Enrgy    enet   glmnet::glmnet      1.21   #001|100 <tidyFit>    <tibble>
 #> 2 Shops    enet   glmnet::glmnet      1.21   #001|049 <tidyFit>    <tibble>
-#> 3 Enrgy    robust MASS::rlm           0.0639 #0010000 <tidyFit>    <tibble>
+#> 3 Enrgy    robust MASS::rlm           0.0638 #0010000 <tidyFit>    <tibble>
 #> 4 Shops    robust MASS::rlm           0.0638 #0010000 <tidyFit>    <tibble>
 #> # ℹ 2 more variables: warnings <chr>, fitted_model <list>
 ```

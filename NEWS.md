@@ -6,6 +6,8 @@ This version adds several new features and methods:
 - New methods:
   - 'anova' for analysis of variance on glm objects
   - 'nnet' for single-layer neural networks
+- An explain() generic which provides a convenience wrapper for methods from several variable importance packages
+- Several bugfixes and improved error handling
 
 ## tidyfit 0.6.5
 
