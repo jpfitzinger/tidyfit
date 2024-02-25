@@ -53,10 +53,6 @@
 #'
 #' * "mean_decrease_accuracy"
 #'
-#' ### \code{partimp} package:
-#'
-#' This is currently still experimental. Documentation will be provided when the package is more stable.
-#'
 #' @author Johann Pfitzinger
 #'
 #' @examples

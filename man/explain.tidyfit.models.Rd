@@ -78,11 +78,6 @@ This uses the native importance method of the randomForest package and can be us
 \item "mean_decrease_accuracy"
 }
 }
-
-\subsection{\code{partimp} package:}{
-
-This is currently still experimental. Documentation will be provided when the package is more stable.
-}
 }
 \examples{
 data <- dplyr::group_by(tidyfit::Factor_Industry_Returns, Industry)
