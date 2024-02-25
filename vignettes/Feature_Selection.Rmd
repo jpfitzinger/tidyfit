@@ -172,11 +172,8 @@ Last, but not least, **Random Forests importance** is a popular machine learning
 
 ```{r}
 # Random Forest Importance
-algorithms_df <- algorithms_df %>% 
-  bind_rows(
-    data %>% 
+nonlinear_algorithms_df <- data %>% 
       regress(Target ~ ., `RF Importance` = m("rf"))
-  )
 ```
 
 ## Extracting the top models
@@ -185,7 +182,8 @@ All information needed to select the top 10 features for each algorithm can be o
 
 ```{r}
 coef_df <- coef(algorithms_df) %>% 
-  unnest(model_info)
+  unnest(model_info) %>%
+  bind_rows(explain(nonlinear_algorithms_df))
 ```
 
 Some algorithms return more than the maximum 10 variables. For instance, the filter methods (correlation, RReliefF and information gain) return a score for each feature. The below code chunk selects the top 10 features for each algorithm:
@@ -202,7 +200,7 @@ model_df <- coef_df %>%
     # BMA features are selected using the posterior inclusion probability
     model == "BMA" ~ rank(-pip) <= MODEL_SIZE,
     # The RF importance is stored in a separate column (%IncMSE)
-    model == "RF Importance" ~ rank(-`%IncMSE`) <= MODEL_SIZE,
+    model == "RF Importance" ~ rank(-importance) <= MODEL_SIZE,
     # For all other methods keep all features
     TRUE ~ TRUE
   )) %>% 
