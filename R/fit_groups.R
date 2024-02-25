@@ -75,7 +75,7 @@
       pred <- cv_res %>%
         purrr::transpose() %>%
         purrr::map_dfr(function(row) {
-          if (is.null(row$df_test) | is.null(row$model_object$object))
+          if (is.null(row$df_test) | is.na(row$df_test) | is.null(row$model_object$object))
             return(NULL)
           out <- row$model_object$predict(as.data.frame(row$df_test), training_context = TRUE)
           if (is.null(out))
