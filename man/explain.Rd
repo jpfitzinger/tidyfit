@@ -81,6 +81,19 @@ fit <- regress(data, Return ~ ., m("lm"), .mask = c("Date", "Industry"))
 explain(fit, use_package = "iml", use_method = "Shapley", which_rows = c(1))
 
 }
+\references{
+Molnar C, Bischl B, Casalicchio G (2018). “iml: An R package for Interpretable Machine Learning.” \emph{JOSS},
+\emph{3}(26), 786. doi:10.21105/joss.00786 \url{https://doi.org/10.21105/joss.00786},
+\url{https://joss.theoj.org/papers/10.21105/joss.00786}.
+
+Iooss B, Veiga SD, Janon A, Pujol G, Broto wcfB, Boumhaout K, Clouvel L, Delage T, Amri RE, Fruth J, Gilquin
+L, Guillaume J, Herin M, Idrissi MI, Le Gratiet L, Lemaitre P, Marrel A, Meynaoui A, Nelson BL, Monari F,
+Oomen R, Rakovec O, Ramos B, Rochet P, Roustant O, Sarazin G, Song E, Staum J, Sueur R, Touati T, Verges V,
+Weber F (2024). \emph{sensitivity: Global Sensitivity Analysis of Model Outputs and Importance Measures}. R
+package version 1.30.0, \url{https://CRAN.R-project.org/package=sensitivity}.
+
+A. Liaw and M. Wiener (2002). Classification and Regression by randomForest. R News 2(3), 18--22.
+}
 \author{
 Johann Pfitzinger
 }
