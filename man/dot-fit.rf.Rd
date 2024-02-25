@@ -44,7 +44,7 @@ fit
 
 # Within 'regress' function
 fit <- regress(data, Return ~ ., m("rf"))
-tidyr::unnest(coef(fit), model_info)
+explain(fit)
 
 }
 \references{

@@ -26,6 +26,12 @@
       df_slices <- df %>%
         dplyr::filter(.data$slice_id != "FULL")
 
+      if (all(is.na(df_slices$metric))) {
+        df_slices <- df_slices |>
+          dplyr::filter(.data$grid_id == .data$grid_id[1])
+        warning("could not select optimal hyperparameter due to model errors. keeping the first hyperparameter set.")
+      }
+
       if (!all(is.na(df_slices$metric)) & !.return_grid) {
         df_slices <- df_slices %>%
           dplyr::group_by(.data$model, .data$grid_id, .add = TRUE) %>%

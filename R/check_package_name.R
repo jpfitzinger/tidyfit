@@ -10,6 +10,7 @@
 
 .package_names <- list(
   adalasso = "glmnet",
+  anova = "stats",
   bayes = "arm",
   blasso = "monomvn",
   bma = "BMS",
@@ -27,6 +28,7 @@
   lm = "stats",
   mrmr = "mRMRe",
   mslm = "MSwM",
+  nnet = "nnet",
   pcr = "pls",
   plsr = "pls",
   quantile_rf = "quantregForest",

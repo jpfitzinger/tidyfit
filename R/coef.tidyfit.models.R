@@ -43,12 +43,18 @@ coef.tidyfit.models <- function(
 
   object <- .warn_and_remove_errors(object)
 
+  get_coefs <- function(model) {
+    model$coef()
+  }
+
   sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
   gr_vars <- attr(object, "structure")$groups
-  out <- object %>%
+  model_df <- object %>%
     dplyr::select(-dplyr::any_of(sel_cols)) %>%
-    dplyr::rename(grid_id_ = "grid_id") %>%
-    dplyr::mutate(coefs = purrr::map(.data$model_object, ~.$coef())) %>%
+    dplyr::rename(grid_id_ = "grid_id")
+  coef_df <- purrr::map(model_df$model_object, get_coefs)
+  out <- model_df %>%
+    dplyr::mutate(coefs = coef_df) %>%
     dplyr::select(-"model_object") %>%
     tidyr::unnest("coefs")
 

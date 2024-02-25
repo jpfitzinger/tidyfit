@@ -34,10 +34,16 @@ residuals.tidyfit.models <- function(object, ...) {
   if (any(modes == "classification"))
     stop("cannot produce residuals for classification models")
 
+  get_residuals <- function(model) {
+    model$resid()
+  }
+
   sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
-  out <- object %>%
-    dplyr::select(-dplyr::any_of(sel_cols)) %>%
-    dplyr::mutate(residual = purrr::map(.data$model_object, ~.$resid())) %>%
+  model_df <- object %>%
+    dplyr::select(-dplyr::any_of(sel_cols))
+  resid_df <- purrr::map(model_df$model_object, get_residuals)
+  out <- model_df %>%
+    dplyr::mutate(residual = resid_df) %>%
     dplyr::select(- "model_object") %>%
     tidyr::unnest("residual")
 

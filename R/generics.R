@@ -42,3 +42,8 @@ tidy.tidyFit <- function(x, ...) {
 glance.tidyFit <- function(x, ...) {
   broom::glance(x$object, ...)
 }
+
+#' @export
+explain.tidyFit <- function(object, ...) {
+  generics::explain(object$object, ...)
+}

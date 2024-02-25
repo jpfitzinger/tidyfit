@@ -6,8 +6,13 @@
 .eval_metrics <- function(pred, mode, weights = NULL) {
 
   if (!"truth" %in% colnames(pred)) {
+    if ("grid_id" %in% colnames(pred)) {
+      grid_id <- unique(pred$grid_id)
+    } else {
+      grid_id <- NA
+    }
     metrics <- tibble(
-      grid_id = unique(pred$grid_id),
+      grid_id = grid_id,
       metric = NA
     )
     return(metrics)

@@ -47,7 +47,7 @@
     data = NULL
 ) {
   ctr <- self$args[names(self$args) %in% methods::formalArgs(stats::lm)]
-  ctr$model <- FALSE
+  ctr$model <- TRUE
   ctr$x <- FALSE
   ctr$y <- FALSE
   eval_fun_ <- function(...) {

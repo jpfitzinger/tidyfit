@@ -54,6 +54,10 @@ model_definition <- R6::R6Class(
       do.call(.predict, all_args)
     },
     coef = function(...) {
+      if (!.check_method(self$method, "has_coef_method")) {
+        warning(paste0("No coef method for type '", self$method, "'. Try using 'explain()'"))
+        return(NULL)
+      }
       all_args <- list(object = self$object, self = self)
       coef_df <- do.call(.coef, all_args)
       coef_df <- coef_df %>%
@@ -67,6 +71,21 @@ model_definition <- R6::R6Class(
     fitted = function(...) {
       all_args <- list(object = self$object, self = self)
       do.call(.fitted, all_args)
+    },
+    explain = function(use_package, use_method, additional_args) {
+      if (!.check_method(self$method, "has_importance_method")) {
+        warning(paste0("No explain method for type '", self$method, "'."))
+        return(dplyr::tibble(term = character(), importance = double()))
+      }
+      all_args <- list(object = self$object, self = self, use_package = use_package, use_method = use_method)
+      all_args <- append(all_args, additional_args)
+      var_imp_df <- do.call(.explain, all_args)
+      if (nrow(var_imp_df) > 0) {
+        var_imp_df <- var_imp_df %>%
+          dplyr::mutate(term = dplyr::if_else(.data$term %in% names(self$names_map), self$names_map[.data$term], .data$term))
+      }
+
+      return(var_imp_df)
     },
     print = function(...) {
       cat("<tidyFit> object\n", crayon::italic("method:"),

@@ -54,9 +54,11 @@
   response_var <- all.vars(self$formula)[1]
   reg_data <- dplyr::tibble(!!response_var := mf[,1]) |>
     dplyr::bind_cols(dplyr::as_tibble(x)) |>
+    dplyr::select(-any_of("(Intercept)")) |>
     data.frame()
 
-  formula <- stats::as.formula(paste(make.names(response_var), "~ 0 + ."))
+  formula <- ifelse("(Intercept)" %in% colnames(x), "~ .", "~ 0 + .")
+  formula <- stats::as.formula(paste(make.names(response_var), formula))
 
   ctr_lm <- self$args[names(self$args) %in% methods::formalArgs(stats::lm)]
   ctr_gets <- self$args[names(self$args) %in% methods::formalArgs(gets::getsm)]
