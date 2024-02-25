@@ -100,7 +100,7 @@
     purrr::map_dfr(function(row) {
       row$model_object[[1]] <- row$model_object[[1]]$clone()
       row$model_object[[1]]$grid_id <- row$grid_id
-      row$model_object[[1]]$args <- unlist(purrr::transpose(row$settings), recursive = FALSE)
+      row$model_object[[1]]$args <- unlist(purrr::transpose(row$settings[[1]]), recursive = FALSE)
       row
     })
 }
