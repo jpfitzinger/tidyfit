@@ -120,27 +120,6 @@
   return(result_df)
 }
 
-.explain_partimp_tree_lmg <- function(self, ...) {
-  args <- list(...)
-  args[["object"]] <- self
-  args[["method"]] <- "tree_lmg"
-  return(do.call(.partimp_explainer, args))
-}
-
-.explain_partimp_tree_pmvd <- function(self, ...) {
-  args <- list(...)
-  args[["object"]] <- self
-  args[["method"]] <- "tree_pmvd"
-  return(do.call(.partimp_explainer, args))
-}
-
-.explain_partimp_tree_entropy <- function(self, ...) {
-  args <- list(...)
-  args[["object"]] <- self
-  args[["method"]] <- "tree_entropy"
-  return(do.call(.partimp_explainer, args))
-}
-
 .explain_iml_Shapley <- function(self, ...) {
   args <- list(...)
   data <- stats::model.frame(self$formula, data.frame(self$data))
