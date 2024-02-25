@@ -62,7 +62,6 @@ Suggests:
   quantreg,
   quantregForest,
   randomForest,
-  relaimpo,
   sandwich,
   sensitivity,
   shrinkTVP,
