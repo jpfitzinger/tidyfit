@@ -147,7 +147,10 @@ m <- function(
   }
 
   mods <- .make_model_cols(mods)
-  mods <- .unnest_args(mods)
+  mods <- dplyr::group_by(mods, r = dplyr::row_number()) |>
+    dplyr::group_split() |>
+    purrr::map_dfr(.unnest_args) |>
+    dplyr::select(-"r")
   col_ord <- c("estimator_fct", "size (MB)", "grid_id", "model_object", "settings", "errors", "warnings", "messages")
   mods <- dplyr::relocate(mods, any_of(col_ord)) %>%
     dplyr::arrange(.data$grid_id)
