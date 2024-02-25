@@ -72,12 +72,12 @@ model_definition <- R6::R6Class(
       all_args <- list(object = self$object, self = self)
       do.call(.fitted, all_args)
     },
-    explain = function(method, additional_args) {
+    explain = function(use_package, use_method, additional_args) {
       if (!.check_method(self$method, "has_importance_method")) {
         warning(paste0("No explain method for type '", self$method, "'."))
         return(dplyr::tibble(term = character(), importance = double()))
       }
-      all_args <- list(object = self$object, self = self, method = method)
+      all_args <- list(object = self$object, self = self, use_package = use_package, use_method = use_method)
       all_args <- append(all_args, additional_args)
       var_imp_df <- do.call(.explain, all_args)
       if (nrow(var_imp_df) > 0) {

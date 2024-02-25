@@ -42,6 +42,7 @@
 #' @importFrom purrr safely quietly
 #' @importFrom stats model.frame model.matrix model.response
 #' @importFrom methods formalArgs
+#' @importFrom vctrs vec_as_names
 
 .fit.nnet <- function(
     self,

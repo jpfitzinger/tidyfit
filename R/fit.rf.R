@@ -72,64 +72,6 @@
   invisible(self)
 }
 
-.explain.randomForest <- function(object, self = NULL, method = NULL, explainer_model = NULL, ...) {
-
-  if (!is.null(method)) {
-    possible_methods <- c("mean_decrease_accuracy", "partition_shap")
-    if (!method %in% possible_methods) {
-      stop(sprintf("available 'explain' methods for 'randomForest' objects are: %s", paste(possible_methods, collapse=", ")))
-    }
-  } else {
-    method = "mean_decrease_accuracy"
-  }
-  if (method %in% c("partition_shap") &
-      !"glmnet" %in% utils::installed.packages())
-    stop("Package 'glmnet' is necessary to explain 'lm' models. Use install.packages('glmnet') to install it.")
-
-  if (method == "partition_shap" & is.null(explainer_model))
-    stop("provide an explainer_model, e.g. m('ridge', lambda = 0)")
-  if (method == "mean_decrease_accuracy") {
-    if (self$mode == "regression") {
-      imp <- object$importance
-      estimates <- dplyr::as_tibble(imp) %>%
-        dplyr::mutate(term = rownames(imp)) %>%
-        dplyr::mutate(importanceSD = object$importanceSD[.data$term]) %>%
-        dplyr::rename(importance = "%IncMSE")
-    } else {
-      imp <- object$importance
-      imp_MDacc <- imp[, -(ncol(imp)-1):-ncol(imp)]
-      imp_Other <- imp[, (ncol(imp)-1):ncol(imp)]
-      estimates <- dplyr::as_tibble(imp_MDacc) %>%
-        dplyr::mutate(term = rownames(imp)) %>%
-        tidyr::pivot_longer(-"term", names_to = "class", values_to = "Class_MeanDecreaseAccuracy")
-      estimates_other <- dplyr::as_tibble(imp_Other) %>%
-        dplyr::mutate(term = rownames(imp))
-      estimates <- dplyr::left_join(estimates, estimates_other, by = "term")
-      impSD <- object$importanceSD
-      impSD_MDacc <- impSD[, -ncol(impSD)]
-      impSD_Other <- impSD[, ncol(impSD)]
-      estimatesSD <- dplyr::as_tibble(impSD_MDacc) %>%
-        dplyr::mutate(term = rownames(impSD)) %>%
-        tidyr::pivot_longer(-"term", names_to = "class", values_to = "Class_MeanDecreaseAccuracySD")
-      estimatesSD_other <- dplyr::tibble(MeanDecreaseAccuracySD = impSD_Other) %>%
-        dplyr::mutate(term = rownames(impSD))
-      estimatesSD <- dplyr::left_join(estimatesSD, estimatesSD_other, by = "term")
-      estimates <- estimates %>%
-        dplyr::left_join(estimatesSD, by = c("term", "class"))
-    }
-  }
-  if (method == "partition_shap") {
-    shap_values <- partition_shap(self, explainer_model)
-    estimates <- tidyr::tibble(
-      term = names(shap_values),
-      importance = shap_values
-    )
-  }
-
-
-  return(estimates)
-}
-
 .predict.randomForest <- function(object, data, self = NULL, ...) {
   augmented_data <- dplyr::bind_rows(data, self$data)
   response_var <- all.vars(self$formula)[1]

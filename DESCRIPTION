@@ -32,6 +32,7 @@ Imports:
   tibble,
   tidyr,
   utils,
+  vctrs,
   yardstick
 Suggests:
   arm,
@@ -45,6 +46,7 @@ Suggests:
   ggplot2,
   glmnet,
   hfr,
+  iml,
   kableExtra,
   knitr,
   lme4,
@@ -62,6 +64,7 @@ Suggests:
   randomForest,
   relaimpo,
   sandwich,
+  sensitivity,
   shrinkTVP,
   stringr,
   rmarkdown,

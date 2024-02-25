@@ -1,58 +1,236 @@
-#' @importFrom stats rnorm
-
 .explain.default <- function(
     object,
     self,
-    method,
+    use_package = NULL,
+    use_method = NULL,
     ...) {
-  additional_args <- list(...)
-  if (!is.null(method)) {
-    possible_methods <- c("shapley_reg", "rel_weights")
-    if (!method %in% possible_methods) {
-      stop(sprintf("available 'explain' methods for '%s' objects are: %s", self$method, paste(possible_methods, collapse=", ")))
-    }
-  } else {
-    method = "shapley_reg"
-    if (!"type" %in% names(additional_args))
-      warning(sprintf("the default importance metric for method '%s' is 'shapley_reg' using `type='lmg'` in `relaimpo` package", self$method))
+  if (is.null(use_package)) {
+    use_package = .get_default_explain_package(self)
+    warning(sprintf("using explain package '%s'", use_package))
   }
-  if (!"type" %in% names(additional_args)) {
-    additional_args["type"] = ifelse(method == "shapley_reg", "lmg", "genizi")
-  }
-  mf <- stats::model.frame(self$formula, self$data)
-  x <- stats::model.matrix(self$formula, mf)
-
-  target_var <- all.vars(self$formula)[1]
-  fitted_values <- self$fitted()$fitted
-  resid_values <- self$resid()$residual
-  y <- mf[[target_var]]
-  R2 <- 1 - sum(resid_values^2)/sum((y - mean(y))^2)
-
-  # keep only columns with non-zero coefficients
-  selected_vars <- self$coef()$term
-  selected_vars <- selected_vars[selected_vars != "(Intercept)"]
-  if (length(selected_vars) == 0) return(tibble(term = character(), importance = numeric()))
-  if (length(selected_vars) == 1) {
-    result_df <- tibble(
-      term = colnames(x[, -1])[selected_vars],
-      importance = R2
-    ) |>
-      tidyr::complete(term = colnames(x)[-1], fill = list(importance = 0))
-    return(result_df)
-  }
-  data <- as.data.frame(x[, -1][, selected_vars])
-
-  # Add small epsilon
-  data[target_var] <- fitted_values + stats::rnorm(length(fitted_values), sd = sd(fitted_values) * 0.001)
-  args <- list(formula = self$formula, data = data)
-  args <- append(args, additional_args)
-  result <- do.call(relaimpo::calc.relimp.formula, args)
-  result <- attr(result, additional_args$type)
-
-  result_df <- tibble(
-    term = names(result),
-    importance = result * R2
-  ) |>
-    tidyr::complete(term = colnames(x)[-1], fill = list(importance = 0))
+  .check_explain_method(self, use_package)
+  use_method <- .get_default_explain_method(use_package, use_method)
+  explain_function <- paste(".explain", use_package, use_method, sep = "_")
+  result_df = do.call(explain_function, append(list(self = self), list(...)))
   return (result_df)
+}
+
+.explain_sensitivity_lmg <- function(self, ...) {
+  args <- list(...)
+  args <- args[names(args) %in% methods::formalArgs(sensitivity::lmg)]
+  args$logistic <- self$mode == "classification"
+  mf <- stats::model.frame(self$formula, data.frame(self$data))
+  x <- stats::model.matrix(self$formula, mf)
+  if ("(Intercept)" %in% colnames(x)) intercept <- TRUE
+  x <- as.data.frame(x[, colnames(x)!="(Intercept)"])
+  y <- stats::model.response(mf)
+  args[["X"]] <- x
+  args[["y"]] <- y
+  res <- do.call(sensitivity::lmg, args)
+  result_df <- tibble(
+    term = colnames(x),
+    importance = res$lmg[, "original"]
+  )
+  return(result_df)
+}
+
+.explain_sensitivity_pmvd <- function(self, ...) {
+  args <- list(...)
+  args <- args[names(args) %in% methods::formalArgs(sensitivity::pmvd)]
+  args$logistic <- self$mode == "classification"
+  mf <- stats::model.frame(self$formula, data.frame(self$data))
+  x <- stats::model.matrix(self$formula, mf)
+  if ("(Intercept)" %in% colnames(x)) intercept <- TRUE
+  x <- as.data.frame(x[, colnames(x)!="(Intercept)"])
+  y <- stats::model.response(mf)
+  args[["X"]] <- x
+  args[["y"]] <- y
+  res <- do.call(sensitivity::pmvd, args)
+  result_df <- tibble(
+    term = colnames(x),
+    importance = res$pmvd[, "original"]
+  )
+  return(result_df)
+}
+
+.explain_sensitivity_johnson <- function(self, ...) {
+  args <- list(...)
+  args <- args[names(args) %in% methods::formalArgs(sensitivity::johnson)]
+  args$logistic <- self$mode == "classification"
+  mf <- stats::model.frame(self$formula, data.frame(self$data))
+  x <- stats::model.matrix(self$formula, mf)
+  if ("(Intercept)" %in% colnames(x)) intercept <- TRUE
+  x <- as.data.frame(x[, colnames(x)!="(Intercept)"])
+  y <- stats::model.response(mf)
+  args[["X"]] <- x
+  args[["y"]] <- y
+  res <- do.call(sensitivity::johnson, args)
+  result_df <- tibble(
+    term = colnames(x),
+    importance = res$johnson[, "original"]
+  )
+  return(result_df)
+}
+
+.explain_sensitivity_src <- function(self, ...) {
+  args <- list(...)
+  args <- args[names(args) %in% methods::formalArgs(sensitivity::src)]
+  args$logistic <- self$mode == "classification"
+  mf <- stats::model.frame(self$formula, data.frame(self$data))
+  x <- stats::model.matrix(self$formula, mf)
+  if ("(Intercept)" %in% colnames(x)) intercept <- TRUE
+  x <- as.data.frame(x[, colnames(x)!="(Intercept)"])
+  y <- stats::model.response(mf)
+  args[["X"]] <- x
+  args[["y"]] <- y
+  res <- do.call(sensitivity::src, args)
+  rank <- ifelse(!is.null(args$rank), args$rank, FALSE)
+  res <- ifelse(rank, res$SRRC, res$SRC)[[1]]
+  result_df <- tibble(
+    term = colnames(x),
+    importance = res
+  )
+  return(result_df)
+}
+
+.explain_sensitivity_pcc <- function(self, ...) {
+  args <- list(...)
+  args <- args[names(args) %in% methods::formalArgs(sensitivity::pcc)]
+  args$logistic <- self$mode == "classification"
+  mf <- stats::model.frame(self$formula, data.frame(self$data))
+  x <- stats::model.matrix(self$formula, mf)
+  if ("(Intercept)" %in% colnames(x)) intercept <- TRUE
+  x <- as.data.frame(x[, colnames(x)!="(Intercept)"])
+  y <- stats::model.response(mf)
+  args[["X"]] <- x
+  args[["y"]] <- y
+  res <- do.call(sensitivity::pcc, args)
+  rank <- ifelse(!is.null(args$rank), args$rank, FALSE)
+  semi <- ifelse(!is.null(args$semi), args$semi, FALSE)
+  if (rank) {
+    res <- ifelse(semi, res$SPRCC, res$PRCC)
+  } else {
+    res <- ifelse(semi, res$SPCC, res$PCC)
+  }
+  res <- res[[1]]
+  result_df <- tibble(
+    term = colnames(x),
+    importance = res
+  )
+  return(result_df)
+}
+
+.explain_partimp_tree_lmg <- function(self, ...) {
+  args <- list(...)
+  args[["object"]] <- self
+  args[["method"]] <- "tree_lmg"
+  return(do.call(.partimp_explainer, args))
+}
+
+.explain_partimp_tree_pmvd <- function(self, ...) {
+  args <- list(...)
+  args[["object"]] <- self
+  args[["method"]] <- "tree_pmvd"
+  return(do.call(.partimp_explainer, args))
+}
+
+.explain_partimp_tree_entropy <- function(self, ...) {
+  args <- list(...)
+  args[["object"]] <- self
+  args[["method"]] <- "tree_entropy"
+  return(do.call(.partimp_explainer, args))
+}
+
+.explain_iml_Shapley <- function(self, ...) {
+  args <- list(...)
+  data <- stats::model.frame(self$formula, data.frame(self$data))
+  predictor <- iml::Predictor$new(
+    self,
+    data = data[,-1],
+    y = data[,1],
+    predict.function = function(model, newdata) model$predict(newdata)$prediction)
+  x0 <- data[1,-1]
+  explainer <- do.call(iml::Shapley$new, append(list(predictor = predictor, x.interest=x0), args[names(args)%in%c("sample.size")]))
+  samples <- 1:nrow(data)
+  if (!is.null(args$which_rows)) samples <- args$which_rows[args$which_rows %in% samples]
+  result_df <- map_dfr(samples, function(i) {
+    explainer$explain(data[i,-1])
+    return(explainer$results)
+  })
+  result_df <- result_df |>
+    dplyr::as_tibble() |>
+    dplyr::rename(term = .data$feature, importance = .data$phi)
+  return(result_df)
+}
+
+.explain_iml_FeatureImp <- function(self, ...) {
+  data <- stats::model.frame(self$formula, data.frame(self$data))
+  predictor <- iml::Predictor$new(
+    self,
+    data = data[,-1],
+    y = data[,1],
+    predict.function = function(model, newdata) model$predict(newdata)$prediction)
+  loss <- ifelse(self$mode == "regression", "mae", "ce")
+  explainer <- iml::FeatureImp$new(predictor, loss = loss)
+  result_df <- dplyr::as_tibble(explainer$results) |>
+    dplyr::rename(term = .data$feature)
+  return(result_df)
+}
+
+.explain_iml_LocalModel <- function(self, ...) {
+  args <- list(...)
+  args <- args[names(args) %in% c("k", "gower.power", "kernel.width", "dist.fun")]
+  data <- stats::model.frame(self$formula, data.frame(self$data))
+  predictor <- iml::Predictor$new(
+    self,
+    data = data[,-1],
+    y = data[,1],
+    predict.function = function(model, newdata) model$predict(newdata)$prediction)
+  x0 <- data[1,-1]
+  args[["predictor"]] <- predictor
+  explainer <- do.call(iml::LocalModel$new, append(list(x.interest=x0), args))
+  samples <- 1:nrow(data)
+  if (!is.null(args$which_rows)) samples <- args$which_rows[args$which_rows %in% samples]
+  result_df <- map_dfr(samples, function(i) {
+    explainer$explain(data[i,-1])
+    return(explainer$results)
+  })
+  result_df <- result_df |>
+    dplyr::as_tibble() |>
+    dplyr::rename(term = .data$feature, importance = .data$effect)
+  return(result_df)
+}
+
+.explain_randomForest_mean_decrease_accuracy <- function(self, ...) {
+
+  if (self$mode == "regression") {
+    imp <- self$object$importance
+    estimates <- dplyr::as_tibble(imp) %>%
+      dplyr::mutate(term = rownames(imp)) %>%
+      dplyr::mutate(importanceSD = self$object$importanceSD[.data$term]) %>%
+      dplyr::rename(importance = "%IncMSE")
+  } else {
+    imp <- self$object$importance
+    imp_MDacc <- imp[, -(ncol(imp)-1):-ncol(imp)]
+    imp_Other <- imp[, (ncol(imp)-1):ncol(imp)]
+    estimates <- dplyr::as_tibble(imp_MDacc) %>%
+      dplyr::mutate(term = rownames(imp)) %>%
+      tidyr::pivot_longer(-"term", names_to = "class", values_to = "Class_MeanDecreaseAccuracy")
+    estimates_other <- dplyr::as_tibble(imp_Other) %>%
+      dplyr::mutate(term = rownames(imp))
+    estimates <- dplyr::left_join(estimates, estimates_other, by = "term")
+    impSD <- self$object$importanceSD
+    impSD_MDacc <- impSD[, -ncol(impSD)]
+    impSD_Other <- impSD[, ncol(impSD)]
+    estimatesSD <- dplyr::as_tibble(impSD_MDacc) %>%
+      dplyr::mutate(term = rownames(impSD)) %>%
+      tidyr::pivot_longer(-"term", names_to = "class", values_to = "Class_MeanDecreaseAccuracySD")
+    estimatesSD_other <- dplyr::tibble(MeanDecreaseAccuracySD = impSD_Other) %>%
+      dplyr::mutate(term = rownames(impSD))
+    estimatesSD <- dplyr::left_join(estimatesSD, estimatesSD_other, by = "term")
+    estimates <- estimates %>%
+      dplyr::left_join(estimatesSD, by = c("term", "class"))
+  }
+
+  return(estimates)
 }
