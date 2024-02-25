@@ -97,7 +97,12 @@
 
 }
 
+.fitted.svm <- function(object, self = NULL, ...) {
+  return(dplyr::select(.predict.svm(object, self$data, self, ...), -"truth"))
+}
+
 .predict.svm <- function(object, data, self = NULL, ...) {
+  augmented_data <- dplyr::bind_rows(data, self$data)
   response_var <- all.vars(self$formula)[1]
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
@@ -105,17 +110,15 @@
     data[, response_var] <- 1
     truth <- NULL
   }
-  augmented_data <- dplyr::bind_rows(data, self$data)
   mf <- stats::model.frame(self$formula, augmented_data)
   x <- stats::model.matrix(self$formula, mf)
   x <- x[, colnames(x) != "(Intercept)"]
 
   pred_mat <- stats::predict(object, newdata = x, probability = TRUE)
 
-  pred_mat <- pred_mat[1:nrow(data)]
-
   if (is.factor(pred_mat)) {
     pred_mat <- attr(pred_mat, "probabilities")
+    pred_mat <- pred_mat[1:nrow(data),]
     if (ncol(pred_mat) > 2) {
       pred <- pred_mat %>%
         dplyr::as_tibble() %>%
@@ -131,8 +134,10 @@
 
       return(pred)
     } else {
-      pred_mat <- pred_mat[, 2]
+      pred_mat <- pred_mat[1:nrow(data), 2]
     }
+  } else {
+    pred_mat <- pred_mat[1:nrow(data)]
   }
 
   pred <- dplyr::tibble(

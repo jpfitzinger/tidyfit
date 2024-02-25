@@ -54,7 +54,7 @@
           dplyr::bind_cols(tidyr::nest(df_test, df_test = everything()))
       } else {
         res_row <- res_row %>%
-          dplyr::mutate(df_test = NA)
+          dplyr::mutate(df_test = NULL)
       }
 
       # Store weights

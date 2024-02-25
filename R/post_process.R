@@ -26,7 +26,7 @@
       df_slices <- df %>%
         dplyr::filter(.data$slice_id != "FULL")
 
-      if (all(is.na(df_slices$metric))) {
+      if (all(is.na(df_slices$metric)) & (length(unique(df_slices$grid_id)) > 1)) {
         df_slices <- df_slices |>
           dplyr::filter(.data$grid_id == .data$grid_id[1])
         warning("could not select optimal hyperparameter due to model errors. keeping the first hyperparameter set.")
