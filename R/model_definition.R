@@ -140,15 +140,27 @@ model_definition <- R6::R6Class(
   var_names <- colnames(data)
   syn_var_names <- make.names(var_names)
   colnames(prepared_data) <- syn_var_names
-  model_mat <- stats::model.matrix(self$original_formula, data)
-  prepared_model_mat <- stats::model.matrix(self$formula, prepared_data)
-  var_names_mm <- colnames(model_mat)
-  prepared_var_names_mm <- colnames(prepared_model_mat)
-  syn_var_names_mm <- make.names(prepared_var_names_mm)
-  if (write_names_map) {
-    names_map <- c(stats::setNames(var_names, syn_var_names),
+  names_map <- c(stats::setNames(var_names, syn_var_names))
+
+  if (!.check_method(self$method, "nonstandard_formula")) {
+    # add response variable if it is missing
+    prepared_data_temp <- prepared_data
+    response_var <- all.vars(self$original_formula)[1]
+    if (!response_var %in% colnames(data)) {
+      data[, response_var] = NA
+      prepared_data_temp[, response_var] <- NA
+    }
+
+    model_mat <- stats::model.matrix(self$original_formula, data)
+    prepared_model_mat <- stats::model.matrix(self$formula, prepared_data_temp)
+    var_names_mm <- colnames(model_mat)
+    prepared_var_names_mm <- colnames(prepared_model_mat)
+    syn_var_names_mm <- make.names(prepared_var_names_mm)
+    names_map <- c(names_map,
                    stats::setNames(var_names_mm, prepared_var_names_mm),
                    stats::setNames(var_names_mm, syn_var_names_mm))
+  }
+  if (write_names_map) {
     self$names_map <- names_map[!duplicated(names(names_map))]
   }
   return(prepared_data)
