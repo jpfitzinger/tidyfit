@@ -86,7 +86,7 @@
   }
   if (self$mode == "regression") {
     if (!training_context) {
-      tau <- self$args$tau[[1]]
+      tau <- self$args$tau
     } else {
       tau <- 0.5
     }
@@ -103,6 +103,7 @@
         dplyr::mutate(truth = truth) %>%
         tidyr::gather("tau", "prediction", -any_of(c("truth")))
     }
+    pred <- dplyr::mutate(pred, tau = as.numeric(tau))
   } else {
 
   }

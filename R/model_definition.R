@@ -37,9 +37,9 @@ model_definition <- R6::R6Class(
     },
     fit = function(data = NULL, ...) {
       class(self) <- c(class(self), self$method)
+      if (is.null(self$formula)) self$formula <- .prepare_formula(self$original_formula)
       self$data <- data
       data <- .prepare_data(self, data, TRUE)
-      if (is.null(self$formula)) self$formula <- .prepare_formula(self$original_formula)
       .fit(self, data, ...)
     },
     predict = function(data, ...) {
@@ -56,7 +56,7 @@ model_definition <- R6::R6Class(
     coef = function(...) {
       if (!.check_method(self$method, "has_coef_method")) {
         warning(paste0("No coef method for type '", self$method, "'. Try using 'explain()'"))
-        return(NULL)
+        return(tibble(term=character(), estimate=numeric()))
       }
       all_args <- list(object = self$object, self = self)
       coef_df <- do.call(.coef, all_args)
@@ -136,12 +136,22 @@ model_definition <- R6::R6Class(
 
 .prepare_data <- function(self, data, write_names_map = FALSE) {
   # method to store names mapping and convert names to syntactic terms
+  prepared_data <- data
   var_names <- colnames(data)
   syn_var_names <- make.names(var_names)
-  if (write_names_map)
-    self$names_map <- stats::setNames(var_names, syn_var_names)
-  colnames(data) <- syn_var_names
-  return(data)
+  colnames(prepared_data) <- syn_var_names
+  model_mat <- stats::model.matrix(self$original_formula, data)
+  prepared_model_mat <- stats::model.matrix(self$formula, prepared_data)
+  var_names_mm <- colnames(model_mat)
+  prepared_var_names_mm <- colnames(prepared_model_mat)
+  syn_var_names_mm <- make.names(prepared_var_names_mm)
+  if (write_names_map) {
+    names_map <- c(stats::setNames(var_names, syn_var_names),
+                   stats::setNames(var_names_mm, prepared_var_names_mm),
+                   stats::setNames(var_names_mm, syn_var_names_mm))
+    self$names_map <- names_map[!duplicated(names(names_map))]
+  }
+  return(prepared_data)
 }
 
 .prepare_formula <- function(formula) {

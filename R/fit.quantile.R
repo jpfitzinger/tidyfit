@@ -91,7 +91,7 @@
     truth <- NULL
   }
   pred_mat <- stats::predict(object, data)
-  tau <- self$args$tau[[1]]
+  tau <- self$args$tau
   if (length(tau) == 1) {
     pred <- dplyr::tibble(prediction = pred_mat, truth = truth, tau = tau)
   } else {
