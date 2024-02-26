@@ -1,15 +1,13 @@
 ## Summary of changes
 
-This version adds a new regression method:
+This version adds several new features and methods:
 
-- Quantile Random Forest regression ('quantile_rf')
-
-In addition, there a few additional features & fixes:
-
-- Add a new arugment '.return_grid' (default \code{FALSE}) to \code{regress} and \code{classify} methods to permit returning entire hyperparameter grid instead of only optimal setting
-- Handling of syntactically invalid names is now down generically and not by the individual methods
-- Add observation weights in 'genetic'
-- Bugfixes in 'glmm' classification
+- More generic handling of non-syntactic names
+- New methods:
+  - 'anova' for analysis of variance on glm objects
+  - 'nnet' for single-layer neural networks
+- An explain() generic which provides a convenience wrapper for methods from several variable importance packages
+- Several bugfixes and improved error handling
 
 ## R CMD check results
 
