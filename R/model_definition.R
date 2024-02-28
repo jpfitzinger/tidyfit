@@ -42,13 +42,13 @@ model_definition <- R6::R6Class(
       data <- .prepare_data(self, data, TRUE)
       .fit(self, data, ...)
     },
-    predict = function(data, ...) {
+    predict = function(data, check_cols = TRUE, ...) {
       if (!self$has_predict_method) {
         warning(paste0("No prediction method for type '", self$method, "'."))
         return(NULL)
       }
       all_args <- list(object = self$object,
-                       data = .prepare_data(self, data),
+                       data = .prepare_data(self, data, check_cols = check_cols),
                        self = self)
       all_args <- append(all_args, list(...))
       do.call(.predict, all_args)
@@ -134,15 +134,19 @@ model_definition <- R6::R6Class(
   invisible(self)
 }
 
-.prepare_data <- function(self, data, write_names_map = FALSE) {
-  # method to store names mapping and convert names to syntactic terms
+.prepare_data <- function(self, data, write_names_map = FALSE, check_cols = FALSE) {
+  # fix non-syntactic names in data
   prepared_data <- data
   var_names <- colnames(data)
   syn_var_names <- make.names(var_names)
   colnames(prepared_data) <- syn_var_names
-  names_map <- c(stats::setNames(var_names, syn_var_names))
 
-  if (!.check_method(self$method, "nonstandard_formula")) {
+  # create a names mapper
+  if (write_names_map)
+    names_map <- c(stats::setNames(var_names, syn_var_names))
+
+  # augment names mapper
+  if (!.check_method(self$method, "nonstandard_formula") & write_names_map) {
     # add response variable if it is missing
     prepared_data_temp <- prepared_data
     response_var <- all.vars(self$original_formula)[1]
@@ -160,9 +164,20 @@ model_definition <- R6::R6Class(
                    stats::setNames(var_names_mm, prepared_var_names_mm),
                    stats::setNames(var_names_mm, syn_var_names_mm))
   }
-  if (write_names_map) {
+  if (write_names_map)
     self$names_map <- names_map[!duplicated(names(names_map))]
+
+  # keep only relevant columns
+  if (!is.null(self$data) & check_cols & !.check_method(self$method, "nonstandard_formula")) {
+    mf <- stats::model.frame(self$original_formula, self$data)
+    model_colnames <- colnames(mf)
+    required_colnames <- model_colnames[-1]
+    if (!all(required_colnames %in% colnames(data))) {
+      stop("missing columns in 'data'")
+    }
+    prepared_data <- dplyr::select(prepared_data, syn_var_names[var_names %in% model_colnames])
   }
+
   return(prepared_data)
 }
 
