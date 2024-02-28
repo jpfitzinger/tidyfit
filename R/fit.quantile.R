@@ -106,25 +106,25 @@
 }
 
 .fitted.rq <- function(object, self = NULL, ...) {
-  .predict.rq(object, data = data.frame(self$data), self = self, ...) %>%
+  .predict.rq(object, data = .prepare_data(self, self$data), self = self, ...) %>%
     dplyr::rename(fitted = "prediction") %>%
     dplyr::select(-any_of(c("truth")))
 }
 
 .fitted.rqs <- function(object, self = NULL, ...) {
-  .predict.rqs(object, data = data.frame(self$data), self = self, ...) %>%
+  .predict.rqs(object, data = .prepare_data(self, self$data), self = self, ...) %>%
     dplyr::rename(fitted = "prediction") %>%
     dplyr::select(-any_of(c("truth")))
 }
 
 .resid.rq <- function(object, self = NULL, ...) {
-  .predict.rq(object, data = data.frame(self$data), self = self, ...) %>%
+  .predict.rq(object, data = .prepare_data(self, self$data), self = self, ...) %>%
     dplyr::mutate(residual = .data$truth - .data$prediction) %>%
     dplyr::select(-any_of(c("truth", "prediction")))
 }
 
 .resid.rqs <- function(object, self = NULL, ...) {
-  .predict.rqs(object, data = data.frame(self$data), self = self, ...) %>%
+  .predict.rqs(object, data = .prepare_data(self, self$data), self = self, ...) %>%
     dplyr::mutate(residual = .data$truth - .data$prediction) %>%
     dplyr::select(-any_of(c("truth", "prediction")))
 }

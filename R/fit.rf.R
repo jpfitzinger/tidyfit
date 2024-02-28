@@ -73,7 +73,7 @@
 }
 
 .predict.randomForest <- function(object, data, self = NULL, ...) {
-  augmented_data <- dplyr::bind_rows(data, self$data)
+  augmented_data <- dplyr::bind_rows(data, .prepare_data(self, self$data))
   response_var <- all.vars(self$formula)[1]
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
