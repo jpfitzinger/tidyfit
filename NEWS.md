@@ -1,3 +1,7 @@
+## tidyfit 0.7.1
+
+Minor bugfix for non-syntactic name handling in 'rf' and 'quantile_rf' methods.
+
 ## tidyfit 0.7.0
 
 This version adds several new features and methods:
