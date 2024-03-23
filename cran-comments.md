@@ -1,13 +1,6 @@
 ## Summary of changes
 
-This version adds several new features and methods:
-
-- More generic handling of non-syntactic names
-- New methods:
-  - 'anova' for analysis of variance on glm objects
-  - 'nnet' for single-layer neural networks
-- An explain() generic which provides a convenience wrapper for methods from several variable importance packages
-- Several bugfixes and improved error handling
+Minor bugfix for non-syntactic name handling in 'rf' and 'quantile_rf' methods.
 
 ## R CMD check results
 
