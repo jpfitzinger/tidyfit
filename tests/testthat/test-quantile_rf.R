@@ -1,6 +1,7 @@
 test_that("quantile rf regression works", {
   library(dplyr)
   df_reg <- MASS::Boston
+  colnames(df_reg)[1] <- "some non-syntactic name"
 
   m_reg <- m("quantile_rf", medv ~ ., df_reg, tau = 0.4)
   expect_equal(nrow(tidyfit::explain(m_reg)), 14)

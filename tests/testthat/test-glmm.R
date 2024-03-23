@@ -2,7 +2,7 @@ test_that("glmm regression works", {
   library(dplyr)
   df_reg <- tidyfit::Factor_Industry_Returns
 
-  m_reg <- m("glmm", Return ~ CMA + CMA | Industry, df_reg)
+  m_reg <- m("glmm", Return ~ `Mkt-RF` + `Mkt-RF` | Industry, df_reg)
   expect_equal(nrow(coef(m_reg)), 11)
   expect_equal(nrow(predict(m_reg, df_reg[1:10,])), 10)
   expect_equal(nrow(fitted(m_reg)), 7080)

@@ -76,7 +76,7 @@
 }
 
 .predict.quantregForest <- function(object, data, self = NULL, training_context = FALSE, ...) {
-  augmented_data <- dplyr::bind_rows(data, self$data)
+  augmented_data <- dplyr::bind_rows(data, .prepare_data(self, self$data))
   response_var <- all.vars(self$formula)[1]
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
@@ -112,13 +112,13 @@
 }
 
 .fitted.quantregForest <- function(object, self = NULL, ...) {
-  .predict.quantregForest(object, data = self$data, self = self, ...) %>%
+  .predict.quantregForest(object, data = .prepare_data(self, self$data), self = self, ...) %>%
     dplyr::rename(fitted = "prediction") %>%
     dplyr::select(-any_of(c("truth")))
 }
 
 .resid.quantregForest <- function(object, self = NULL, ...) {
-  .predict.quantregForest(object, data = self$data, self = self, ...) %>%
+  .predict.quantregForest(object, data = .prepare_data(self, self$data), self = self, ...) %>%
     dplyr::mutate(residual = .data$truth - .data$prediction) %>%
     dplyr::select(-any_of(c("truth", "prediction")))
 }

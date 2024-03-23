@@ -98,11 +98,11 @@
 }
 
 .fitted.svm <- function(object, self = NULL, ...) {
-  return(dplyr::select(.predict.svm(object, self$data, self, ...), -"truth"))
+  return(dplyr::select(.predict.svm(object, .prepare_data(self, self$data), self, ...), -"truth"))
 }
 
 .predict.svm <- function(object, data, self = NULL, ...) {
-  augmented_data <- dplyr::bind_rows(data, self$data)
+  augmented_data <- dplyr::bind_rows(data, .prepare_data(self, self$data))
   response_var <- all.vars(self$formula)[1]
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]

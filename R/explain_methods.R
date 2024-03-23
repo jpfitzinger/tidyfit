@@ -19,7 +19,7 @@
   args <- list(...)
   args <- args[names(args) %in% methods::formalArgs(sensitivity::lmg)]
   args$logistic <- self$mode == "classification"
-  mf <- stats::model.frame(self$formula, data.frame(self$data))
+  mf <- stats::model.frame(self$formula, .prepare_data(self, self$data))
   x <- stats::model.matrix(self$formula, mf)
   if ("(Intercept)" %in% colnames(x)) intercept <- TRUE
   x <- as.data.frame(x[, colnames(x)!="(Intercept)"])
@@ -38,7 +38,7 @@
   args <- list(...)
   args <- args[names(args) %in% methods::formalArgs(sensitivity::pmvd)]
   args$logistic <- self$mode == "classification"
-  mf <- stats::model.frame(self$formula, data.frame(self$data))
+  mf <- stats::model.frame(self$formula, .prepare_data(self, self$data))
   x <- stats::model.matrix(self$formula, mf)
   if ("(Intercept)" %in% colnames(x)) intercept <- TRUE
   x <- as.data.frame(x[, colnames(x)!="(Intercept)"])
@@ -57,7 +57,7 @@
   args <- list(...)
   args <- args[names(args) %in% methods::formalArgs(sensitivity::johnson)]
   args$logistic <- self$mode == "classification"
-  mf <- stats::model.frame(self$formula, data.frame(self$data))
+  mf <- stats::model.frame(self$formula, .prepare_data(self, self$data))
   x <- stats::model.matrix(self$formula, mf)
   if ("(Intercept)" %in% colnames(x)) intercept <- TRUE
   x <- as.data.frame(x[, colnames(x)!="(Intercept)"])
@@ -76,7 +76,7 @@
   args <- list(...)
   args <- args[names(args) %in% methods::formalArgs(sensitivity::src)]
   args$logistic <- self$mode == "classification"
-  mf <- stats::model.frame(self$formula, data.frame(self$data))
+  mf <- stats::model.frame(self$formula, .prepare_data(self, self$data))
   x <- stats::model.matrix(self$formula, mf)
   if ("(Intercept)" %in% colnames(x)) intercept <- TRUE
   x <- as.data.frame(x[, colnames(x)!="(Intercept)"])
@@ -97,7 +97,7 @@
   args <- list(...)
   args <- args[names(args) %in% methods::formalArgs(sensitivity::pcc)]
   args$logistic <- self$mode == "classification"
-  mf <- stats::model.frame(self$formula, data.frame(self$data))
+  mf <- stats::model.frame(self$formula, .prepare_data(self, self$data))
   x <- stats::model.matrix(self$formula, mf)
   if ("(Intercept)" %in% colnames(x)) intercept <- TRUE
   x <- as.data.frame(x[, colnames(x)!="(Intercept)"])
@@ -122,12 +122,12 @@
 
 .explain_iml_Shapley <- function(self, ...) {
   args <- list(...)
-  data <- stats::model.frame(self$formula, data.frame(self$data))
+  data <- stats::model.frame(self$formula, .prepare_data(self, self$data))
   predictor <- iml::Predictor$new(
     self,
     data = data[,-1],
     y = data[,1],
-    predict.function = function(model, newdata) model$predict(newdata)$prediction)
+    predict.function = function(model, newdata) model$predict(newdata, check_cols=FALSE)$prediction)
   x0 <- data[1,-1]
   explainer <- do.call(iml::Shapley$new, append(list(predictor = predictor, x.interest=x0), args[names(args)%in%c("sample.size")]))
   samples <- 1:nrow(data)
@@ -143,12 +143,12 @@
 }
 
 .explain_iml_FeatureImp <- function(self, ...) {
-  data <- stats::model.frame(self$formula, data.frame(self$data))
+  data <- stats::model.frame(self$formula, .prepare_data(self, self$data))
   predictor <- iml::Predictor$new(
     self,
     data = data[,-1],
     y = data[,1],
-    predict.function = function(model, newdata) model$predict(newdata)$prediction)
+    predict.function = function(model, newdata) model$predict(newdata, check_cols=FALSE)$prediction)
   loss <- ifelse(self$mode == "regression", "mae", "ce")
   explainer <- iml::FeatureImp$new(predictor, loss = loss)
   result_df <- dplyr::as_tibble(explainer$results) |>
@@ -159,12 +159,12 @@
 .explain_iml_LocalModel <- function(self, ...) {
   args <- list(...)
   args <- args[names(args) %in% c("k", "gower.power", "kernel.width", "dist.fun")]
-  data <- stats::model.frame(self$formula, data.frame(self$data))
+  data <- stats::model.frame(self$formula, .prepare_data(self, self$data))
   predictor <- iml::Predictor$new(
     self,
     data = data[,-1],
     y = data[,1],
-    predict.function = function(model, newdata) model$predict(newdata)$prediction)
+    predict.function = function(model, newdata) model$predict(newdata, check_cols = FALSE)$prediction)
   x0 <- data[1,-1]
   args[["predictor"]] <- predictor
   explainer <- do.call(iml::LocalModel$new, append(list(x.interest=x0), args))
