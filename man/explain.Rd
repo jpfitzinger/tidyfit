@@ -83,7 +83,7 @@ explain(fit, use_package = "iml", use_method = "Shapley", which_rows = c(1))
 }
 \references{
 Molnar C, Bischl B, Casalicchio G (2018). “iml: An R package for Interpretable Machine Learning.” \emph{JOSS},
-\emph{3}(26), 786. \url{doi:10.21105/joss.00786}.
+\emph{3}(26), 786. \doi{10.21105/joss.00786}.
 
 Iooss B, Veiga SD, Janon A, Pujol G, Broto wcfB, Boumhaout K, Clouvel L, Delage T, Amri RE, Fruth J, Gilquin
 L, Guillaume J, Herin M, Idrissi MI, Le Gratiet L, Lemaitre P, Marrel A, Meynaoui A, Nelson BL, Monari F,

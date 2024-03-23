@@ -67,7 +67,7 @@
 #' @references
 #'
 #' Molnar C, Bischl B, Casalicchio G (2018). “iml: An R package for Interpretable Machine Learning.” _JOSS_,
-#' *3*(26), 786. <doi:10.21105/joss.00786>.
+#' *3*(26), 786. \doi{10.21105/joss.00786}.
 #'
 #' Iooss B, Veiga SD, Janon A, Pujol G, Broto wcfB, Boumhaout K, Clouvel L, Delage T, Amri RE, Fruth J, Gilquin
 #' L, Guillaume J, Herin M, Idrissi MI, Le Gratiet L, Lemaitre P, Marrel A, Meynaoui A, Nelson BL, Monari F,
