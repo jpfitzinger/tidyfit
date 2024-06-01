@@ -60,8 +60,18 @@
 
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
+  incl_intercept <- "(Intercept)" %in% colnames(x)
+  if (incl_intercept) x <- x[, -1]
+
+  # keep only linearly independent columns
+  var_names <- colnames(x)
+  x <- x[, qr(x)$pivot[seq_len(qr(x)$rank)]]
+  model_var_names <- colnames(x)
+  if (length(var_names) > length(model_var_names))
+    warning("some variables were dropped from BMA estimation due to linear dependence")
+
   y <- stats::model.response(mf)
-  Xy <- cbind(y, x[,-1])
+  Xy <- cbind(y, x)
   ctr <- self$args[names(self$args) %in% methods::formalArgs(BMS::bms)]
   eval_fun_ <- function(...) {
     args <- list(...)
@@ -71,6 +81,37 @@
   res <- do.call(eval_fun,
                  append(list(X.data = Xy), ctr))
   .store_on_self(self, res)
+  self$fit_info = list(all_var_names = var_names, model_var_names = model_var_names)
   self$estimator <- "BMS::bms"
   invisible(self)
+}
+
+.coef.bma <- function(object, self = NULL, ...) {
+  raw_estimates <- coef(object, include.constant = TRUE)
+  estimates <- dplyr::tibble(
+    term = rownames(raw_estimates),
+    estimate = raw_estimates[, "Post Mean"],
+    posterior_sd = raw_estimates[, "Post SD"],
+    pip = raw_estimates[, "PIP"]
+  )
+  estimates <- tidyr::complete(estimates, term = self$fit_info$all_var_names)
+  return(estimates)
+}
+
+.predict.bma <- function(object, data, self = NULL, ...) {
+  response_var <- all.vars(self$formula)[1]
+  if (response_var %in% colnames(data)) {
+    truth <- data[, response_var]
+  } else {
+    data[, response_var] <- 0
+    truth <- NULL
+  }
+  mf <- stats::model.frame(self$formula, data)
+  x <- stats::model.matrix(self$formula, mf)
+  x <- x[, colnames(x) %in% self$fit_info$model_var_names]
+  pred <- dplyr::tibble(
+    prediction = stats::predict(object, x, exact = TRUE),
+    truth = truth
+  )
+  return(pred)
 }

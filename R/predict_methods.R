@@ -184,20 +184,3 @@
   return(pred)
 }
 
-.predict.bma <- function(object, data, self = NULL, ...) {
-  response_var <- all.vars(self$formula)[1]
-  if (response_var %in% colnames(data)) {
-    truth <- data[, response_var]
-  } else {
-    data[, response_var] <- 0
-    truth <- NULL
-  }
-  mf <- stats::model.frame(self$formula, data)
-  x <- stats::model.matrix(self$formula, mf)
-  pred <- dplyr::tibble(
-    prediction = stats::predict(object, x),
-    truth = truth
-  )
-  return(pred)
-}
-
