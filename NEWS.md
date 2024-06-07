@@ -1,6 +1,7 @@
 ## tidyfit 0.7.2
 
  - Fix ordering of 'tau' arguments in 'quantile_rf'
+ - Allow columns containing NA values (these will be dropped before fitting)
 
 ## tidyfit 0.7.1
 
