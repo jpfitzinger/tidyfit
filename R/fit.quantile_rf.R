@@ -86,7 +86,7 @@
   }
   if (self$mode == "regression") {
     if (!training_context) {
-      tau <- self$args$tau
+      tau <- sort(self$args$tau)
     } else {
       tau <- 0.5
     }
@@ -98,7 +98,7 @@
       pred <- dplyr::tibble(prediction = pred_mat, truth = truth, tau = tau)
     } else {
       pred_mat <- data.frame(pred_mat)
-      colnames(pred_mat) <- sort(tau)
+      colnames(pred_mat) <- tau
       pred <- dplyr::tibble(pred_mat) %>%
         dplyr::mutate(truth = truth) %>%
         tidyr::gather("tau", "prediction", -any_of(c("truth")))

@@ -1,3 +1,7 @@
+## tidyfit 0.7.2
+
+ - Fix ordering of 'tau' arguments in 'quantile_rf'
+
 ## tidyfit 0.7.1
 
 Minor bugfix for non-syntactic name handling in 'rf' and 'quantile_rf' methods.
