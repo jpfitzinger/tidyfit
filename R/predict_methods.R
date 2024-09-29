@@ -161,7 +161,7 @@
   } else {
     truth <- NULL
   }
-  pred <- stats::predict(object)
+  pred <- shrinkTVP::forecast_shrinkTVP(object, data)$y_pred
   pred <- dplyr::tibble(
     prediction = colMeans(pred),
     truth = truth
