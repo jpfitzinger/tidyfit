@@ -24,7 +24,7 @@
   args[["fEstimate"]] <- fEstimate
   args[["data"]] <- object$data
   args <- args[c("formula", "data", "fExplain", "fEstimate", "method")]
-  res <- do.call(partimp::partimp, args)
+  res <- do.call(partim::partim, args)
   result_df <- tibble(
     term = names(res),
     importance = res
