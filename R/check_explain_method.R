@@ -44,13 +44,14 @@
 }
 
 regression_explain_methods <- list(
-  lm = c("sensitivity", "partimp", "iml"),
-  glm = c("sensitivity", "partimp", "iml"),
-  lasso = c("iml", "partimp"),
-  ridge = c("iml", "partimp"),
-  enet = c("iml", "partimp"),
-  adalasso = c("iml", "partimp"),
-  nnet = c("iml", "partimp"),
+  lm = c("sensitivity", "partim", "iml"),
+  glm = c("sensitivity", "partim", "iml"),
+  lasso = c("iml", "partim"),
+  ridge = c("iml", "partim"),
+  enet = c("iml", "partim"),
+  adalasso = c("iml", "partim"),
+  hfr = c("iml", "partim"),
+  nnet = c("iml", "partim"),
   rf = c("randomForest"),
   quantile_rf = c("randomForest")
 )
@@ -63,6 +64,6 @@ classification_explain_methods <- list(
 valid_explain_methods <- list(
   sensitivity = c("lmg", "pmvd", "johnson", "src", "pcc"),
   iml = c("Shapley", "LocalModel", "FeatureImp"),
-  partimp = c("tree_lmg", "tree_pmvd", "tree_entropy"),
+  partim = c("tree_lmg", "tree_pmvd", "tree_entropy"),
   randomForest = c("mean_decrease_accuracy")
 )
