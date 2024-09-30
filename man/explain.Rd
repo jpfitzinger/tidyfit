@@ -79,11 +79,11 @@ This is currently still experimental. Documentation will be provided when the pa
 \examples{
 data <- dplyr::group_by(tidyfit::Factor_Industry_Returns, Industry)
 fit <- regress(data, Return ~ ., m("lm"), .mask = "Date")
-explain(fit, use_package = "sensitivity", use_method = "src")
+tidyfit::explain(fit, use_package = "sensitivity", use_method = "src")
 
 data <- dplyr::filter(tidyfit::Factor_Industry_Returns, Industry == Industry[1])
 fit <- regress(data, Return ~ ., m("lm"), .mask = c("Date", "Industry"))
-explain(fit, use_package = "iml", use_method = "Shapley", which_rows = c(1))
+tidyfit::explain(fit, use_package = "iml", use_method = "Shapley", which_rows = c(1))
 
 }
 \references{
