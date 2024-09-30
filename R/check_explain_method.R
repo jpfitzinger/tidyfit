@@ -50,6 +50,7 @@ regression_explain_methods <- list(
   ridge = c("iml"),
   enet = c("iml"),
   adalasso = c("iml"),
+  hfr = c("iml"),
   nnet = c("iml"),
   rf = c("randomForest"),
   quantile_rf = c("randomForest")

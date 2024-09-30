@@ -41,6 +41,9 @@
   if (!is.null(control[["tau"]]) & model_method %in% c("quantile", "quantile_rf")) {
     control$tau <- list(control[["tau"]])
   }
+  if (!is.null(control[["group"]]) & model_method %in% c("group_lasso")) {
+    control$group <- list(control[["group"]])
+  }
 
   control <- .func_to_list(control)
   grid <- tidyr::expand_grid(!!! control) %>%

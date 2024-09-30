@@ -9,6 +9,7 @@ model_definition <- R6::R6Class(
     original_formula = NULL,
     formula = NULL,
     data = NULL,
+    valid_data_columns = NULL,
     args = NULL,
     cv = NULL,
     has_predict_method = NULL,
@@ -110,6 +111,19 @@ model_definition <- R6::R6Class(
       }
       invisible(self)
     },
+    get_valid_data_columns = function(...) {
+      if (!is.null(self$data)) {
+        if (is.null(self$valid_data_columns)) {
+          invalid_columns <- apply(self$data, 2, function(col) any(is.na(col) | is.infinite(col)))
+          self$valid_data_columns <- colnames(self$data)[!invalid_columns]
+          # add syntactic versions of the valid column names
+          self$valid_data_columns <- unique(append(self$valid_data_columns, make.names(self$valid_data_columns)))
+        }
+        return(self$valid_data_columns)
+      } else {
+        stop("data is not set yet")
+      }
+    },
     clear = function(...) {
       self$object = NULL
       self$error = NULL
@@ -135,9 +149,17 @@ model_definition <- R6::R6Class(
 }
 
 .prepare_data <- function(self, data, write_names_map = FALSE, check_cols = FALSE) {
+  # keep only valid columns
+  data_non_na <- dplyr::select(data, dplyr::any_of(self$get_valid_data_columns()))
+
+  # stop if there are NA values in data
+  na_columns <- colnames(data_non_na)[apply(data_non_na, 2, function(x) any(is.na(x)))]
+  if (length(na_columns) > 0)
+    stop(paste("NA or Inf values found in data. columns:", paste(na_columns, collapse = "; ")))
+
   # fix non-syntactic names in data
-  prepared_data <- data
-  var_names <- colnames(data)
+  prepared_data <- data_non_na
+  var_names <- colnames(data_non_na)
   syn_var_names <- make.names(var_names)
   colnames(prepared_data) <- syn_var_names
 
@@ -150,12 +172,12 @@ model_definition <- R6::R6Class(
     # add response variable if it is missing
     prepared_data_temp <- prepared_data
     response_var <- all.vars(self$original_formula)[1]
-    if (!response_var %in% colnames(data)) {
-      data[, response_var] = NA
+    if (!response_var %in% colnames(data_non_na)) {
+      data_non_na[, response_var] = NA
       prepared_data_temp[, response_var] <- NA
     }
 
-    model_mat <- stats::model.matrix(self$original_formula, data)
+    model_mat <- stats::model.matrix(self$original_formula, data_non_na)
     prepared_model_mat <- stats::model.matrix(self$formula, prepared_data_temp)
     var_names_mm <- colnames(model_mat)
     prepared_var_names_mm <- colnames(prepared_model_mat)

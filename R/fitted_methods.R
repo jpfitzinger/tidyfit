@@ -58,7 +58,7 @@
 
 .fitted.shrinkTVP <- function(object, ...) {
   fitted <- dplyr::tibble(
-    fitted = colMeans(t(fitted(object)))
+    fitted = colMeans(stats::predict(object))
   )
   return(fitted)
 }

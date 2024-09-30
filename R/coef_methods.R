@@ -171,17 +171,6 @@
   return(estimates)
 }
 
-.coef.bma <- function(object, ...) {
-  raw_estimates <- coef(object, include.constant = TRUE)
-  estimates <- dplyr::tibble(
-    term = rownames(raw_estimates),
-    estimate = raw_estimates[, "Post Mean"],
-    posterior_sd = raw_estimates[, "Post SD"],
-    pip = raw_estimates[, "PIP"]
-  )
-  return(estimates)
-}
-
 
 
 

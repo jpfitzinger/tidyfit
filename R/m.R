@@ -26,11 +26,15 @@
 #'
 #' \code{"enet"} performs a linear regression or classification with L1 and L2 penalties using \code{glmnet::glmnet}. See \code{\link{.fit.enet}} for details.
 #'
+#' \code{"group_lasso"} performs a linear regression or classification with grouped L1 penalty using \code{gglasso::gglasso}. See \code{\link{.fit.group_lasso}} for details.
+#'
 #' ### Other Machine Learning
 #'
 #' \code{"boost"} performs gradient boosting regression or classification using \code{mboost::glmboost}. See \code{\link{.fit.boost}} for details.
 #'
 #' \code{"rf"} performs a random forest regression or classification using \code{randomForest::randomForest}. See \code{\link{.fit.rf}} for details.
+#'
+#' \code{"quantile_rf"} performs a quantile random forest regression or classification using \code{quantregForest::quantregForest}. See \code{\link{.fit.quantile_rf}} for details.
 #'
 #' \code{"svm"} performs a support vector regression or classification using \code{e1071::svm}. See \code{\link{.fit.svm}} for details.
 #'
