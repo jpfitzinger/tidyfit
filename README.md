@@ -239,7 +239,7 @@ yes
 yes
 </td>
 </tr>
-<tr grouplength="4">
+<tr grouplength="5">
 <td colspan="5" style="border-bottom: 1px solid;">
 <strong>Regression or classification with L1 and L2 penalties</strong>
 </td>
@@ -270,6 +270,23 @@ ridge
 </td>
 <td style="text-align:center;">
 `glmnet`
+</td>
+<td style="text-align:center;">
+yes
+</td>
+<td style="text-align:center;">
+yes
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Group LASSO
+</td>
+<td style="text-align:center;">
+group_lasso
+</td>
+<td style="text-align:center;">
+`gglasso`
 </td>
 <td style="text-align:center;">
 yes
@@ -681,7 +698,7 @@ cor
 `stats`
 </td>
 <td style="text-align:center;">
-yes
+no
 </td>
 <td style="text-align:center;">
 no
@@ -698,7 +715,7 @@ chisq
 `stats`
 </td>
 <td style="text-align:center;">
-no
+yes
 </td>
 <td style="text-align:center;">
 yes
