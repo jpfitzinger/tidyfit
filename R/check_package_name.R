@@ -23,6 +23,7 @@
   gets = "gets",
   glm = "stats",
   glmm = "lme4",
+  group_lasso = "gglasso",
   hfr = "hfr",
   lasso = "glmnet",
   lm = "stats",
