@@ -120,21 +120,21 @@
   return(result_df)
 }
 
-.explain_partimp_tree_lmg <- function(self, ...) {
+.explain_partim_tree_lmg <- function(self, ...) {
   args <- list(...)
   args[["object"]] <- self
   args[["method"]] <- "tree_lmg"
   return(do.call(.partimp_explainer, args))
 }
 
-.explain_partimp_tree_pmvd <- function(self, ...) {
+.explain_partim_tree_pmvd <- function(self, ...) {
   args <- list(...)
   args[["object"]] <- self
   args[["method"]] <- "tree_pmvd"
   return(do.call(.partimp_explainer, args))
 }
 
-.explain_partimp_tree_entropy <- function(self, ...) {
+.explain_partim_tree_entropy <- function(self, ...) {
   args <- list(...)
   args[["object"]] <- self
   args[["method"]] <- "tree_entropy"
