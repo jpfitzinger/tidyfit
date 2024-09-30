@@ -150,7 +150,7 @@ model_definition <- R6::R6Class(
 
 .prepare_data <- function(self, data, write_names_map = FALSE, check_cols = FALSE) {
   # keep only valid columns
-  data_non_na <- dplyr::select(data, self$get_valid_data_columns())
+  data_non_na <- dplyr::select(data, dplyr::any_of(self$get_valid_data_columns()))
 
   # stop if there are NA values in data
   na_columns <- colnames(data_non_na)[apply(data_non_na, 2, function(x) any(is.na(x)))]
