@@ -143,7 +143,8 @@
 
 .explain_iml_Shapley <- function(self, ...) {
   args <- list(...)
-  data <- stats::model.frame(self$formula, .prepare_data(self, self$data))
+  data <- stats::model.frame(self$original_formula, self$data)
+  data <- .prepare_data(self, data)
   predictor <- iml::Predictor$new(
     self,
     data = data[,-1],
@@ -164,7 +165,8 @@
 }
 
 .explain_iml_FeatureImp <- function(self, ...) {
-  data <- stats::model.frame(self$formula, .prepare_data(self, self$data))
+  data <- stats::model.frame(self$original_formula, self$data)
+  data <- .prepare_data(self, data)
   predictor <- iml::Predictor$new(
     self,
     data = data[,-1],
@@ -180,7 +182,8 @@
 .explain_iml_LocalModel <- function(self, ...) {
   args <- list(...)
   args <- args[names(args) %in% c("k", "gower.power", "kernel.width", "dist.fun")]
-  data <- stats::model.frame(self$formula, .prepare_data(self, self$data))
+  data <- stats::model.frame(self$original_formula, self$data)
+  data <- .prepare_data(self, data)
   predictor <- iml::Predictor$new(
     self,
     data = data[,-1],
