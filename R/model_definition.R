@@ -116,6 +116,8 @@ model_definition <- R6::R6Class(
         if (is.null(self$valid_data_columns)) {
           invalid_columns <- apply(self$data, 2, function(col) any(is.na(col) | is.infinite(col)))
           self$valid_data_columns <- colnames(self$data)[!invalid_columns]
+          # add syntactic versions of the valid column names
+          self$valid_data_columns <- unique(append(self$valid_data_columns, make.names(self$valid_data_columns)))
         }
         return(self$valid_data_columns)
       } else {
