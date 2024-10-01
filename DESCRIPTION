@@ -4,6 +4,7 @@ Title: Regularized Linear Modeling with Tidy Data
 Date: 2024-09-30
 Version: 0.7.2
 Author: Johann Pfitzinger [aut, cre]
+Authors@R: person(given = "Johann", family = "Pfitzinger", role = c("aut", "cre"), email = "johann.pfitzinger@gmail.com")
 Maintainer: Johann Pfitzinger <johann.pfitzinger@gmail.com>
 Description: An extension to the 'R' tidy data environment for automated machine learning. The package allows fitting and cross validation of linear regression and classification algorithms on grouped data. 
 License: GPL-3
