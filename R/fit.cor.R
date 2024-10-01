@@ -79,8 +79,38 @@
 }
 
 .predict.custom.test <- function(object, data, self, ...) {
-  warning(paste0("No prediction method for type '", self$method, "'."))
-  return(NULL)
+  if (is.null(self$args$predict_method)) {
+    warning(paste0("No prediction method for type '", self$method, "'."))
+    return(NULL)
+  }
+  estimates <- self$coef()
+  n_features <- self$args$feature_count
+  if (is.null(n_features)) n_features <- nrow(estimates)
+  selected_variables <- estimates |>
+    dplyr::filter(rank(-abs(.data$estimate)) <= n_features) |>
+    pull("term")
+  mf_fit <- stats::model.frame(self$original_formula, self$data)
+  x_fit <- stats::model.matrix(self$formula, mf_fit)
+  y_fit <- stats::model.response(mf_fit)
+  new_data <- data.frame(dplyr::select(dplyr::as_tibble(x_fit), any_of(selected_variables)), check.names = FALSE)
+  response_var <- all.vars(self$formula)[1]
+  new_data[, response_var] <- y_fit
+  new_formula <- paste(response_var, ".", sep = "~")
+  pred_method_args <- self$args[names(self$args) != "predict_method"]
+  pred_method_args <- append(pred_method_args,
+                             list(model_method = self$args$predict_method,
+                                  formula = as.formula(new_formula),
+                                  data = new_data))
+  pred_method <- do.call(m, pred_method_args)
+
+  mf_pred <- stats::model.frame(self$original_formula, data)
+  x_pred <- stats::model.matrix(self$formula, mf_pred)
+  y_pred <- stats::model.response(mf_pred)
+  pred_data <- data.frame(x_pred, check.names = FALSE)
+  pred_data[, response_var] <- y_pred
+  prediction <- predict(pred_method, pred_data)
+
+  return(prediction)
 }
 
 .resid.custom.test <- function(object, self, ...) {

@@ -33,7 +33,7 @@ model_definition <- R6::R6Class(
       self$args <- settings
       self$grid_id <- grid_id
       self$cv <- .check_method(method, "cv")
-      self$has_predict_method <- .check_method(method, "has_predict_method")
+      self$has_predict_method <- .check_method(method, "has_predict_method") || !is.null(settings$predict_method)
       self$mode <- "regression"
     },
     fit = function(data = NULL, ...) {
