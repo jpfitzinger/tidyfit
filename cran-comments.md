@@ -1,5 +1,11 @@
 ## Summary of changes
 
+### Resubmission:
+
+Fixed previously missing 'Authors@R' field in DESCRIPTION
+
+### Same as initial 0.7.2 submission:
+
 This version adds new methods and features:
 
  - New methods:
