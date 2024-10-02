@@ -24,6 +24,7 @@ model_definition <- R6::R6Class(
     grid_id = NULL,
     inner_grid = NULL,
     mode = NULL,
+    predictor_model = NULL,
 
     initialize = function(method, formula, settings, grid_id) {
       .check_method(method, "exists", TRUE)

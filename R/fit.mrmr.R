@@ -99,26 +99,30 @@
   estimates <- self$coef()
   selected_variables <- estimates |>
     pull("term")
-  mf_fit <- stats::model.frame(self$original_formula, self$data)
-  x_fit <- stats::model.matrix(self$formula, mf_fit)
-  y_fit <- stats::model.response(mf_fit)
-  new_data <- data.frame(dplyr::select(dplyr::as_tibble(x_fit), any_of(selected_variables)), check.names = FALSE)
-  response_var <- all.vars(self$formula)[1]
-  new_data[, response_var] <- y_fit
-  new_formula <- paste(response_var, ".", sep = "~")
-  pred_method_args <- self$args[names(self$args) != "predict_method"]
-  pred_method_args <- append(pred_method_args,
-                             list(model_method = self$args$predict_method,
-                                  formula = as.formula(new_formula),
-                                  data = new_data))
-  pred_method <- do.call(m, pred_method_args)
+
+  if (is.null(self$predictor_model)) {
+    mf_fit <- stats::model.frame(self$original_formula, self$data)
+    x_fit <- stats::model.matrix(self$formula, mf_fit)
+    y_fit <- stats::model.response(mf_fit)
+    new_data <- data.frame(dplyr::select(dplyr::as_tibble(x_fit), any_of(selected_variables)), check.names = FALSE)
+    response_var <- all.vars(self$formula)[1]
+    new_data[, response_var] <- y_fit
+    new_formula <- paste(response_var, ".", sep = "~")
+    pred_method_args <- self$args[names(self$args) != "predict_method"]
+    pred_method_args <- append(pred_method_args,
+                               list(model_method = self$args$predict_method,
+                                    formula = as.formula(new_formula),
+                                    data = new_data))
+    pred_method <- do.call(m, pred_method_args)
+    self$predictor_model <- pred_method
+  }
 
   mf_pred <- stats::model.frame(self$original_formula, data)
   x_pred <- stats::model.matrix(self$formula, mf_pred)
   y_pred <- stats::model.response(mf_pred)
   pred_data <- data.frame(x_pred, check.names = FALSE)
   pred_data[, response_var] <- y_pred
-  prediction <- predict(pred_method, pred_data)
+  prediction <- predict(self$predictor_model, pred_data)
 
   return(prediction)
 }
@@ -129,7 +133,33 @@
 }
 
 .fitted.mRMRe.Filter <- function(object, self, ...) {
-  warning(paste0("No fitted method for type '", self$method, "'."))
-  return(NULL)
+  if (is.null(self$args$predict_method) | (self$mode == "classification")) {
+    warning(paste0("No fitted method for type '", self$method, "'."))
+    return(NULL)
+  }
+  estimates <- self$coef()
+  selected_variables <- estimates |>
+    pull("term")
+
+  if (is.null(self$predictor_model)) {
+    mf_fit <- stats::model.frame(self$original_formula, self$data)
+    x_fit <- stats::model.matrix(self$formula, mf_fit)
+    y_fit <- stats::model.response(mf_fit)
+    new_data <- data.frame(dplyr::select(dplyr::as_tibble(x_fit), any_of(selected_variables)), check.names = FALSE)
+    response_var <- all.vars(self$formula)[1]
+    new_data[, response_var] <- y_fit
+    new_formula <- paste(response_var, ".", sep = "~")
+    pred_method_args <- self$args[names(self$args) != "predict_method"]
+    pred_method_args <- append(pred_method_args,
+                               list(model_method = self$args$predict_method,
+                                    formula = as.formula(new_formula),
+                                    data = new_data))
+    pred_method <- do.call(m, pred_method_args)
+    self$predictor_model <- pred_method
+  }
+
+  fitted <- fitted(self$predictor_model, pred_data)
+
+  return(fitted)
 }
 
