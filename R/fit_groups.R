@@ -24,7 +24,7 @@
   if (!is.null(cv) & row$model_object$cv) {
 
     # Cross-validation mapper
-    cv_res <- furrr::future_pmap_dfr(cv, function(splits, id) {
+    cv_res <- purrr::pmap_dfr(cv, function(splits, id) {
 
       # Model for current slice
       res_row <- dplyr::tibble(
@@ -66,7 +66,7 @@
 
       return(res_row)
 
-    }, .options = furrr::furrr_options(seed = TRUE))
+    })
 
     # Only generate predictions, if CV slices are not returned and the method has a predict method
     if (!row$return_grid & row$model_object$has_predict_method) {
