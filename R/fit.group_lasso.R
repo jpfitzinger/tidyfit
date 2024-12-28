@@ -62,12 +62,20 @@
 
   # Prepare 'group' arg
   if (!is.null(self$args$group)) {
-    var_names <- make.names(names(self$args$group))
-    missing_cols <- names(self$args$group)[!var_names %in% colnames(x)]
-    if (length(missing_cols) > 0)
-      stop(paste("Some columns not specified in 'group' argument:", paste(missing_cols, collapse = ", ")))
-    self$set_args(group_with_names = self$args$group, overwrite = FALSE)
-    self$set_args(group = as.numeric(self$args$group_with_names[self$names_map[colnames(x)]]), overwrite = TRUE)
+    # keep only relevant names
+    groups <- self$args$group
+    var_names <- names(groups) <- make.names(names(groups))
+    var_names <- var_names[var_names %in% colnames(x)]
+    group_vec <- groups[var_names]
+    # add missing columns
+    missing_names <- colnames(x)[!colnames(x) %in% var_names]
+    group_vec <- c(group_vec, setNames(rep("_UNGROUPED", length(missing_names)), missing_names))
+    # convert strings to integer
+    int_map <- setNames(1:length(unique(group_vec)), unique(group_vec))
+    group_vec_int <- int_map[group_vec]
+    names(group_vec_int) <- names(group_vec)
+    self$set_args(group_with_names = group_vec, overwrite = FALSE)
+    self$set_args(group = group_vec_int, overwrite = TRUE)
   }
 
   # Prepare 'loss' arg
@@ -133,7 +141,8 @@
   estimates <- estimates |>
     tidyr::pivot_longer(-"term", names_to = "grid_id", values_to = "estimate") |>
     dplyr::left_join(self$inner_grid, by = "grid_id") |>
-    dplyr::arrange(.data$grid_id, .data$term)
+    dplyr::arrange(.data$grid_id, .data$term) |>
+    dplyr::mutate(group = self$args$group_with_names[.data$term])
   return(estimates)
 }
 
@@ -177,7 +186,7 @@
 }
 
 .fitted.gglasso <- function(object, self = NULL, ...) {
-  fitted <- .predict.gglasso(object, self$data, self) |>
+  fitted <- .predict.gglasso(object, .prepare_data(self, self$data), self) |>
     dplyr::rename(fitted = "prediction") |>
     dplyr::select(-dplyr::any_of(c("truth", "grid_id")))
   return(fitted)
