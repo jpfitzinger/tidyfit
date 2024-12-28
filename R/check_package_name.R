@@ -11,6 +11,7 @@
 .package_names <- list(
   adalasso = "glmnet",
   anova = "stats",
+  ar = "tsDyn",
   bayes = "arm",
   blasso = "monomvn",
   bma = "BMS",
@@ -39,6 +40,7 @@
   ridge = "glmnet",
   robust = "MASS",
   spikeslab = "BoomSpikeSlab",
+  star = "tsDyn",
   subset = "bestglm",
   svm = "e1071",
   tvp = "shrinkTVP"

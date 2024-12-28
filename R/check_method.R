@@ -22,7 +22,7 @@
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor",
                 "chisq", "rf", "bridge", "blasso", "spikeslab", "genetic",
-                "quantile_rf", "anova", "nnet", "group_lasso"),
+                "quantile_rf", "anova", "nnet", "group_lasso", "star", "ar"),
     message = "'%s' is not a valid method. See '?m' for details"
   ),
   cv = list(
@@ -35,7 +35,7 @@
                 "pcr", "plsr", "hfr", "boost", "subset", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm",
                 "rf", "bridge", "blasso", "spikeslab", "genetic",
-                "quantile_rf", "nnet", "group_lasso"),
+                "quantile_rf", "nnet", "group_lasso", "star", "ar"),
     message = "'%s' has no predict method."
   ),
   uses_index = list(
@@ -46,7 +46,7 @@
     methods = c("lm", "glm", "robust", "lasso", "ridge", "enet", "adalasso",
                 "pcr", "plsr", "hfr", "boost", "subset", "cor", "bayes", "quantile",
                 "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor", "rf", "bridge", "blasso",
-                "spikeslab", "genetic", "quantile_rf", "anova", "nnet", "group_lasso"),
+                "spikeslab", "genetic", "quantile_rf", "anova", "nnet", "group_lasso", "star", "ar"),
     message = "'%s' cannot be used for regression"
   ),
   classify = list(

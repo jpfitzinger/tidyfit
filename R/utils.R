@@ -44,6 +44,12 @@
   if (!is.null(control[["group"]]) & model_method %in% c("group_lasso")) {
     control$group <- list(control[["group"]])
   }
+  if (!is.null(control[["control"]]) & model_method %in% c("star")) {
+    control$control <- list(control[["control"]])
+  }
+  if (!is.null(control[["mTh"]]) & model_method %in% c("star")) {
+    control$mTh <- list(control[["mTh"]])
+  }
 
   control <- .func_to_list(control)
   grid <- tidyr::expand_grid(!!! control) %>%
