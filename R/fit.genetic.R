@@ -65,6 +65,7 @@
                 minVariables = 1,
                 maxVariables = ncol(x),
                 seed = 123,
+                numThreads = 1,
                 overwrite = FALSE)
 
   incl_intercept <- "(Intercept)" %in% colnames(x)
