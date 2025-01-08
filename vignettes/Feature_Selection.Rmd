@@ -240,7 +240,7 @@ model_df %>%
   mutate(model = factor(model, levels = unique(model_df$model))) %>% 
   ggplot(aes(term, model)) +
   geom_tile(aes(fill = selected)) +
-  theme_bw(8, "Arial") +
+  theme_bw(8) +
   scale_fill_identity() +
   xlab(element_blank()) + ylab(element_blank()) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -290,7 +290,7 @@ boot_df %>%
   mutate(model = factor(model, levels = str_wrap(unique(model_df$model), 10))) %>% 
   ggplot(aes(model)) +
   geom_errorbar(aes(ymin = lower, ymax = upper), linewidth = 0.25, width = 0.25) +
-  theme_bw(8, "Arial") +
+  theme_bw(8) +
   xlab(element_blank()) + ylab("R2 statistic")
 ```
 
