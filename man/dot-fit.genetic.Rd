@@ -43,14 +43,12 @@ gaselect::evaluatorLM is used as the evaluator with the relevant arguments autom
 # Load data
 data <- tidyfit::Factor_Industry_Returns
 
-# Stand-alone function
-fit <- m("genetic", Return ~ ., data)
-fit
-
-# Within 'regress' function
-fit <- regress(data, Return ~ ., m("genetic"),
+# Generally used inside 'regress' function
+\dontrun{
+fit <- regress(data, Return ~ ., m("genetic", statistic = "BIC"),
                .mask = c("Date", "Industry"))
 coef(fit)
+}
 
 }
 \references{
