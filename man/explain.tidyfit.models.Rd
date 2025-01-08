@@ -84,9 +84,12 @@ data <- dplyr::group_by(tidyfit::Factor_Industry_Returns, Industry)
 fit <- regress(data, Return ~ ., m("lm"), .mask = "Date")
 explain(fit, use_package = "sensitivity", use_method = "src")
 
+# SHAP can be slow and is therefore not run
+\dontrun{
 data <- dplyr::filter(tidyfit::Factor_Industry_Returns, Industry == Industry[1])
 fit <- regress(data, Return ~ ., m("lm"), .mask = c("Date", "Industry"))
 explain(fit, use_package = "iml", use_method = "Shapley", which_rows = c(1))
+}
 
 }
 \references{
