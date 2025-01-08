@@ -39,7 +39,7 @@ MODEL_SIZE <- 10
 
 `tidyfit` packages several methods that can be used for feature selection. These include **filter**, **wrapper** and **embedded** algorithms. In this tutorial, we will use 3 algorithms from each of these broader categories, in order to select the top 10 best predictors of industrial production from a macroeconomic data set of monthly US economic indicators (FRED-MD). 
 
-The FRED-MD data set contains 134 variables characterizing the US macroeconomy with a monthly frequency and values (across all features) since the early 1990s. The data set is often used in academic research — primarily for the development of high-dimensional forecasting and nowcasting. All variables have conveniently been transformed to ensure stationarity. A description of the data as well as transformations can be found [here](https://research.stlouisfed.org/econ/mccracken/fred-databases/).
+The FRED-MD data set contains 134 variables characterizing the US macroeconomy with a monthly frequency and values (across all features) since the early 1990s. The data set is often used in academic research — primarily for the development of high-dimensional forecasting and nowcasting. All variables have conveniently been transformed to ensure stationarity. A description of the data as well as transformations can be found [here](https://www.stlouisfed.org/research/economists/mccracken/fred-databases).
 
 The data can be downloaded using the `fbi`-package in `R`.^[See `?fbi::fredmd`.] In addition to the variables included there, I augment the ISM manufacturing PMI data (6 features), which is no longer provided by FRED.
 
