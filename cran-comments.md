@@ -1,12 +1,9 @@
 ## Summary of changes
 
-This version adds new methods and features:
+This version includes two minor changes:
 
- - New methods:
-  - 'group_lasso' for grouped Lasso estimation with gglasso
- - Fix ordering of 'tau' arguments in 'quantile_rf'
- - Allow columns containing NA values (these will be dropped before fitting)
- - Minor bugfixes
+ - Resolves asan issues with dependencies
+ - Improves handling of groups for 'group_lasso' (for instance, missing groups, empty groups and ungrouped variables)
 
 ## R CMD check results
 

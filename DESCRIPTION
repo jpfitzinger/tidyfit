@@ -1,8 +1,8 @@
 Package: tidyfit
 Type: Package
 Title: Regularized Linear Modeling with Tidy Data
-Date: 2024-09-30
-Version: 0.7.2
+Date: 2025-01-08
+Version: 0.7.3
 Author: Johann Pfitzinger [aut, cre]
 Authors@R: person(given = "Johann", family = "Pfitzinger", role = c("aut", "cre"), email = "johann.pfitzinger@gmail.com")
 Maintainer: Johann Pfitzinger <johann.pfitzinger@gmail.com>
