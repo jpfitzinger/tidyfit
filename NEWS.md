@@ -2,7 +2,7 @@
 
 This version includes two minor changes:
 
- - Resolves asan issues with dependencies
+ - Minor bugfixes
  - Improves handling of groups for 'group_lasso' (for instance, missing groups, empty groups and ungrouped variables)
  
 ## tidyfit 0.7.2
