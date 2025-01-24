@@ -37,6 +37,10 @@ top_vars.tidyfit.models <- function(
 
   object <- .warn_and_remove_errors(object)
 
+  n <- as.integer(n)
+  if (n <= 0)
+    stop("'n' must be larger than zero.", call. = FALSE)
+
   get_top_vars <- function(model) {
     model$top_vars(n = n)
   }
