@@ -57,7 +57,7 @@
     ) {
 
   if (!is.null(self$args$weights)) {
-    warning("plsr cannot handle weights, weights are ignored")
+    warning("plsr cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   mf <- stats::model.frame(self$formula, data)

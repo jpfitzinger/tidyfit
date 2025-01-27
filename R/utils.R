@@ -144,7 +144,7 @@ appr_in <- function(a, b) {
   object <- object %>%
     dplyr::filter(as.logical(map(.data$model_object, function(obj) {
       if (is.null(obj$object))
-        warning(paste0("No model fitted for '", obj$method, "'. Check errors."))
+        warning(paste0("No model fitted for '", obj$method, "'. Check errors.", call. = FALSE), call. = FALSE)
       return(!is.null(obj$object))
     })))
   return(object)

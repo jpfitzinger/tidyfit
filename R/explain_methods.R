@@ -6,7 +6,7 @@
     ...) {
   if (is.null(use_package)) {
     use_package = .get_default_explain_package(self)
-    warning(sprintf("using explain package '%s'", use_package))
+    warning(sprintf("using explain package '%s'", use_package), call. = FALSE)
   }
   .check_explain_method(self, use_package)
   use_method <- .get_default_explain_method(use_package, use_method)

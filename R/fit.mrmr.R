@@ -52,7 +52,7 @@
 ) {
 
   if (!is.null(self$args$weights)) {
-    warning("mrmr cannot handle weights, weights are ignored")
+    warning("mrmr cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   mf <- stats::model.frame(self$formula, data)
@@ -92,17 +92,17 @@
 }
 
 .predict.mRMRe.Filter <- function(object, data, self, ...) {
-  warning(paste0("No prediction method for type '", self$method, "'."))
+  warning(paste0("No prediction method for type '", self$method, "'."), call. = FALSE)
   return(NULL)
 }
 
 .resid.mRMRe.Filter <- function(object, self, ...) {
-  warning(paste0("No residual method for type '", self$method, "'."))
+  warning(paste0("No residual method for type '", self$method, "'."), call. = FALSE)
   return(NULL)
 }
 
 .fitted.mRMRe.Filter <- function(object, self, ...) {
-  warning(paste0("No fitted method for type '", self$method, "'."))
+  warning(paste0("No fitted method for type '", self$method, "'."), call. = FALSE)
   return(NULL)
 }
 

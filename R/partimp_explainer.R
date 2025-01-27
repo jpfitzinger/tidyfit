@@ -5,7 +5,7 @@
   args[["formula"]] <- object$formula
   if (is.null(args$fExplain)) fExplain_obj <- object else fExplain_obj <- args$fExplain$model_object[[1]]
   if (!is.null(args$fEstimate))
-    warning("fModel will be ignored, will use the fitted object instead")
+    warning("fModel will be ignored, will use the fitted object instead", call. = FALSE)
   fExplain <- function(x, y) {
     object <- fExplain_obj$clone()$clear()
     data <- data.frame(y = y, x)

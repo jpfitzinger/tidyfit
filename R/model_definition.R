@@ -45,7 +45,7 @@ model_definition <- R6::R6Class(
     },
     predict = function(data, check_cols = TRUE, ...) {
       if (!self$has_predict_method) {
-        warning(paste0("No prediction method for type '", self$method, "'."))
+        warning(paste0("No prediction method for type '", self$method, "'."), call. = FALSE)
         return(NULL)
       }
       all_args <- list(object = self$object,
@@ -56,7 +56,7 @@ model_definition <- R6::R6Class(
     },
     coef = function(...) {
       if (!.check_method(self$method, "has_coef_method")) {
-        warning(paste0("No coef method for type '", self$method, "'. Try using 'explain()'"))
+        warning(paste0("No coef method for type '", self$method, "'. Try using 'explain()'"), call. = FALSE)
         return(tibble(term=character(), estimate=numeric()))
       }
       all_args <- list(object = self$object, self = self)
@@ -75,7 +75,7 @@ model_definition <- R6::R6Class(
     },
     explain = function(use_package, use_method, additional_args) {
       if (!.check_method(self$method, "has_importance_method")) {
-        warning(paste0("No explain method for type '", self$method, "'."))
+        warning(paste0("No explain method for type '", self$method, "'."), call. = FALSE)
         return(dplyr::tibble(term = character(), importance = double()))
       }
       all_args <- list(object = self$object, self = self, use_package = use_package, use_method = use_method)

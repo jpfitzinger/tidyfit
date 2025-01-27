@@ -41,7 +41,7 @@
 ) {
 
   if (!is.null(self$args$weights)) {
-    warning("chisq cannot handle weights, weights are ignored")
+    warning("chisq cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   mf <- stats::model.frame(self$formula, data)

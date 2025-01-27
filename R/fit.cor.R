@@ -44,7 +44,7 @@
 ) {
 
   if (!is.null(self$args$weights)) {
-    warning("cor cannot handle weights, weights are ignored")
+    warning("cor cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   mf <- stats::model.frame(self$formula, data)
@@ -79,16 +79,16 @@
 }
 
 .predict.custom.test <- function(object, data, self, ...) {
-  warning(paste0("No prediction method for type '", self$method, "'."))
+  warning(paste0("No prediction method for type '", self$method, "'."), call. = FALSE)
   return(NULL)
 }
 
 .resid.custom.test <- function(object, self, ...) {
-  warning(paste0("No residual method for type '", self$method, "'."))
+  warning(paste0("No residual method for type '", self$method, "'."), call. = FALSE)
   return(NULL)
 }
 
 .fitted.custom.test <- function(object, self, ...) {
-  warning(paste0("No fitted method for type '", self$method, "'."))
+  warning(paste0("No fitted method for type '", self$method, "'."), call. = FALSE)
   return(NULL)
 }
