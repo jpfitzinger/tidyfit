@@ -2,7 +2,8 @@
 .check_method <- function(
     method,
     what = c("exists", "cv", "has_predict_method", "has_importance_method", "uses_index",
-             "regress", "classify", "multinomial", "nonstandard_formula", "has_coef_method"),
+             "regress", "classify", "multinomial", "nonstandard_formula", "has_coef_method",
+             "has_top_vars_method"),
     message = FALSE
     ) {
 
@@ -73,5 +74,9 @@
                 "glmm", "tvp", "mslm", "bma", "gets", "svm", "mrmr", "relief", "cor",
                 "chisq", "bridge", "blasso", "spikeslab", "genetic", "anova", "group_lasso"),
     message = "'%s' has not coef method"
+  ),
+  has_top_vars_method = list(
+    methods = c("lasso", "enet", "adalasso", "subset", "cor", "relief"),
+    message = "'%s' has no top_vars method"
   )
 )
