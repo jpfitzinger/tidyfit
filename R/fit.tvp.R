@@ -51,7 +51,7 @@
   self$set_args(display_progress = FALSE, overwrite = FALSE)
 
   if (!is.null(self$args$weights)) {
-    warning("tvp cannot handle weights, weights are ignored")
+    warning("tvp cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   idx_col <- self$args$index_col

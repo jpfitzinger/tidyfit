@@ -53,7 +53,7 @@
 ) {
 
   if (!is.null(self$args$weights)) {
-    warning("relief cannot handle weights, weights are ignored")
+    warning("relief cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   estimator <- ifelse(self$mode=="classification", "ReliefFequalK", "RReliefFequalK")
@@ -83,16 +83,16 @@
 }
 
 .predict.numeric <- function(object, data, self, ...) {
-  warning(paste0("No prediction method for type '", self$method, "'."))
+  warning(paste0("No prediction method for type '", self$method, "'."), call. = FALSE)
   return(NULL)
 }
 
 .resid.numeric <- function(object, self, ...) {
-  warning(paste0("No residual method for type '", self$method, "'."))
+  warning(paste0("No residual method for type '", self$method, "'."), call. = FALSE)
   return(NULL)
 }
 
 .fitted.numeric <- function(object, self, ...) {
-  warning(paste0("No fitted method for type '", self$method, "'."))
+  warning(paste0("No fitted method for type '", self$method, "'."), call. = FALSE)
   return(NULL)
 }

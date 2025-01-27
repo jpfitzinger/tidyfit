@@ -59,7 +59,7 @@
   # TODO: Request 'bestglm' maintainers to fix this
   ctr$weights <- NULL
   if (!is.null(self$args$weights)) {
-    warning("subset cannot handle weights, weights are ignored")
+    warning("subset cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   Xy <- data.frame(x, y, check.names = FALSE)

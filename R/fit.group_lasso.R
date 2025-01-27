@@ -88,7 +88,7 @@
   }
   if (self$mode == "classification") {
     if (!is.null(self$args$weights)) {
-      warning("group_lasso classification cannot handle weights, weights are ignored")
+      warning("group_lasso classification cannot handle weights, weights are ignored", call. = FALSE)
     }
     self$set_args(weights = NULL, overwrite = TRUE)
     self$set_args(loss = "logit", overwrite = FALSE)
