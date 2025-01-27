@@ -73,6 +73,17 @@ model_definition <- R6::R6Class(
       all_args <- list(object = self$object, self = self)
       do.call(.fitted, all_args)
     },
+    top_vars = function(n, ...) {
+      if (!.check_method(self$method, "has_top_vars_method")) {
+        warning(paste0("No top_vars method for type '", self$method, "'."), call. = FALSE)
+        return(tibble(term=character()))
+      }
+      all_args <- list(object = self$object, self = self, n = n)
+      top_vars_df <- do.call(.top_vars, all_args)
+      top_vars_df <- top_vars_df %>%
+        dplyr::mutate(term = dplyr::if_else(.data$term %in% names(self$names_map), self$names_map[.data$term], .data$term))
+      return(top_vars_df)
+    },
     explain = function(use_package, use_method, additional_args) {
       if (!.check_method(self$method, "has_importance_method")) {
         warning(paste0("No explain method for type '", self$method, "'."))
