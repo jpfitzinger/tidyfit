@@ -145,6 +145,7 @@ model_definition <- R6::R6Class(
   self$error <- model$error[[1]]
   if (length(model$result$messages)>0) self$messages <- paste(model$result$messages, collapse = " | ")
   if (length(model$result$warnings)>0) self$warnings <- paste(model$result$warnings, collapse = " | ")
+  self$estimator <- METHOD_REGISTER[[self$method]]$estimator
   invisible(self)
 }
 
