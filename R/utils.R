@@ -11,6 +11,21 @@
 # Wrap vector/array arguments in list and return a grid of settings
 .args_to_grid <- function(model_method, control) {
 
+  vector_args <- METHOD_REGISTER[[model_method]]$vector_args
+  tunable_vector_args <- METHOD_REGISTER[[model_method]]$tunable_vector_args
+  for (arg in vector_args) {
+    if (!is.null(control[[arg]])) {
+      if (inherits(control[[arg]], "list")) {
+        if (!arg %in% tunable_vector_args) {
+          control[[arg]] <- list(control[[arg]])
+          warning(sprintf("the list argument '%s' in '%s' is not a tunable argument", arg, model_method), call. = FALSE)
+        }
+      } else {
+        control[[arg]] <- list(control[[arg]])
+      }
+    }
+  }
+
   # Exceptions for vectors that are handled at a lower level
   if (!is.null(control[["weights"]])) {
     control$weights <- list(control[["weights"]])
@@ -18,7 +33,7 @@
   if (!is.null(control[["index_col"]])) {
     control$index_col <- list(control[["index_col"]])
   }
-  if (!is.null(control[["lambda"]]) & model_method %in% c("lasso", "enet", "ridge", "adalasso")) {
+  if (!is.null(control[["lambda"]]) & model_method %in% c("lasso", "enet", "ridge")) {
     control$lambda <- list(control[["lambda"]])
   }
   if (!is.null(control[["kappa"]]) & model_method == "hfr") {
