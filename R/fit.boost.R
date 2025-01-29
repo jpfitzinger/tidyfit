@@ -79,6 +79,5 @@
                              center = F), ctr))
   .store_on_self(self, res)
   self$fit_info <- list(standard_mean = standard_mean, standard_sd = standard_sd, var_names = colnames(xs))
-  self$estimator <- "mboost::glmboost"
   invisible(self)
 }

@@ -68,7 +68,6 @@
   res <- do.call(eval_fun,
                  append(list(formula = self$formula, data = data), ctr))
   .store_on_self(self, res)
-  self$estimator <- "arm::bayesglm"
   invisible(self)
 
 }

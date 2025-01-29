@@ -46,11 +46,15 @@
     data = NULL
 ) {
 
+  if (!is.null(self$args$weights)) {
+    warning("blasso cannot handle weights, weights are ignored", call. = FALSE)
+  }
+
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
   y <- stats::model.response(mf)
 
-  ctr <- self$args[names(self$args) %in% methods::formalArgs(monomvn::bridge)]
+  ctr <- self$args[names(self$args) %in% methods::formalArgs(monomvn::blasso)]
   ctr$verb <- 0
 
   incl_intercept <- "(Intercept)" %in% colnames(x)
@@ -64,7 +68,6 @@
   res <- do.call(eval_fun,
                  append(list(X = x, y = y, icept = incl_intercept), ctr))
   .store_on_self(self, res)
-  self$estimator <- "monomvn::blasso"
   self$fit_info <- list(var_names = colnames(x))
   invisible(self)
 

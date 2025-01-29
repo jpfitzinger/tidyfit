@@ -82,7 +82,6 @@
                  append(list(X.data = Xy), ctr))
   .store_on_self(self, res)
   self$fit_info = list(all_var_names = var_names, model_var_names = model_var_names)
-  self$estimator <- "BMS::bms"
   invisible(self)
 }
 
