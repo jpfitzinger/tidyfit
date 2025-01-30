@@ -97,10 +97,72 @@ METHOD_REGISTER <- list(
     no_grid_args = c("control"),
     has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = FALSE
   ),
+  chisq = METHOD$new(
+    method = "chisq", estimator = "stats::chisq.test", regress = FALSE, classify = TRUE,
+    multinomial = TRUE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("p"), list_args = c(), no_grid_args = c(),
+    has_predict_method = FALSE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
+  cor = METHOD$new(
+    method = "cor", estimator = "stats::cor.test", regress = TRUE, classify = FALSE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("subset"), list_args = c(), no_grid_args = c(),
+    has_predict_method = FALSE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
   enet = METHOD$new(
     method = "enet", estimator = "glmnet::glmnet", regress = TRUE, classify = TRUE,
     multinomial = TRUE, cv = TRUE, uses_index = FALSE, nonstandard_formula = FALSE,
-    vector_args = c("weights", "offset", "lambda", "exclude", "lower.limits", "upper.limits"), tunable_vector_args = c("lambda", "lower.limits", "upper.limits"),
+    vector_args = c("weights", "offset", "lambda", "exclude", "lower.limits", "upper.limits"),
+    list_args = c(),
+    no_grid_args = c("weights"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = TRUE
+  ),
+  genetic = METHOD$new(
+    method = "genetic", estimator = "gaselect::genAlg", regress = TRUE, classify = FALSE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c(),
+    list_args = c(),
+    no_grid_args = c("control"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
+  gets = METHOD$new(
+    method = "gets", estimator = "gets::gets", regress = TRUE, classify = FALSE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("subset", "weights", "offset"),
+    list_args = c("contrasts"),
+    no_grid_args = c("weights"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = TRUE
+  ),
+  glm = METHOD$new(
+    method = "glm", estimator = "stats::glm", regress = TRUE, classify = TRUE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("subset", "weights", "offset", "start", "etastart", "mustart"),
+    list_args = c("contrasts", "control"),
+    no_grid_args = c("weights"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = TRUE
+  ),
+  glmm = METHOD$new(
+    method = "glmm", estimator = "lme4::glmer", regress = TRUE, classify = TRUE,
+    multinomial = FALSE, cv = FALSE, uses_index = TRUE, nonstandard_formula = TRUE,
+    vector_args = c("subset", "weights", "offset", "start", "etastart", "mustart"),
+    list_args = c("contrasts"),
+    no_grid_args = c("weights"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
+  group_lasso = METHOD$new(
+    method = "group_lasso", estimator = "gglasso::gglasso", regress = TRUE, classify = TRUE,
+    multinomial = TRUE, cv = TRUE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("group", "lambda"),
+    list_args = c(),
+    no_grid_args = c(),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
+  hfr = METHOD$new(
+    method = "hfr", estimator = "hfr::cv.hfr", regress = TRUE, classify = FALSE,
+    multinomial = FALSE, cv = TRUE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("weights", "kappa"),
+    list_args = c(),
+    no_grid_args = c("weights"),
     has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = TRUE
   ),
   lasso = METHOD$new(
@@ -114,8 +176,50 @@ METHOD_REGISTER <- list(
   lm = METHOD$new(
     method = "lm", estimator = "stats::lm", regress = TRUE, classify = FALSE,
     multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
-    vector_args = c("subset", "weights", "contrasts", "offset"), tunable_vector_args = c("subset"),
+    vector_args = c("subset", "weights", "offset"),
+    list_args = c("contrasts"),
+    no_grid_args = c("weights"),
     has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = TRUE
+  ),
+  pcr = METHOD$new(
+    method = "pcr", estimator = "pls::pcr", regress = TRUE, classify = FALSE,
+    multinomial = FALSE, cv = TRUE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("subset", "scale", "lower", "upper", "ncomp", "ncomp_pct"),
+    list_args = c(),
+    no_grid_args = c("scale"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = TRUE
+  ),
+  plsr = METHOD$new(
+    method = "plsr", estimator = "pls::plsr", regress = TRUE, classify = FALSE,
+    multinomial = FALSE, cv = TRUE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("subset", "scale", "lower", "upper", "ncomp", "ncomp_pct"),
+    list_args = c(),
+    no_grid_args = c("scale"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = TRUE
+  ),
+  quantile = METHOD$new(
+    method = "quantile", estimator = "quantreg::rq", regress = TRUE, classify = FALSE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("subset", "weights", "offset", "tau"),
+    list_args = c("contrasts"),
+    no_grid_args = c("weights"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
+  quantile_rf = METHOD$new(
+    method = "quantile_rf", estimator = "quantregForest::quantregForest", regress = TRUE, classify = FALSE,
+    multinomial = FALSE, cv = TRUE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("weights", "classwt", "cutoff", "strata", "sampsize", "tau"),
+    list_args = c(),
+    no_grid_args = c("weights"),
+    has_predict_method = TRUE, has_coef_method = FALSE, has_importance_method = TRUE
+  ),
+  rf = METHOD$new(
+    method = "rf", estimator = "randomForest::randomForest", regress = TRUE, classify = TRUE,
+    multinomial = TRUE, cv = TRUE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("weights", "classwt", "cutoff", "strata", "sampsize"),
+    list_args = c(),
+    no_grid_args = c("weights"),
+    has_predict_method = TRUE, has_coef_method = FALSE, has_importance_method = TRUE
   ),
   ridge = METHOD$new(
     method = "ridge", estimator = "glmnet::glmnet", regress = TRUE, classify = TRUE,
