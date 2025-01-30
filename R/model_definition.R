@@ -124,6 +124,9 @@ model_definition <- R6::R6Class(
         stop("data is not set yet")
       }
     },
+    get_syntactic_response_var_name = function(...) {
+      return(all.vars(self$formula)[1])
+    },
     clear = function(...) {
       self$object = NULL
       self$error = NULL

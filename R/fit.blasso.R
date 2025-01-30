@@ -87,7 +87,7 @@
   return(estimates)
 }
 .predict.blasso <- function(object, data, self, ...) {
-  response_var <- all.vars(self$formula)[1]
+  response_var <- self$get_syntactic_response_var_name()
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
   } else {
@@ -106,7 +106,7 @@
 }
 .fitted.blasso <- function(object, self, ...) {
   burnin <- c(1:round(T/2))
-  response_var <- all.vars(self$formula)[1]
+  response_var <- self$get_syntactic_response_var_name()
   data <- as.data.frame(object$X)
   data[, response_var] <- object$y
   mf <- stats::model.frame(self$formula, data)
@@ -119,7 +119,7 @@
 }
 .resid.blasso <- function(object, self, ...) {
   burnin <- c(1:round(T/2))
-  response_var <- all.vars(self$formula)[1]
+  response_var <- self$get_syntactic_response_var_name()
   data <- as.data.frame(object$X)
   data[, response_var] <- object$y
   mf <- stats::model.frame(self$formula, data)
