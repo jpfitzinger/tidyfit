@@ -55,7 +55,7 @@
     message = "'%s' cannot be used for classification"
   ),
   multinomial = list(
-    methods = c("ridge", "lasso", "enet", "adalasso", "svm", "mrmr", "relief", "chisq", "rf", "nnet"),
+    methods = c("ridge", "lasso", "enet", "adalasso", "svm", "mrmr", "relief", "chisq", "rf", "nnet", "group_lasso"),
     message = "'%s' cannot be used for multinomial classification"
   ),
   nonstandard_formula = list(
