@@ -12,16 +12,23 @@
 .args_to_grid <- function(model_method, control) {
 
   vector_args <- METHOD_REGISTER[[model_method]]$vector_args
-  tunable_vector_args <- METHOD_REGISTER[[model_method]]$tunable_vector_args
-  for (arg in vector_args) {
-    if (!is.null(control[[arg]])) {
-      if (inherits(control[[arg]], "list")) {
-        if (!arg %in% tunable_vector_args) {
-          control[[arg]] <- list(control[[arg]])
-          warning(sprintf("the list argument '%s' in '%s' is not a tunable argument", arg, model_method), call. = FALSE)
-        }
-      } else {
-        control[[arg]] <- list(control[[arg]])
+  list_args <- METHOD_REGISTER[[model_method]]$list_args
+  no_grid_args <- METHOD_REGISTER[[model_method]]$no_grid_args
+
+  for (arg_name in vector_args) {
+    arg = control[[arg_name]]
+    if (!is.null(arg)) {
+      if ((arg_name %in% no_grid_args) | !inherits(arg, "list")) {
+        control[[arg_name]] <- list(arg)
+      }
+    }
+  }
+
+  for (arg_name in list_args) {
+    arg = control[[arg_name]]
+    if (!is.null(arg)) {
+      if ((arg_name %in% no_grid_args) | !inherits(arg[[1]], "list")) {
+        control[[arg_name]] <- list(arg)
       }
     }
   }
