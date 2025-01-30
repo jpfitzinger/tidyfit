@@ -91,6 +91,5 @@
     ncomp = self$args$ncomp
   )
   self$fit_info <- list(standard_sd = standard_sd)
-  self$estimator <- "pls::plsr"
   invisible(self)
 }

@@ -63,7 +63,6 @@
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
   res <- do.call(eval_fun, ctr)
   .store_on_self(self, res)
-  self$estimator <- "stats::chisq.test"
   invisible(self)
 }
 

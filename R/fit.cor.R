@@ -63,7 +63,6 @@
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
   res <- eval_fun()
   .store_on_self(self, res)
-  self$estimator <- "stats::cor.test"
   invisible(self)
 }
 

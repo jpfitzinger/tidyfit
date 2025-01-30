@@ -115,7 +115,6 @@
   .store_on_self(self, res)
   if (!is.null(res$result$result$lambda))
     self$set_args(lambda = res$result$result$lambda)
-  self$estimator <- "gglasso::gglasso"
   self$inner_grid <- data.frame(
     grid_id = paste(substring(self$grid_id, 1, 4), formatC(1:length(self$args$lambda), 2, flag = "0"), sep = "|"),
     lambda = self$args$lambda
