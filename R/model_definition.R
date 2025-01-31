@@ -156,10 +156,14 @@ model_definition <- R6::R6Class(
   # keep only valid columns
   data_non_na <- dplyr::select(data, dplyr::any_of(self$get_valid_data_columns()))
 
+  # stop if target is not in valid data columns
+  if (!self$get_syntactic_response_var_name() %in% self$get_valid_data_columns())
+    stop("NA or Inf values found in the target column.", call. = FALSE)
+
   # stop if there are NA values in data
   na_columns <- colnames(data_non_na)[apply(data_non_na, 2, function(x) any(is.na(x)))]
   if (length(na_columns) > 0)
-    stop(paste("NA or Inf values found in data. columns:", paste(na_columns, collapse = "; ")))
+    stop(paste("NA or Inf values found in data. columns:", paste(na_columns, collapse = "; ")), call. = FALSE)
 
   # fix non-syntactic names in data
   prepared_data <- data_non_na
