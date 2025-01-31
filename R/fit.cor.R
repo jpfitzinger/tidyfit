@@ -91,3 +91,12 @@
   warning(paste0("No fitted method for type '", self$method, "'."), call. = FALSE)
   return(NULL)
 }
+
+.top_vars.custom.test <- function(object, self, n, ...) {
+  coefs_df <- self$coef()
+  coefs_df <- coefs_df |>
+    dplyr::filter(.data$term != "(Intercept)") |>
+    dplyr::filter(rank(-abs(.data$estimate)) <= n) |>
+    dplyr::select("term")
+  return(coefs_df)
+}

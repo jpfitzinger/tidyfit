@@ -88,3 +88,37 @@
   }
   invisible(self)
 }
+
+.top_vars.glmnet <- function(object, self = NULL, n = NULL, ...) {
+  coefs_df <- self$coef()
+  # check if pmax is set to correct value
+  refit <- F
+  if (nrow(coefs_df) - 1 > n) {
+    if(is.null(self$args$pmax)) {
+      warning(sprintf("'%s' method: parameter 'pmax' is not set. will attempt to refit.", self$method), call. = F)
+      refit <- T
+    } else if(self$args$pmax > n) {
+      warning(sprintf("'%s' method: parameter 'pmax' too large. will attempt to refit.", self$method), call. = FALSE)
+      refit <- T
+    }
+  }
+  if(refit) {
+    refit_self <- self$clone()
+    refit_self$set_args(lambda = NULL, pmax = n)
+    refit_self$fit(refit_self$data)
+    if (any(is.finite(refit_self$object$lambda))) {
+      ix <- last(which(colSums(as.matrix(refit_self$object$beta) != 0) <= n))
+      selected_grid <- refit_self$inner_grid[ix, 1]
+      refit_coefs_df <- dplyr::filter(refit_self$coef(), .data$grid_id == selected_grid)
+      refit_coefs_df$grid_id <- unique(coefs_df$grid_id)
+      coefs_df <- refit_coefs_df
+    } else {
+      warning(sprintf("'%s' method: failed to refit. try a different value for 'n'.", self$method), call. = FALSE)
+      return(tibble(term = character()))
+    }
+  }
+  coefs_df <- coefs_df |>
+    dplyr::filter(.data$term != "(Intercept)") |>
+    dplyr::select("term")
+  return(coefs_df)
+}

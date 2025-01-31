@@ -81,3 +81,28 @@
   self$force_syntactic_names <- TRUE
   invisible(self)
 }
+
+.top_vars.lm <- function(object, self, n, ...) {
+  coefs_df <- self$coef()
+  # check if nvmax is set to correct value
+  refit <- F
+  if (nrow(coefs_df) - 1 > n) {
+    if(is.null(self$args$nvmax)) {
+      warning(sprintf("'%s' method: parameter 'nvmax' is not set. will attempt to refit.", self$method), call. = F)
+      refit <- T
+    } else if(self$args$nvmax > n) {
+      warning(sprintf("'%s' method: parameter 'nvmax' too large. will attempt to refit.", self$method), call. = FALSE)
+      refit <- T
+    }
+  }
+  if(refit) {
+    refit_self <- self$clone()
+    refit_self$set_args(nvmax = n)
+    refit_self$fit(refit_self$data)
+    coefs_df <- refit_self$coef()
+  }
+  coefs_df <- coefs_df |>
+    dplyr::filter(.data$term != "(Intercept)") |>
+    dplyr::select("term")
+  return(coefs_df)
+}
