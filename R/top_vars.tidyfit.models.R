@@ -36,6 +36,7 @@ top_vars.tidyfit.models <- function(
     .keep_grid_id = FALSE) {
 
   object <- .warn_and_remove_errors(object)
+  object <- .nest_settings(object)
 
   n <- as.integer(n)
   if (n <= 0)

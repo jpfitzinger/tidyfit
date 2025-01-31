@@ -54,7 +54,6 @@
     message = "'%s' has not coef method"
   ),
   has_top_vars_method = list(
-    methods = c("lasso", "enet", "adalasso", "subset", "cor", "relief"),
     message = "'%s' has no top_vars method"
   )
 )
