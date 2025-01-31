@@ -147,15 +147,15 @@
   data <- .prepare_data(self, data)
   predictor <- iml::Predictor$new(
     self,
-    data = data[,-1],
-    y = data[,1],
+    data = data[, colnames(data) != self$get_syntactic_response_var_name()],
+    y = data[, self$get_syntactic_response_var_name()],
     predict.function = function(model, newdata) model$predict(newdata, check_cols=FALSE)$prediction)
-  x0 <- data[1,-1]
+  x0 <- data[1, colnames(data) != self$get_syntactic_response_var_name()]
   explainer <- do.call(iml::Shapley$new, append(list(predictor = predictor, x.interest=x0), args[names(args)%in%c("sample.size")]))
   samples <- 1:nrow(data)
   if (!is.null(args$which_rows)) samples <- args$which_rows[args$which_rows %in% samples]
   result_df <- map_dfr(samples, function(i) {
-    explainer$explain(data[i,-1])
+    explainer$explain(data[i, colnames(data) != self$get_syntactic_response_var_name()])
     return(explainer$results)
   })
   result_df <- result_df |>
@@ -169,8 +169,8 @@
   data <- .prepare_data(self, data)
   predictor <- iml::Predictor$new(
     self,
-    data = data[,-1],
-    y = data[,1],
+    data = data[, colnames(data) != self$get_syntactic_response_var_name()],
+    y = data[, self$get_syntactic_response_var_name()],
     predict.function = function(model, newdata) model$predict(newdata, check_cols=FALSE)$prediction)
   loss <- ifelse(self$mode == "regression", "mae", "ce")
   explainer <- iml::FeatureImp$new(predictor, loss = loss)
@@ -186,16 +186,16 @@
   data <- .prepare_data(self, data)
   predictor <- iml::Predictor$new(
     self,
-    data = data[,-1],
-    y = data[,1],
+    data = data[, colnames(data) != self$get_syntactic_response_var_name()],
+    y = data[, self$get_syntactic_response_var_name()],
     predict.function = function(model, newdata) model$predict(newdata, check_cols = FALSE)$prediction)
-  x0 <- data[1,-1]
+  x0 <- data[1, colnames(data) != self$get_syntactic_response_var_name()]
   args[["predictor"]] <- predictor
   explainer <- do.call(iml::LocalModel$new, append(list(x.interest=x0), args))
   samples <- 1:nrow(data)
   if (!is.null(args$which_rows)) samples <- args$which_rows[args$which_rows %in% samples]
   result_df <- map_dfr(samples, function(i) {
-    explainer$explain(data[i,-1])
+    explainer$explain(data[i, colnames(data) != self$get_syntactic_response_var_name()])
     return(explainer$results)
   })
   result_df <- result_df |>

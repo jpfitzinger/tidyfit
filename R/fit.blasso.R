@@ -46,11 +46,15 @@
     data = NULL
 ) {
 
+  if (!is.null(self$args$weights)) {
+    warning("blasso cannot handle weights, weights are ignored", call. = FALSE)
+  }
+
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
   y <- stats::model.response(mf)
 
-  ctr <- self$args[names(self$args) %in% methods::formalArgs(monomvn::bridge)]
+  ctr <- self$args[names(self$args) %in% methods::formalArgs(monomvn::blasso)]
   ctr$verb <- 0
 
   incl_intercept <- "(Intercept)" %in% colnames(x)
@@ -64,7 +68,6 @@
   res <- do.call(eval_fun,
                  append(list(X = x, y = y, icept = incl_intercept), ctr))
   .store_on_self(self, res)
-  self$estimator <- "monomvn::blasso"
   self$fit_info <- list(var_names = colnames(x))
   invisible(self)
 
@@ -84,7 +87,7 @@
   return(estimates)
 }
 .predict.blasso <- function(object, data, self, ...) {
-  response_var <- all.vars(self$formula)[1]
+  response_var <- self$get_syntactic_response_var_name()
   if (response_var %in% colnames(data)) {
     truth <- data[, response_var]
   } else {
@@ -103,7 +106,7 @@
 }
 .fitted.blasso <- function(object, self, ...) {
   burnin <- c(1:round(T/2))
-  response_var <- all.vars(self$formula)[1]
+  response_var <- self$get_syntactic_response_var_name()
   data <- as.data.frame(object$X)
   data[, response_var] <- object$y
   mf <- stats::model.frame(self$formula, data)
@@ -116,7 +119,7 @@
 }
 .resid.blasso <- function(object, self, ...) {
   burnin <- c(1:round(T/2))
-  response_var <- all.vars(self$formula)[1]
+  response_var <- self$get_syntactic_response_var_name()
   data <- as.data.frame(object$X)
   data[, response_var] <- object$y
   mf <- stats::model.frame(self$formula, data)

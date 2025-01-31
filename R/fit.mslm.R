@@ -57,6 +57,9 @@
     self,
     data = NULL
 ) {
+  if (!is.null(self$args$weights)) {
+    warning("mslm cannot handle weights, weights are ignored", call. = FALSE)
+  }
   data <- data.frame(data, check.names = FALSE)
   idx_col <- self$args$index_col
   if (is.null(self$args$index_col)) {
@@ -69,10 +72,11 @@
   self$set_args(k = 2, overwrite = FALSE)
   ctr <- self$args[names(self$args) %in% methods::formalArgs(MSwM::msmFit)]
 
-  if (is.null(wts)) {
-    m_raw <- stats::lm(self$formula, data)
+  if (TRUE) {
+    m_raw <- do.call(stats::lm, list(formula = self$formula, data = data))
   } else {
-    m_raw <- stats::lm(self$formula, data, weights = wts)
+    # weights currently not implemented correctly
+    # m_raw <- do.call(stats::lm, list(formula = self$formula, data = data, weights = wts))
   }
   if (is.null(ctr$sw)) {
     ctr$sw <- rep(TRUE, length(m_raw$coefficients) + 1)
@@ -87,6 +91,5 @@
                  append(list(object = m_raw), ctr))
   .store_on_self(self, res)
   self$fit_info <- list(index_var = idx_var)
-  self$estimator <- "MSwM::msmFit"
   invisible(self)
 }

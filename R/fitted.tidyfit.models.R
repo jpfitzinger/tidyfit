@@ -27,6 +27,7 @@ fitted.tidyfit.models <- function(object, ...) {
   .weights <- attr(object, "structure")$weights
 
   object <- .warn_and_remove_errors(object)
+  object <- .nest_settings(object)
 
   sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
   out <- object %>%

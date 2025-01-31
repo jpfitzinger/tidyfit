@@ -94,6 +94,7 @@ explain.tidyfit.models <- function(object,
                                    .keep_grid_id = FALSE) {
 
   object <- .warn_and_remove_errors(object)
+  object <- .nest_settings(object)
   additional_args <- list(...)
 
   get_explanation <- function(model) {

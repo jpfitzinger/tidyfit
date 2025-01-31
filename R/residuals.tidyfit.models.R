@@ -27,6 +27,7 @@ residuals.tidyfit.models <- function(object, ...) {
   .weights <- attr(object, "structure")$weights
 
   object <- .warn_and_remove_errors(object)
+  object <- .nest_settings(object)
 
   # Check mode
   modes <- object$model_object %>%

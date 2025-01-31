@@ -71,6 +71,5 @@
   res <- do.call(eval_fun,
                  append(list(x = mod_lm), ctr_gets))
   .store_on_self(self, res)
-  self$estimator <- "gets::gets"
   invisible(self)
 }

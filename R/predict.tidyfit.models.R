@@ -34,6 +34,7 @@ predict.tidyfit.models <- function(object,
   .weights <- attr(object, "structure")$weights
 
   object <- .warn_and_remove_errors(object)
+  object <- .nest_settings(object)
 
   get_predictions <- function(model_row) {
     if (is.null(model_row$newdata)) return(NULL)

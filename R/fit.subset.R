@@ -79,6 +79,5 @@
     ctr))
   .store_on_self(self, res)
   self$force_syntactic_names <- TRUE
-  self$estimator <- "bestglm::bestglm"
   invisible(self)
 }

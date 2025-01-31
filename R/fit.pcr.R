@@ -63,6 +63,9 @@
   if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
   standard_sd <- apply(x, 2, stats::sd)
 
+  # data is always scaled
+  self$set_args(center = TRUE, scale = standard_sd, overwrite = TRUE)
+
   self$set_args(ncomp = unique(1 + round((NCOL(x) - 1) * self$args$ncomp_pct)),
                 overwrite = FALSE)
   ctr <- self$args[names(self$args) %in% c(methods::formalArgs(pls::mvr),
@@ -81,14 +84,12 @@
   }
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
   res <- do.call(eval_fun,
-                 append(list(formula = self$formula, data = data,
-                             scale=standard_sd, center=T), ctr))
+                 append(list(formula = self$formula, data = data), ctr))
   .store_on_self(self, res)
   self$inner_grid <- data.frame(
     grid_id = paste(substring(self$grid_id, 1, 4), formatC(1:length(self$args$ncomp), 2, flag = "0"), sep = "|"),
     ncomp = self$args$ncomp
   )
   self$fit_info <- list(standard_sd = standard_sd)
-  self$estimator <- "pls::pcr"
   invisible(self)
 }

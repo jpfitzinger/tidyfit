@@ -50,17 +50,19 @@
   incl_intercept <- "(Intercept)" %in% colnames(x)
   if (incl_intercept) x <- x[, -1]
   var_names <- colnames(x)
+
+  ctr <- self$args[names(self$args) %in% methods::formalArgs(stats::chisq.test)]
+  ctr <- ctr[!names(ctr) %in% c("x, y")]
+
   eval_fun_ <- function(...) {
-    args <- list(...)
-    tests <- purrr::map(var_names, function(nam) chisq.test(x[,nam], y))
+    tests <- purrr::map(var_names, function(nam) stats::chisq.test(x[,nam], y, ...))
     names(tests) <- var_names
     class(tests) <- "custom.test"
     tests
   }
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
-  res <- eval_fun()
+  res <- do.call(eval_fun, ctr)
   .store_on_self(self, res)
-  self$estimator <- "stats::chisq.test"
   invisible(self)
 }
 
