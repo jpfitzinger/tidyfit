@@ -36,6 +36,10 @@ METHOD <- R6::R6Class(
       self$has_predict_method <- has_predict_method
       self$has_coef_method <- has_coef_method
       self$has_importance_method <- has_importance_method
+    },
+
+    check = function(type) {
+      return(as.list(self)[[type]])
     }
   )
 )
