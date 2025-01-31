@@ -142,3 +142,13 @@ appr_in <- function(a, b) {
     })))
   return(object)
 }
+
+.nest_settings <- function(object) {
+  if (!"settings" %in% colnames(object)) {
+    valid_cols <- c("model", "estimator_fct", "size (MB)", "grid_id", "grid_id_",
+                    "model_object", "errors", "warnings", "messages")
+    object <- object |>
+      tidyr::nest(settings = -any_of(c(valid_cols, attr(object, "structure")$groups)))
+  }
+  return(object)
+}
