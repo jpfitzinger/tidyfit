@@ -185,6 +185,30 @@ METHOD_REGISTER <- list(
     no_grid_args = c("weights"),
     has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = TRUE
   ),
+  mrmr = METHOD$new(
+    method = "mrmr", estimator = "mRMRe::mRMR.ensemble", regress = TRUE, classify = TRUE,
+    multinomial = TRUE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c(),
+    list_args = c(),
+    no_grid_args = c(),
+    has_predict_method = FALSE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
+  mslm = METHOD$new(
+    method = "mslm", estimator = "MSwM::msmFit", regress = TRUE, classify = FALSE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("weights", "sw"),
+    list_args = c("control"),
+    no_grid_args = c("weights"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
+  nnet = METHOD$new(
+    method = "nnet", estimator = "nnet::nnet", regress = TRUE, classify = TRUE,
+    multinomial = TRUE, cv = TRUE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("subset", "weights", "offset", "Wts", "mask"),
+    list_args = c("contrasts"),
+    no_grid_args = c("weights"),
+    has_predict_method = TRUE, has_coef_method = FALSE, has_importance_method = TRUE
+  ),
   pcr = METHOD$new(
     method = "pcr", estimator = "pls::pcr", regress = TRUE, classify = FALSE,
     multinomial = FALSE, cv = TRUE, uses_index = FALSE, nonstandard_formula = FALSE,
@@ -217,6 +241,12 @@ METHOD_REGISTER <- list(
     no_grid_args = c("weights"),
     has_predict_method = TRUE, has_coef_method = FALSE, has_importance_method = TRUE
   ),
+  relief = METHOD$new(
+    method = "relief", estimator = "CORElearn::attrEval", regress = TRUE, classify = TRUE,
+    multinomial = TRUE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c(), list_args = c(), no_grid_args = c(),
+    has_predict_method = FALSE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
   rf = METHOD$new(
     method = "rf", estimator = "randomForest::randomForest", regress = TRUE, classify = TRUE,
     multinomial = TRUE, cv = TRUE, uses_index = FALSE, nonstandard_formula = FALSE,
@@ -232,5 +262,45 @@ METHOD_REGISTER <- list(
     list_args = c(),
     no_grid_args = c("weights"),
     has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = TRUE
+  ),
+  robust = METHOD$new(
+    method = "robust", estimator = "MASS::rlm", regress = TRUE, classify = FALSE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("subset", "weights", "offset", "w", "init", "u"),
+    list_args = c("contrasts", "lqs.control"),
+    no_grid_args = c("weights"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
+  spikeslab = METHOD$new(
+    method = "spikeslab", estimator = "BoomSpikeSlab::lm.spike", regress = TRUE, classify = TRUE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("optional.coefficient.estimate", "prior.inclusion.probabilities", "weight", "subset", "initial.value", "sampler.weights"),
+    list_args = c("contrasts"),
+    no_grid_args = c("prior"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
+  subset = METHOD$new(
+    method = "subset", estimator = "bestglm::bestglm", regress = TRUE, classify = TRUE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("subset", "weights", "offset"),
+    list_args = c("contrasts"),
+    no_grid_args = c("weights"),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = TRUE
+  ),
+  svm = METHOD$new(
+    method = "svm", estimator = "e1071::svm", regress = TRUE, classify = TRUE,
+    multinomial = TRUE, cv = TRUE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c("scale", "class.weights", "subset"),
+    list_args = c(),
+    no_grid_args = c(),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = FALSE
+  ),
+  tvp = METHOD$new(
+    method = "tvp", estimator = "shrinkTVP::shrinkTVP", regress = TRUE, classify = FALSE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c(),
+    list_args = c("hyperprior_param", "sv_param", "MH_tuning", "starting_vals"),
+    no_grid_args = c(),
+    has_predict_method = TRUE, has_coef_method = TRUE, has_importance_method = FALSE
   )
 )
