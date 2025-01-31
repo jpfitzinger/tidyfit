@@ -45,7 +45,7 @@ model_definition <- R6::R6Class(
     },
     predict = function(data, check_cols = TRUE, ...) {
       if (!self$has_predict_method) {
-        warning(paste0("No prediction method for type '", self$method, "'."))
+        warning(paste0("No prediction method for type '", self$method, "'."), call. = FALSE)
         return(NULL)
       }
       all_args <- list(object = self$object,
@@ -56,7 +56,7 @@ model_definition <- R6::R6Class(
     },
     coef = function(...) {
       if (!.check_method(self$method, "has_coef_method")) {
-        warning(paste0("No coef method for type '", self$method, "'. Try using 'explain()'"))
+        warning(paste0("No coef method for type '", self$method, "'. Try using 'explain()'"), call. = FALSE)
         return(tibble(term=character(), estimate=numeric()))
       }
       all_args <- list(object = self$object, self = self)
@@ -86,7 +86,7 @@ model_definition <- R6::R6Class(
     },
     explain = function(use_package, use_method, additional_args) {
       if (!.check_method(self$method, "has_importance_method")) {
-        warning(paste0("No explain method for type '", self$method, "'."))
+        warning(paste0("No explain method for type '", self$method, "'."), call. = FALSE)
         return(dplyr::tibble(term = character(), importance = double()))
       }
       all_args <- list(object = self$object, self = self, use_package = use_package, use_method = use_method)
@@ -135,6 +135,9 @@ model_definition <- R6::R6Class(
         stop("data is not set yet")
       }
     },
+    get_syntactic_response_var_name = function(...) {
+      return(all.vars(self$formula)[1])
+    },
     clear = function(...) {
       self$object = NULL
       self$error = NULL
@@ -156,6 +159,7 @@ model_definition <- R6::R6Class(
   self$error <- model$error[[1]]
   if (length(model$result$messages)>0) self$messages <- paste(model$result$messages, collapse = " | ")
   if (length(model$result$warnings)>0) self$warnings <- paste(model$result$warnings, collapse = " | ")
+  self$estimator <- METHOD_REGISTER[[self$method]]$estimator
   invisible(self)
 }
 
@@ -163,10 +167,14 @@ model_definition <- R6::R6Class(
   # keep only valid columns
   data_non_na <- dplyr::select(data, dplyr::any_of(self$get_valid_data_columns()))
 
+  # stop if target is not in valid data columns
+  if (!self$get_syntactic_response_var_name() %in% self$get_valid_data_columns())
+    stop("NA or Inf values found in the target column.", call. = FALSE)
+
   # stop if there are NA values in data
   na_columns <- colnames(data_non_na)[apply(data_non_na, 2, function(x) any(is.na(x)))]
   if (length(na_columns) > 0)
-    stop(paste("NA or Inf values found in data. columns:", paste(na_columns, collapse = "; ")))
+    stop(paste("NA or Inf values found in data. columns:", paste(na_columns, collapse = "; ")), call. = FALSE)
 
   # fix non-syntactic names in data
   prepared_data <- data_non_na

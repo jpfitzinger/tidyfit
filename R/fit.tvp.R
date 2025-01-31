@@ -51,7 +51,7 @@
   self$set_args(display_progress = FALSE, overwrite = FALSE)
 
   if (!is.null(self$args$weights)) {
-    warning("tvp cannot handle weights, weights are ignored")
+    warning("tvp cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   idx_col <- self$args$index_col
@@ -71,6 +71,5 @@
                  append(list(formula = self$formula, data = data), ctr))
   .store_on_self(self, res)
   self$fit_info <- list(index_var = idx_var)
-  self$estimator <- "shrinkTVP::shrinkTVP"
   invisible(self)
 }

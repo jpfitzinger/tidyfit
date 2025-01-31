@@ -67,7 +67,6 @@
     grid_id = paste(substring(self$grid_id, 1, 4), formatC(1:length(self$args$kappa), 2, flag = "0"), sep = "|"),
     kappa = self$args$kappa
   )
-  self$estimator <- "hfr::cv.hfr"
   invisible(self)
 }
 

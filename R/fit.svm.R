@@ -51,7 +51,7 @@
 ) {
 
   if (!is.null(self$args$weights)) {
-    warning("svm cannot handle weights, weights are ignored")
+    warning("svm cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   mf <- stats::model.frame(self$formula, data)
@@ -75,13 +75,12 @@
   res <- do.call(eval_fun,
                  append(list(x = x, y = y), ctr))
   .store_on_self(self, res)
-  self$estimator <- "e1071::svm"
   invisible(self)
 }
 
 .coef.svm <- function(object, self = NULL, ...) {
   if (self$args$kernel != "linear") {
-    warning("No coefficients produced for 'svm' with nonlinear kernel.")
+    warning("No coefficients produced for 'svm' with nonlinear kernel.", call. = FALSE)
     return(NULL)
   }
   raw_estimates <- stats::coef(object)

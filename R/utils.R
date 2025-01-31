@@ -11,38 +11,31 @@
 # Wrap vector/array arguments in list and return a grid of settings
 .args_to_grid <- function(model_method, control) {
 
+  vector_args <- METHOD_REGISTER[[model_method]]$vector_args
+  list_args <- METHOD_REGISTER[[model_method]]$list_args
+  no_grid_args <- METHOD_REGISTER[[model_method]]$no_grid_args
+
+  for (arg_name in vector_args) {
+    arg = control[[arg_name]]
+    if (!is.null(arg)) {
+      if ((arg_name %in% no_grid_args) | !inherits(arg, "list")) {
+        control[[arg_name]] <- list(arg)
+      }
+    }
+  }
+
+  for (arg_name in list_args) {
+    arg = control[[arg_name]]
+    if (!is.null(arg)) {
+      if ((arg_name %in% no_grid_args) | !inherits(arg[[1]], "list")) {
+        control[[arg_name]] <- list(arg)
+      }
+    }
+  }
+
   # Exceptions for vectors that are handled at a lower level
   if (!is.null(control[["weights"]])) {
     control$weights <- list(control[["weights"]])
-  }
-  if (!is.null(control[["index_col"]])) {
-    control$index_col <- list(control[["index_col"]])
-  }
-  if (!is.null(control[["lambda"]]) & model_method %in% c("lasso", "enet", "ridge", "adalasso")) {
-    control$lambda <- list(control[["lambda"]])
-  }
-  if (!is.null(control[["kappa"]]) & model_method == "hfr") {
-    control$kappa <- list(control[["kappa"]])
-  }
-  if (model_method %in% c("pcr", "plsr")) {
-    if (!is.null(control[["ncomp"]])) {
-      control$ncomp <- list(control[["ncomp"]])
-    }
-    if (!is.null(control[["ncomp_pct"]])) {
-      control$ncomp_pct <- list(control[["ncomp_pct"]])
-    }
-  }
-  if (!is.null(control[["sw"]]) & model_method == "mslm") {
-    control$sw <- list(control[["sw"]])
-  }
-  if (!is.null(control[["control"]]) & model_method == "mslm") {
-    control$control <- list(control[["control"]])
-  }
-  if (!is.null(control[["tau"]]) & model_method %in% c("quantile", "quantile_rf")) {
-    control$tau <- list(control[["tau"]])
-  }
-  if (!is.null(control[["group"]]) & model_method %in% c("group_lasso")) {
-    control$group <- list(control[["group"]])
   }
 
   control <- .func_to_list(control)
@@ -144,8 +137,18 @@ appr_in <- function(a, b) {
   object <- object %>%
     dplyr::filter(as.logical(map(.data$model_object, function(obj) {
       if (is.null(obj$object))
-        warning(paste0("No model fitted for '", obj$method, "'. Check errors."))
+        warning(paste0("No model fitted for '", obj$method, "'. Check errors.", call. = FALSE), call. = FALSE)
       return(!is.null(obj$object))
     })))
+  return(object)
+}
+
+.nest_settings <- function(object) {
+  if (!"settings" %in% colnames(object)) {
+    valid_cols <- c("model", "estimator_fct", "size (MB)", "grid_id", "grid_id_",
+                    "model_object", "errors", "warnings", "messages")
+    object <- object |>
+      tidyr::nest(settings = -any_of(c(valid_cols, attr(object, "structure")$groups)))
+  }
   return(object)
 }
