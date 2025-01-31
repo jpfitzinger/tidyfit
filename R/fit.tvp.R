@@ -71,6 +71,5 @@
                  append(list(formula = self$formula, data = data), ctr))
   .store_on_self(self, res)
   self$fit_info <- list(index_var = idx_var)
-  self$estimator <- "shrinkTVP::shrinkTVP"
   invisible(self)
 }

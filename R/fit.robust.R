@@ -63,7 +63,6 @@
   res <- do.call(eval_fun,
                  append(list(x = x, y = y), ctr))
   .store_on_self(self, res)
-  self$estimator <- "MASS::rlm"
   invisible(self)
 
 }

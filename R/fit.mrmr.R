@@ -76,7 +76,6 @@
   res <- do.call(eval_fun,
                  append(list(data = dat), ctr))
   .store_on_self(self, res)
-  self$estimator <- "mRMRe::mRMR.ensemble"
   invisible(self)
 }
 

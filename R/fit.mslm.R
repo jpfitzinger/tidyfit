@@ -87,6 +87,5 @@
                  append(list(object = m_raw), ctr))
   .store_on_self(self, res)
   self$fit_info <- list(index_var = idx_var)
-  self$estimator <- "MSwM::msmFit"
   invisible(self)
 }
