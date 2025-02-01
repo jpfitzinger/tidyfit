@@ -2,7 +2,7 @@
 .check_method <- function(
     method,
     what = c("exists", "cv", "has_predict_method", "has_importance_method", "uses_index",
-             "regress", "classify", "multinomial", "nonstandard_formula", "has_coef_method"),
+             "regress", "classify", "cluster", "multinomial", "nonstandard_formula", "has_coef_method"),
     message = FALSE
     ) {
 
@@ -39,6 +39,9 @@
   ),
   classify = list(
     message = "'%s' cannot be used for classification"
+  ),
+  cluster = list(
+    message = "'%s' cannot be used for clustering"
   ),
   multinomial = list(
     message = "'%s' cannot be used for multinomial classification"
