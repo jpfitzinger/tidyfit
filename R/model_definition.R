@@ -125,7 +125,9 @@ model_definition <- R6::R6Class(
       }
     },
     get_syntactic_response_var_name = function(...) {
-      return(all.vars(self$formula)[1])
+      lhs_terms <- formula.tools::lhs(self$formula)
+      if (!is.null(lhs_terms)) lhs_terms <- as.character(lhs_terms)
+      return(lhs_terms)
     },
     clear = function(...) {
       self$object = NULL
