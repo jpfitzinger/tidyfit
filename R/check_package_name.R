@@ -10,6 +10,7 @@
 
 .package_names <- list(
   adalasso = "glmnet",
+  agnes = "cluster",
   anova = "stats",
   bayes = "arm",
   blasso = "monomvn",
