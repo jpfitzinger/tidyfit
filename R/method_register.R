@@ -241,6 +241,15 @@ METHOD_REGISTER <- list(
     no_grid_args = c("weights"),
     has_predict_method = TRUE, has_coef_method = FALSE, has_importance_method = TRUE
   ),
+  pam = METHOD$new(
+    method = "pam", estimator = "cluster::pam",
+    regress = FALSE, classify = FALSE, cluster = TRUE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c(),
+    list_args = c(),
+    no_grid_args = c(),
+    has_predict_method = FALSE, has_coef_method = FALSE, has_importance_method = FALSE
+  ),
   pcr = METHOD$new(
     method = "pcr", estimator = "pls::pcr",
     regress = TRUE, classify = FALSE, cluster = FALSE,

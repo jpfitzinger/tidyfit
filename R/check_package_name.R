@@ -31,6 +31,7 @@
   mrmr = "mRMRe",
   mslm = "MSwM",
   nnet = "nnet",
+  pam = "cluster",
   pcr = "pls",
   plsr = "pls",
   quantile_rf = "quantregForest",
