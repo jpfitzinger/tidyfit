@@ -19,6 +19,7 @@
   bridge = "monomvn",
   chisq = "stats",
   cor = "stats",
+  diana = "cluster",
   enet = "glmnet",
   genetic = "gaselect",
   gets = "gets",
