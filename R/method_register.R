@@ -133,6 +133,15 @@ METHOD_REGISTER <- list(
     vector_args = c("subset"), list_args = c(), no_grid_args = c(),
     has_predict_method = FALSE, has_coef_method = TRUE, has_importance_method = FALSE
   ),
+  dbscan = METHOD$new(
+    method = "dbscan", estimator = "dbscan::dbscan",
+    regress = FALSE, classify = FALSE, cluster = TRUE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c(),
+    list_args = c(),
+    no_grid_args = c(),
+    has_predict_method = FALSE, has_coef_method = FALSE, has_importance_method = FALSE
+  ),
   diana = METHOD$new(
     method = "diana", estimator = "cluster::diana",
     regress = FALSE, classify = FALSE, cluster = TRUE,

@@ -19,6 +19,7 @@
   bridge = "monomvn",
   chisq = "stats",
   cor = "stats",
+  dbscan = "dbscan",
   diana = "cluster",
   enet = "glmnet",
   genetic = "gaselect",
