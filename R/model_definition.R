@@ -46,7 +46,7 @@ model_definition <- R6::R6Class(
     predict = function(data, check_cols = TRUE, ...) {
       if (!self$has_predict_method) {
         warning(paste0("No prediction method for type '", self$method, "'."), call. = FALSE)
-        return(NULL)
+        return(dplyr::tibble(prediction=numeric()))
       }
       all_args <- list(object = self$object,
                        data = .prepare_data(self, data, check_cols = check_cols),
@@ -57,7 +57,7 @@ model_definition <- R6::R6Class(
     coef = function(...) {
       if (!.check_method(self$method, "has_coef_method")) {
         warning(paste0("No coef method for type '", self$method, "'. Try using 'explain()'"), call. = FALSE)
-        return(tibble(term=character(), estimate=numeric()))
+        return(dplyr::tibble(term=character(), estimate=numeric()))
       }
       all_args <- list(object = self$object, self = self)
       coef_df <- do.call(.coef, all_args)
@@ -159,8 +159,10 @@ model_definition <- R6::R6Class(
   data_non_na <- dplyr::select(data, dplyr::any_of(self$get_valid_data_columns()))
 
   # stop if target is not in valid data columns
-  if (!self$get_syntactic_response_var_name() %in% self$get_valid_data_columns())
-    stop("NA or Inf values found in the target column.", call. = FALSE)
+  response_var <- self$get_syntactic_response_var_name()
+  if (!is.null(response_var))
+    if (!response_var %in% self$get_valid_data_columns())
+      stop("NA or Inf values found in the target column.", call. = FALSE)
 
   # stop if there are NA values in data
   na_columns <- colnames(data_non_na)[apply(data_non_na, 2, function(x) any(is.na(x)))]

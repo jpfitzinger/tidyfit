@@ -126,7 +126,7 @@ m <- function(
     ...
 ) {
   if (!is.null(data) & is.null(formula))
-    stop("'formula' cannot be missing when 'data' is provided")
+    stop("'formula' cannot be missing when 'data' is provided", call. = FALSE)
   .check_method(model_method, "exists", TRUE)
   if (!.check_package_name(model_method))
     stop(sprintf("Package '%s' is required for method '%s'. Run install.packages('%s').",

@@ -39,7 +39,6 @@ predict.tidyfit.models <- function(object,
   get_predictions <- function(model_row) {
     if (is.null(model_row$newdata)) return(NULL)
     out <- model_row$model_object$predict(as.data.frame(model_row$newdata))
-    if (is.null(out)) return(NULL)
     out <- out %>%
       dplyr::mutate(model = model_row[["model"]], grid_id_ = model_row[["grid_id"]])
     return(dplyr::bind_cols(model_row[gr_vars], out))
