@@ -119,16 +119,16 @@
     pred_mat <- attr(pred_mat, "probabilities")
     pred_mat <- pred_mat[1:nrow(data),]
     if (ncol(pred_mat) > 2) {
-      pred <- pred_mat %>%
-        dplyr::as_tibble() %>%
+      pred <- pred_mat |>
+        dplyr::as_tibble() |>
         dplyr::mutate(row_n = dplyr::row_number())
       if (!is.null(truth)) {
         pred <- dplyr::mutate(pred, truth = truth)
       }
-      pred <- pred %>%
+      pred <- pred |>
         tidyr::pivot_longer(-dplyr::any_of(c("truth", "row_n")),
                             names_to = "class",
-                            values_to = "prediction") %>%
+                            values_to = "prediction") |>
         dplyr::select(-dplyr::any_of("row_n"))
 
       return(pred)

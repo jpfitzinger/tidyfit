@@ -96,35 +96,35 @@
   } else {
     pred_mat <- data.frame(pred_mat)
     colnames(pred_mat) <- sort(tau)
-    pred <- dplyr::tibble(pred_mat) %>%
-      dplyr::mutate(truth = truth) %>%
-      tidyr::gather("tau", "prediction", -.data$truth) %>%
-      dplyr::select(.data$prediction, .data$truth, .data$tau) %>%
+    pred <- dplyr::tibble(pred_mat) |>
+      dplyr::mutate(truth = truth) |>
+      tidyr::gather("tau", "prediction", -.data$truth) |>
+      dplyr::select(.data$prediction, .data$truth, .data$tau) |>
       dplyr::mutate(tau = as.numeric(.data$tau))
   }
   return(pred)
 }
 
 .fitted.rq <- function(object, self = NULL, ...) {
-  .predict.rq(object, data = .prepare_data(self, self$data), self = self, ...) %>%
-    dplyr::rename(fitted = "prediction") %>%
+  .predict.rq(object, data = .prepare_data(self, self$data), self = self, ...) |>
+    dplyr::rename(fitted = "prediction") |>
     dplyr::select(-any_of(c("truth")))
 }
 
 .fitted.rqs <- function(object, self = NULL, ...) {
-  .predict.rqs(object, data = .prepare_data(self, self$data), self = self, ...) %>%
-    dplyr::rename(fitted = "prediction") %>%
+  .predict.rqs(object, data = .prepare_data(self, self$data), self = self, ...) |>
+    dplyr::rename(fitted = "prediction") |>
     dplyr::select(-any_of(c("truth")))
 }
 
 .resid.rq <- function(object, self = NULL, ...) {
-  .predict.rq(object, data = .prepare_data(self, self$data), self = self, ...) %>%
-    dplyr::mutate(residual = .data$truth - .data$prediction) %>%
+  .predict.rq(object, data = .prepare_data(self, self$data), self = self, ...) |>
+    dplyr::mutate(residual = .data$truth - .data$prediction) |>
     dplyr::select(-any_of(c("truth", "prediction")))
 }
 
 .resid.rqs <- function(object, self = NULL, ...) {
-  .predict.rqs(object, data = .prepare_data(self, self$data), self = self, ...) %>%
-    dplyr::mutate(residual = .data$truth - .data$prediction) %>%
+  .predict.rqs(object, data = .prepare_data(self, self$data), self = self, ...) |>
+    dplyr::mutate(residual = .data$truth - .data$prediction) |>
     dplyr::select(-any_of(c("truth", "prediction")))
 }

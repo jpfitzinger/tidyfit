@@ -166,19 +166,19 @@
   } else {
     class_vals <- NULL
   }
-  pred <- pred_mat %>%
-    dplyr::as_tibble() %>%
+  pred <- pred_mat |>
+    dplyr::as_tibble() |>
     dplyr::mutate(row_n = dplyr::row_number())
   if (!is.null(truth)) {
     pred <- dplyr::mutate(pred, truth = truth)
   }
-  pred <- pred %>%
+  pred <- pred |>
     tidyr::gather("grid_id", "prediction", -dplyr::any_of(c("truth", "row_n")))
-  pred <- pred %>%
+  pred <- pred |>
     dplyr::select(-"row_n")
   if (length(class_vals)==2) {
-    pred <- pred %>%
-      dplyr::filter(.data$class == sort(class_vals)[2]) %>%
+    pred <- pred |>
+      dplyr::filter(.data$class == sort(class_vals)[2]) |>
       dplyr::select(-"class")
   }
   return(pred)
