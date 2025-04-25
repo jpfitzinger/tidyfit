@@ -19,24 +19,24 @@
   } else {
     class_vals <- NULL
   }
-  pred <- pred_mat %>%
-    dplyr::as_tibble() %>%
+  pred <- pred_mat |>
+    dplyr::as_tibble() |>
     dplyr::mutate(row_n = dplyr::row_number())
   if (self$args$family == "multinomial") {
-    pred <- pred %>%
+    pred <- pred |>
       tidyr::pivot_longer(-dplyr::any_of(c("row_n")),
                           names_to = c("class", "grid_id"),
                           values_to = "fitted",
                           names_sep = "\\.")
   } else {
-    pred <- pred %>%
+    pred <- pred |>
       tidyr::gather("grid_id", "fitted", -dplyr::any_of(c("row_n")))
   }
-  pred <- pred %>%
+  pred <- pred |>
     dplyr::select(-"row_n", -"grid_id")
   if (length(class_vals)==2) {
-    pred <- pred %>%
-      dplyr::filter(.data$class == sort(class_vals)[2]) %>%
+    pred <- pred |>
+      dplyr::filter(.data$class == sort(class_vals)[2]) |>
       dplyr::select(-"class")
   }
   return(pred)
