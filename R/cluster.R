@@ -79,6 +79,12 @@ cluster <- function(
     .data,
     formula,
     ...,
+    k = NULL,
+    k.min = 2,
+    k.max = 10,
+    nbclust_method = "silhouette",
+    metric = "euclidean",
+    transpose = FALSE,
     .cv = "none",
     .cv_args = NULL,
     .weights = NULL,
@@ -116,6 +122,10 @@ cluster <- function(
     mod$original_formula <- formula
     mod$mode <- "clustering"
     if (.force_cv) mod$cv <- TRUE
+    # set clustering args
+    mod$set_args(k = k, k.min = k.min, k.max = k.max, 
+                 nbclust_method = nbclust_method, metric = metric,
+                 transpose = transpose, overwrite = FALSE)
     mod
   })
 
