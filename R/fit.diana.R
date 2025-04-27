@@ -54,41 +54,65 @@
   x <- stats::model.matrix(self$formula, mf)
   if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
   var_names <- colnames(x)
-  self$set_args(k = 2, transpose = FALSE, metric = "euclidean", stand = TRUE, overwrite = FALSE)
-
-  if (self$args$transpose) {
-    x <- stats::dist(stats::cor(x), method = self$args$metric)
-    self$set_args(diss = TRUE, overwrite = TRUE)
-  } else {
-    self$set_args(diss = FALSE, overwrite = TRUE)
+  
+  # set default args
+  self$set_args(transpose = FALSE, metric = "euclidean", stand = TRUE, 
+                overwrite = FALSE)
+  
+  if (((NCOL(x) < 3) & self$args$transpose) | ((NROW(x) < 3) & !self$args$transpose))
+    stop("must have at least 3 observations for clustering")
+  
+  if (self$args$stand) {
+    x <- scale(x)
   }
-
+  
+  # 'x' always passed as distance matrix (due to transpose option)
+  self$set_args(diss = TRUE, overwrite = TRUE)
   ctr <- self$args[names(self$args) %in% methods::formalArgs(cluster::diana)]
-  eval_fun_ <- function(...) {
+  ctr <- ctr[names(ctr) != "k"]
+  
+  eval_fun_ <- function(x, k, transpose, ...) {
     args <- list(...)
+    args[['x']] <- .get_cluster_dist_mat(x, transpose, args$metric)
     do.call(cluster::diana, args)
   }
-  eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
-  res <- do.call(eval_fun,
-                 append(list(x = x), ctr))
-  .store_on_self(self, res)
-  self$fit_info <- list(var_names = var_names)
+  eval_fun <- do.call(purrr::partial, 
+                      append(list(.f = eval_fun_, 
+                                  transpose = self$args$transpose), ctr))
+  
+  cluster_fun <- function(x, k) {
+    clust_obj <- eval_fun(x = x)
+    clusters <- stats::cutree(clust_obj, k = k)
+    return(list(clustering=clusters, result = clust_obj))
+  }
+  
+  d <- .get_cluster_dist_mat(x, self$args$transpose, self$args$metric)
+  
+  results <- .select_optimal_k(
+    x, d, cluster_fun, eval_fun, k = self$args$k, k.min = self$args$k.min, 
+    k.max = self$args$k.max, transpose = self$args$transpose, 
+    method = self$args$nbclust_method)
+  
+  .store_on_self(self, results)
+  self$fit_info <- list(var_names = var_names, optimal_k = results$result$k, 
+                        clusters = results$result$clustering, 
+                        coords = results$result$coords)
   invisible(self)
 }
 
 .fitted.diana <- function(object, self, ...) {
-  clusters <- stats::cutree(object, k = self$args$k)
   if (self$args$transpose) {
     fitted_df <- tidyr::tibble(
       term = self$fit_info$var_names,
-      fitted = clusters
+      fitted = self$fit_info$clusters
     ) |>
       dplyr::mutate(term = dplyr::if_else(.data$term %in% names(self$names_map), self$names_map[.data$term], .data$term))
   } else {
     fitted_df <- tidyr::tibble(
-      fitted = clusters
+      fitted = self$fit_info$clusters
     )
   }
-
+  fitted_df <- dplyr::bind_cols(fitted_df, self$fit_info$coords)
+  
   return(fitted_df)
 }
