@@ -17,27 +17,27 @@
   } else {
     class_vals <- NULL
   }
-  pred <- pred_mat %>%
-    dplyr::as_tibble() %>%
+  pred <- pred_mat |>
+    dplyr::as_tibble() |>
     dplyr::mutate(row_n = dplyr::row_number())
   if (!is.null(truth)) {
     pred <- dplyr::mutate(pred, truth = truth)
   }
   if (self$args$family == "multinomial") {
-    pred <- pred %>%
+    pred <- pred |>
       tidyr::pivot_longer(-dplyr::any_of(c("truth", "row_n")),
                           names_to = c("class", "grid_id"),
                           values_to = "prediction",
                           names_sep = "\\.")
   } else {
-    pred <- pred %>%
+    pred <- pred |>
       tidyr::gather("grid_id", "prediction", -dplyr::any_of(c("truth", "row_n")))
   }
-  pred <- pred %>%
+  pred <- pred |>
     dplyr::select(-"row_n")
   if (length(class_vals)==2) {
-    pred <- pred %>%
-      dplyr::filter(.data$class == sort(class_vals)[2]) %>%
+    pred <- pred |>
+      dplyr::filter(.data$class == sort(class_vals)[2]) |>
       dplyr::select(-"class")
   }
   return(pred)
@@ -109,9 +109,9 @@
   }
   pred_mat <- sapply(self$args$ncomp, function(nc) drop(stats::predict(object, data, ncomp = nc)))
   colnames(pred_mat) <- self$inner_grid$grid_id[appr_in(self$inner_grid$ncomp, self$args$ncomp)]
-  pred <- pred_mat %>%
-    dplyr::as_tibble() %>%
-    dplyr::mutate(truth = truth) %>%
+  pred <- pred_mat |>
+    dplyr::as_tibble() |>
+    dplyr::mutate(truth = truth) |>
     tidyr::pivot_longer(-any_of("truth"), names_to = "grid_id", values_to = "prediction")
   return(pred)
 }

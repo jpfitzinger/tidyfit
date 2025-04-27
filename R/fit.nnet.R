@@ -109,10 +109,10 @@
   }
 
   if (self$mode == "classification") {
-    pred <- stats::predict(object, data) %>%
-      dplyr::as_tibble(.name_repair = ~ vctrs::vec_as_names(..., repair = "unique", quiet = TRUE)) %>%
-      dplyr::mutate(truth = truth_vec) %>%
-      tidyr::pivot_longer(-any_of("truth"), names_to = "class", values_to = "prediction") %>%
+    pred <- stats::predict(object, data) |>
+      dplyr::as_tibble(.name_repair = ~ vctrs::vec_as_names(..., repair = "unique", quiet = TRUE)) |>
+      dplyr::mutate(truth = truth_vec) |>
+      tidyr::pivot_longer(-any_of("truth"), names_to = "class", values_to = "prediction") |>
       dplyr::select(any_of(c("class", "prediction", "truth")))
   }
 

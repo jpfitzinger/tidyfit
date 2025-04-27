@@ -1,16 +1,16 @@
 #' @importFrom utils getFromNamespace
 
 .make_cross_val <- function(.data, .cv, .cv_args, gr_vars, .mask, .weights) {
-  grps <- .data %>%
-    dplyr::select(!!gr_vars) %>%
+  grps <- .data |>
+    dplyr::select(!!gr_vars) |>
     dplyr::distinct()
-  .data <- .data %>%
+  .data <- .data |>
     dplyr::select(-!!gr_vars)
 
   if (!is.null(.weights)) {
-    wts <- .data %>%
+    wts <- .data |>
       dplyr::pull(!!.weights)
-    .data <- .data %>%
+    .data <- .data |>
       dplyr::select(-dplyr::all_of(.weights))
   } else {
     wts <- NULL

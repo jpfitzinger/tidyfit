@@ -208,30 +208,30 @@
 
   if (self$mode == "regression") {
     imp <- self$object$importance
-    estimates <- dplyr::as_tibble(imp) %>%
-      dplyr::mutate(term = rownames(imp)) %>%
-      dplyr::mutate(importanceSD = self$object$importanceSD[.data$term]) %>%
+    estimates <- dplyr::as_tibble(imp) |>
+      dplyr::mutate(term = rownames(imp)) |>
+      dplyr::mutate(importanceSD = self$object$importanceSD[.data$term]) |>
       dplyr::rename(importance = "%IncMSE")
   } else {
     imp <- self$object$importance
     imp_MDacc <- imp[, -(ncol(imp)-1):-ncol(imp)]
     imp_Other <- imp[, (ncol(imp)-1):ncol(imp)]
-    estimates <- dplyr::as_tibble(imp_MDacc) %>%
-      dplyr::mutate(term = rownames(imp)) %>%
+    estimates <- dplyr::as_tibble(imp_MDacc) |>
+      dplyr::mutate(term = rownames(imp)) |>
       tidyr::pivot_longer(-"term", names_to = "class", values_to = "Class_MeanDecreaseAccuracy")
-    estimates_other <- dplyr::as_tibble(imp_Other) %>%
+    estimates_other <- dplyr::as_tibble(imp_Other) |>
       dplyr::mutate(term = rownames(imp))
     estimates <- dplyr::left_join(estimates, estimates_other, by = "term")
     impSD <- self$object$importanceSD
     impSD_MDacc <- impSD[, -ncol(impSD)]
     impSD_Other <- impSD[, ncol(impSD)]
-    estimatesSD <- dplyr::as_tibble(impSD_MDacc) %>%
-      dplyr::mutate(term = rownames(impSD)) %>%
+    estimatesSD <- dplyr::as_tibble(impSD_MDacc) |>
+      dplyr::mutate(term = rownames(impSD)) |>
       tidyr::pivot_longer(-"term", names_to = "class", values_to = "Class_MeanDecreaseAccuracySD")
-    estimatesSD_other <- dplyr::tibble(MeanDecreaseAccuracySD = impSD_Other) %>%
+    estimatesSD_other <- dplyr::tibble(MeanDecreaseAccuracySD = impSD_Other) |>
       dplyr::mutate(term = rownames(impSD))
     estimatesSD <- dplyr::left_join(estimatesSD, estimatesSD_other, by = "term")
-    estimates <- estimates %>%
+    estimates <- estimates |>
       dplyr::left_join(estimatesSD, by = c("term", "class"))
   }
 

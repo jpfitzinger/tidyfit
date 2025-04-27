@@ -39,7 +39,7 @@
   }
 
   control <- .func_to_list(control)
-  grid <- tidyr::expand_grid(!!! control) %>%
+  grid <- tidyr::expand_grid(!!! control) |>
     purrr::transpose()
   if (length(grid)==0) grid <- list(grid)
   return(grid)
@@ -64,8 +64,8 @@
 .args_to_frame <- function(mod) {
   if (length(mod$args) > 0) {
     args <- .func_to_list(mod$args)
-    settings <- tibble::enframe(args) %>%
-      tidyr::pivot_wider() %>%
+    settings <- tibble::enframe(args) |>
+      tidyr::pivot_wider() |>
       dplyr::summarise(across(.cols = dplyr::everything(), .fns = ~ if(length(unlist(.)) == 1) unlist(.) else .))
   } else {
     settings <- NULL
@@ -79,20 +79,20 @@
     if (all(is.na(lst))) return(NULL)
     unlist(lst)
   }
-  df <- df %>%
-    dplyr::mutate(estimator_fct = make_vector(purrr::map(.data$model_object, function(mod) mod$estimator))) %>%
-    dplyr::mutate(`size (MB)` = make_vector(purrr::map(.data$model_object, function(mod) utils::object.size(mod$object)))/1e6) %>%
-    dplyr::mutate(errors = make_vector(purrr::map(.data$model_object, function(mod) mod$error))) %>%
-    dplyr::mutate(warnings = make_vector(purrr::map(.data$model_object, function(mod) mod$warnings))) %>%
+  df <- df |>
+    dplyr::mutate(estimator_fct = make_vector(purrr::map(.data$model_object, function(mod) mod$estimator))) |>
+    dplyr::mutate(`size (MB)` = make_vector(purrr::map(.data$model_object, function(mod) utils::object.size(mod$object)))/1e6) |>
+    dplyr::mutate(errors = make_vector(purrr::map(.data$model_object, function(mod) mod$error))) |>
+    dplyr::mutate(warnings = make_vector(purrr::map(.data$model_object, function(mod) mod$warnings))) |>
     dplyr::mutate(messages = make_vector(purrr::map(.data$model_object, function(mod) mod$messages)))
   df
 }
 
 .reassign_model_info <- function(df) {
-  df %>%
-    dplyr::ungroup() %>%
-    dplyr::group_nest(row_number()) %>%
-    dplyr::pull(.data$data) %>%
+  df |>
+    dplyr::ungroup() |>
+    dplyr::group_nest(row_number()) |>
+    dplyr::pull(.data$data) |>
     purrr::map_dfr(function(row) {
       row$model_object[[1]] <- row$model_object[[1]]$clone()
       row$model_object[[1]]$grid_id <- row$grid_id
@@ -134,7 +134,7 @@ appr_in <- function(a, b) {
 }
 
 .warn_and_remove_errors <- function(object) {
-  object <- object %>%
+  object <- object |>
     dplyr::filter(as.logical(map(.data$model_object, function(obj) {
       if (is.null(obj$object))
         warning(paste0("No model fitted for '", obj$method, "'. Check errors.", call. = FALSE), call. = FALSE)

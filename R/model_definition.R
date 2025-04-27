@@ -61,7 +61,7 @@ model_definition <- R6::R6Class(
       }
       all_args <- list(object = self$object, self = self)
       coef_df <- do.call(.coef, all_args)
-      coef_df <- coef_df %>%
+      coef_df <- coef_df |>
         dplyr::mutate(term = dplyr::if_else(.data$term %in% names(self$names_map), self$names_map[.data$term], .data$term))
       return(coef_df)
     },
@@ -82,7 +82,7 @@ model_definition <- R6::R6Class(
       all_args <- append(all_args, additional_args)
       var_imp_df <- do.call(.explain, all_args)
       if (nrow(var_imp_df) > 0) {
-        var_imp_df <- var_imp_df %>%
+        var_imp_df <- var_imp_df |>
           dplyr::mutate(term = dplyr::if_else(.data$term %in% names(self$names_map), self$names_map[.data$term], .data$term))
       }
 
