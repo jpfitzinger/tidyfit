@@ -18,6 +18,7 @@
   boost = "mboost",
   bridge = "monomvn",
   chisq = "stats",
+  clara = "cluster",
   cor = "stats",
   dbscan = "dbscan",
   diana = "cluster",

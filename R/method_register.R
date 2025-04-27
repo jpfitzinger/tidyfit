@@ -126,6 +126,15 @@ METHOD_REGISTER <- list(
     vector_args = c("p"), list_args = c(), no_grid_args = c(),
     has_predict_method = FALSE, has_coef_method = TRUE, has_importance_method = FALSE
   ),
+  clara = METHOD$new(
+    method = "clara", estimator = "cluster::clara",
+    regress = FALSE, classify = FALSE, cluster = TRUE,
+    multinomial = FALSE, cv = FALSE, uses_index = FALSE, nonstandard_formula = FALSE,
+    vector_args = c(),
+    list_args = c(),
+    no_grid_args = c(),
+    has_predict_method = FALSE, has_coef_method = FALSE, has_importance_method = FALSE
+  ),
   cor = METHOD$new(
     method = "cor", estimator = "stats::cor.test",
     regress = TRUE, classify = FALSE, cluster = FALSE,
