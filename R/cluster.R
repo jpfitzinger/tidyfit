@@ -80,7 +80,7 @@ cluster <- function(
     formula,
     ...,
     k = NULL,
-    k.min = 2,
+    k.min = 1,
     k.max = 10,
     nbclust_method = "silhouette",
     metric = "euclidean",
