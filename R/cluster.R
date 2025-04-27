@@ -153,6 +153,7 @@ cluster <- function(
 
   df <- .post_process(df, .return_slices, .return_grid, .cv, .tune_each_group,
                       .mask, .weights, gr_vars)
+  df <- .align_clusters(df)
   return(df)
 
 }
