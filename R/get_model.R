@@ -7,28 +7,36 @@
 #' This method is a utility to return the object fitted by the underlying algorithm. For instance, when \code{m("lm")} is used to create the tidyfit.models frame, the returned object is of class "lm".
 #'
 #' @param df a tidyfit.models frame created using m(), regress(), classify() and similar methods
-#' @param row an integer index of the row number in 'df' for which the model should be returned
+#' @param ... arguments passed to \code{dplyr::filter} to filter row in 'df' for which the model should be returned. filters can also include columns nested in \code{df$settings}.
+#' @param .first_row should the first row be returned if the (filtered) df contains multiple rows
 #' @return An object of the class associated with the underyling fitting algorithm
 #'
 #' @author Johann Pfitzinger
 #'
 #' @examples
 #' # Load data
-#' data <- tidyfit::Factor_Industry_Returns
+#' data("mtcars")
+#' 
+#' # fit separate models for transmission types
+#' mtcars <- dplyr::group_by(mtcars, am)
 #'
-#' # Stand-alone function
-#' fit <- m("lm", Return ~ ., data)
-#' summary(get_model(fit))
+#' fit <- regress(mtcars, mpg ~ ., m("lasso", lambda = 1:2))
+#' 
+#' # get the model for single row
+#' plot(get_model(fit, am == 0, lambda == 1))
+#' 
+#' # get model by row number
+#' plot(get_model(fit, dplyr::row_number() == 2))
 #'
 #' @seealso \code{\link{get_tidyFit}} method
 #' 
 #' @export
 
-get_model <- function(df, row = 1) {
-  mod <- .get_selected_row(df, row)
-  if (is.null(mod$object))
-    stop("no model fitted for the selected row. check errors.")
-  return(mod$object)
+get_model <- function(df, ..., .first_row = TRUE) {
+  model <- .get_selected_row(df, .first_row, ...)
+  if (is.null(model$object))
+    stop("no model fitted for the selected row. check errors.", call. = FALSE)
+  return(model$object)
 }
 
 #' @name get_tidyFit
@@ -40,40 +48,54 @@ get_model <- function(df, row = 1) {
 #' This method is a utility to return the tidyFit object from a row index of the tidyfit.models frame. The tidyFit object contains the fitted model and several additional objects necessary to reproduce the analysis or refit the model on new data.
 #'
 #' @param df a tidyfit.models frame created using m(), regress(), classify() and similar methods
-#' @param row an integer index of the row number in 'df' for which the model should be returned
+#' @param ... arguments passed to \code{dplyr::filter} to filter row in 'df' for which the model should be returned. filters can also include columns nested in \code{df$settings}.
+#' @param .first_row should the first row be returned if the (filtered) df contains multiple rows
 #' @return An object of the class associated with the underyling fitting algorithm
 #'
 #' @author Johann Pfitzinger
 #'
 #' @examples
 #' # Load data
-#' data <- tidyfit::Factor_Industry_Returns
-#'
-#' # Stand-alone function
-#' fit <- m("lm", Return ~ ., data)
-#' model <- get_tidyFit(fit)
+#' data("mtcars")
 #' 
-#' # Refit
-#' model$fit(data)
+#' # fit separate models for transmission types
+#' mtcars <- dplyr::group_by(mtcars, am)
+#'
+#' fit <- regress(mtcars, mpg ~ ., m("lasso", lambda = 1:2))
+#' 
+#' # get the model for single row
+#' get_tidyFit(fit, am == 0, lambda == 1)
+#' 
+#' # get model by row number
+#' get_tidyFit(fit, dplyr::row_number() == 2)
 #'
 #' @seealso \code{\link{get_model}} method
 #' 
 #' @export
 
-get_tidyFit <- function(df, row = 1) {
-  mod <- .get_selected_row(df, row)
+get_tidyFit <- function(df, ..., .first_row = TRUE) {
+  mod <- .get_selected_row(df, .first_row, ...)
   return(mod)
 }
 
-.get_selected_row <- function(df, row) {
-  if (!is.numeric(row))
-    stop("argument 'row' must be a number")
-  if (!is(df, 'tidyfit.models'))
-    stop("'df' must be a tidyfit.models frame generated using 'm()', 'regress()', 'classify()' etc.")
-  if ((row > nrow(df)) | (row < 1L))
-    stop("invalid value provided for 'row'")
+.get_selected_row <- function(df, .first_row, ...) {
+  if (!methods::is(df, 'tidyfit.models'))
+    stop("'df' must be a tidyfit.models frame generated using 'm()', 'regress()', 'classify()' etc.", call. = FALSE)
   if (!"model_object" %in% colnames(df))
-    stop("'model_object' column is missing in 'df'")
-  mod <- df$model_object[[row]]
-  return(mod)
+    stop("'model_object' column is missing in 'df'", call. = FALSE)
+  if (length(dplyr::quos(...)) > 0) {
+    df_subset <- dplyr::filter(tidyr::unnest(df, .data$settings), ...)
+    if ((nrow(df_subset) > 1) & .first_row) {
+      warning("filters passed to '...' return more than 1 row. returning the first row.", call. = FALSE)
+    } else if (nrow(df_subset) == 0) {
+      stop("filters returned no rows.", call. = FALSE)
+    }
+  } else {
+    df_subset <- df
+  }
+  if ((nrow(df_subset) > 1) & !.first_row) {
+    stop("filters passed to '...' return more than 1 row.", call. = FALSE)
+  }
+  model <- df_subset$model_object[[1]]
+  return(model)
 }
