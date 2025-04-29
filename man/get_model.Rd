@@ -14,7 +14,7 @@ get_model(df, ..., .first_row = TRUE)
 \item{.first_row}{should the first row be returned if the (filtered) df contains multiple rows}
 }
 \value{
-An object of the class associated with the underyling fitting algorithm
+An object of the class associated with the underlying fitting algorithm
 }
 \description{
 Returns a single fitted model object produced by the underlying fitting algorithm from a tidyfit.models frame based on a given row number.

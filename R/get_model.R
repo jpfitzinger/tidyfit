@@ -9,7 +9,7 @@
 #' @param df a tidyfit.models frame created using m(), regress(), classify() and similar methods
 #' @param ... arguments passed to \code{dplyr::filter} to filter row in 'df' for which the model should be returned. filters can also include columns nested in \code{df$settings}.
 #' @param .first_row should the first row be returned if the (filtered) df contains multiple rows
-#' @return An object of the class associated with the underyling fitting algorithm
+#' @return An object of the class associated with the underlying fitting algorithm
 #'
 #' @author Johann Pfitzinger
 #'
@@ -50,7 +50,7 @@ get_model <- function(df, ..., .first_row = TRUE) {
 #' @param df a tidyfit.models frame created using m(), regress(), classify() and similar methods
 #' @param ... arguments passed to \code{dplyr::filter} to filter row in 'df' for which the model should be returned. filters can also include columns nested in \code{df$settings}.
 #' @param .first_row should the first row be returned if the (filtered) df contains multiple rows
-#' @return An object of the class associated with the underyling fitting algorithm
+#' @return An object of the class associated with the underlying fitting algorithm
 #'
 #' @author Johann Pfitzinger
 #'
