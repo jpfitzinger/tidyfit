@@ -1,3 +1,8 @@
+## tidyfit 0.7.4
+
+ - This version introduces two new functions: get_model() and get_tidyFit().
+ - In addition, an updated vignette is provided describing how to access fitted models; and NOTEs from CRAN check are resolved
+
 ## tidyfit 0.7.3
 
 This version includes two minor changes:
@@ -38,7 +43,7 @@ This version adds a new regression method:
 
 In addition, there a few additional features & fixes:
 
-- Add a new arugment '.return_grid' (default \code{FALSE}) to \code{regress} and \code{classify} methods to permit returning entire hyperparameter grid instead of only optimal setting
+- Add a new argument '.return_grid' (default \code{FALSE}) to \code{regress} and \code{classify} methods to permit returning entire hyperparameter grid instead of only optimal setting
 - Handling of syntactically invalid names is now down generically and not by the individual methods
 - Add observation weights in 'genetic'
 - Bugfixes in 'glmm' classification

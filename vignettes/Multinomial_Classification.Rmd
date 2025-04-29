@@ -53,7 +53,7 @@ as_tibble(iris)
 The code chunk below fits the above mentioned algorithms on the training split, using a 10-fold cross validation to select optimal penalties. We then obtain out-of-sample predictions using `predict`. Unlike binomial classification, the `fit` and `pred` objects contain a `class` column with separate coefficients and predictions for each class. The predictions sum to one across classes:
 
 ```{r}
-fit <- data_trn %>% 
+fit <- data_trn |>
   classify(Species ~ ., 
            LASSO = m("lasso"), 
            Ridge = m("ridge"), 
@@ -64,7 +64,7 @@ fit <- data_trn %>%
            `Least Squares` = m("ridge", lambda = 1e-5), 
            .cv = "vfold_cv")
 
-pred <- fit %>% 
+pred <- fit |>
   predict(data_tst)
 ```
 
@@ -73,15 +73,15 @@ Note that we can add unregularized least squares estimates by setting `lambda = 
 Next, we can use `yardstick` to calculate the log loss accuracy metric and compare the performance of the different models:
 
 ```{r, fig.width=7, fig.height=3, fig.align="center", eval=TRUE}
-metrics <- pred %>% 
-  group_by(model, class) %>% 
-  mutate(row_n = row_number()) %>% 
-  spread(class, prediction) %>% 
-  group_by(model) %>% 
+metrics <- pred |>
+  group_by(model, class) |>
+  mutate(row_n = row_number()) |>
+  spread(class, prediction) |>
+  group_by(model) |>
   yardstick::mn_log_loss(truth, setosa:virginica)
 
-metrics %>% 
-  mutate(model = str_wrap(model, 11)) %>% 
+metrics |>
+  mutate(model = str_wrap(model, 11)) |>
   ggplot(aes(model, .estimate)) +
   geom_col(fill = "darkblue") +
   theme_bw() +

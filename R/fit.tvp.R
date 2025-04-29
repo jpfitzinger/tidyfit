@@ -35,7 +35,7 @@
 #' data <- dplyr::select(data, -Industry)
 #'
 #' # Within 'regress' function (using low niter for illustration)
-#' fit <- regress(data, Return ~ ., m("tvp", niter = 50, index_col = "Date"))
+#' fit <- regress(data, Return ~ ., m("tvp", niter = 10, index_col = "Date"))
 #' tidyr::unnest(coef(fit), model_info)
 #'
 #' @seealso \code{\link{.fit.bayes}}, \code{\link{.fit.mslm}} and \code{\link{m}} methods

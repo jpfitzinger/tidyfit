@@ -22,51 +22,48 @@ library(dplyr); library(tidyr); library(purrr) # Data wrangling
 library(tidyfit) # Auto-ML modeling
 ```
 
-The fitted model object is contained in `tidyfit.models` frame in the `model_object` column as an `R6` class. The `tidyFit` `R6` class contains both the underlying model (`...$object`) as well as additional information generated during fitting and needed to obtain predictions or coefficients.
+Models fitted with `tidyfit` (e.g. using the `regress()` function) are stored in `tidyfit.models` frames, which are tibbles that contain information about **multiple** fitted models. **Individual** fitted models are stored using the `tidyFit` `R6` class, in the `model_object` column of the `tidyfit.models` frame.  
 
-Suppose, for instance, we want to visualize the regression tree of the hierarchical features regression for different degrees of shrinkage (see `?hfr::plot.hfr`). We begin by loading Boston house price data and fitting a regression for 4 different shrinkage parameters. Note that we do not need to specify a `.cv` argument, since we are not looking to select the optimal degree of shrinkage:
+**Here's a simple example:**
+
+Suppose we want to fit a hierarchical features regression (HFR) --- <a href="https://hfr.residualmetrics.com" target="_blank">see here</a> --- for different shrinkage penalties. We begin by loading Boston house price data and fitting a regression for 4 different shrinkage parameters:
 
 ```{r}
 data <- MASS::Boston
-mod_frame <- data %>% 
-  regress(medv ~ ., m("hfr", kappa = c(0.25, 0.5, 0.75, 1))) %>% 
+mod_frame <- data |> 
+  regress(medv ~ ., m("hfr", kappa = c(0.25, 0.5, 0.75, 1))) |>
   unnest(settings)
+
+# the tidyfit.models frame:
 mod_frame
+```
+
+The `model_object` columns contains 4 different models (for different values of the parameter `kappa`). To extract one of these models, we can use the `get_tidyFit()` function:
+
+```{r}
+# the tidyFit object:
+get_tidyFit(mod_frame, kappa == 1)
+```
+
+Note that we can pass filters to `...` (see `?get_tidyFit` for more information).
+
+The `tidyFit` class stores information necessary to obtain predictions, coefficients or other information about the model and to re-fit the model. It also contains the underlying model object (created by `hfr::cv.hfr` in this case). To get this underlying object, we can use the `get_model()` function:
+
+```{r, fig.width=7, fig.height=6, fig.align='center'}
+# the underlying model:
+hfr_model <- get_model(mod_frame, kappa == 0.75)
+plot(hfr_model, kappa = 0.75)
 ```
 
 `kappa` defines the extent of shrinkage, with `kappa = 1` equal to an unregularized least squares (OLS) regression, and `kappa = 0.25` representing a regression graph that is shrunken to 25% of its original size, with 25% of the effective degrees of freedom. The regression graph is visualized using the `plot` function.
 
-Let's examine the first model in the `tidyfit.models` frame:
-
-```{r}
-mod_frame$model_object[[1]]
-```
-
-## Accessing the fitted model
-
-We have two options to plot the regression trees. Many generics function directly on the `tidyFit` class. Therefore, we could simply plot (in this case the unregularized regression graph):
+Instead of extracting the underlying model, many generics can also be applied directly to the `tidyFit` object as an added convenience:
 
 ```{r, fig.width=7, fig.height=6, fig.align='center'}
-mod_frame %>% 
-  filter(kappa == 1) %>% 
-  pull(model_object) %>% 
-  .[[1]] %>% 
-  plot(kappa = 1)
+mod_frame |> 
+  get_tidyFit(kappa == .25) |> 
+  plot(kappa = .25)
 ```
-
-The regression graph shows which variables have a similar explanatory effect on the target (variables that are adjacent have a similar effect). The sizes of the leaf-nodes represent the absolute size of the coefficients.
-
-Alternatively, we could access the underlying `cv.hfr` object using `...$object`:
-
-```{r}
-mod_frame <- mod_frame %>% 
-  mutate(mod = map(model_object, ~.$object))
-mod_frame
-```
-
-Now there is a column with `cv.hfr` objects. This is useful, when we want to perform any analysis not directly implemented in the `tidyFit` generics.
-
-## Comparing different regression graphs
 
 Finally, we can use `pwalk` to compare the different settings in a plot:
 
@@ -76,9 +73,9 @@ old_par <- par()
 
 par(mfrow = c(2, 2))
 par(family = "sans", cex = 0.7)
-mod_frame %>% 
-  arrange(desc(kappa)) %>% 
-  select(model_object, kappa) %>% 
+mod_frame |> 
+  arrange(desc(kappa)) |> 
+  select(model_object, kappa) |> 
   pwalk(~plot(.x, kappa = .y, 
               max_leaf_size = 2, 
               show_details = FALSE))

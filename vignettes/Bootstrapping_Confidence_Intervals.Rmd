@@ -35,9 +35,9 @@ library(tidyfit) # Model fitting
 The combination of `.cv = "bootstraps"` and `.return_slices = TRUE` in `tidyfit::regress` or `tidyfit::classify` makes it very easy to calculate bootstrap confidence intervals for estimated coefficients. As an additional convenience function, `coef.tidyfit.models` includes the option of adding percentile bootstrap intervals directly. In this short example, I will calculate and compare bootstrap confidence bands for a partial least squares regression and a principal components regression using Boston house price data:
 
 ```{r, eval=TRUE}
-data <- MASS::Boston %>% 
-  scale %>% 
-  as_tibble
+data <- MASS::Boston |>
+  scale() |>
+  as_tibble()
 ```
 
 `tidyfit` handles data scaling internally (i.e. PLSR and PCR are always fitted on scaled data), however, scaling the data manually here will give us standardized coefficients, which are easier to visualize and compare.
@@ -47,7 +47,7 @@ data <- MASS::Boston %>%
 Instead of selecting an optimal number of latent components, I define a preset. This keeps things a little simpler. Note that dropping the `ncomp = 5` argument results the optimal number of components being selected using bootstrap resampling.
 
 ```{r}
-model_frame <- data %>% 
+model_frame <- data |>
   regress(medv ~ ., m("plsr", ncomp = 5), m("pcr", ncomp = 5),
           .cv = "bootstraps", .cv_args = list(times = 100), 
           .return_slices = TRUE)
@@ -68,7 +68,7 @@ estimates
 The intervals are nested in `model_info`:
 
 ```{r, eval=TRUE}
-estimates <- estimates %>% 
+estimates <- estimates |>
   unnest(model_info)
 estimates
 ```
@@ -78,8 +78,8 @@ estimates
 And thus, in a concise workflow, we have 95% bootstrap confidence intervals for the coefficients of a PCR and PLS regression:
 
 ```{r, fig.width=7, fig.height=3.5, fig.align="center", eval=TRUE}
-estimates %>% 
-  filter(term != "(Intercept)") %>% 
+estimates |>
+  filter(term != "(Intercept)") |>
   ggplot(aes(term, estimate, color = model)) +
   geom_hline(yintercept = 0) +
   geom_errorbar(aes(ymin = .lower, ymax = .upper), position = position_dodge()) +
@@ -91,7 +91,7 @@ estimates %>%
 The `pls`-package includes built-in functionality to jackknife confidence intervals for the coefficients. We can compare these results by passing `jackknife = TRUE` and `validation = "LOO"` to `m()`, and setting `.cv = "none"` (default):
 
 ```{r}
-model_frame_jackknife <- data %>% 
+model_frame_jackknife <- data |>
   regress(medv ~ ., m("plsr", ncomp = 5, jackknife = TRUE, validation = "LOO"), 
           m("pcr", ncomp = 5, jackknife = TRUE, validation = "LOO"))
 
@@ -101,8 +101,8 @@ jackknife_estimates <- coef(model_frame_jackknife)
 Now the `coef()` generic method also provides standard errors and $p$-values for the coefficients using `pls::jack.test`:
 
 ```{r, eval = TRUE}
-jackknife_estimates <- jackknife_estimates %>% 
-  unnest(model_info) %>% 
+jackknife_estimates <- jackknife_estimates |>
+  unnest(model_info) |>
   # Create approximate 95% intervals using 2 standard deviations
   mutate(.upper = estimate + 2 * std.error, .lower = estimate - 2 * std.error)
 
@@ -112,8 +112,8 @@ jackknife_estimates
 The plot is almost exactly identical to the bootstrap results above:
 
 ```{r, fig.width=7, fig.height=3.5, fig.align="center", eval=TRUE}
-jackknife_estimates %>% 
-  filter(term != "(Intercept)") %>% 
+jackknife_estimates |>
+  filter(term != "(Intercept)") |>
   ggplot(aes(term, estimate, color = model)) +
   geom_hline(yintercept = 0) +
   geom_errorbar(aes(ymin = .lower, ymax = .upper), position = position_dodge()) +

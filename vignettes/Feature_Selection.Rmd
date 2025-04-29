@@ -51,11 +51,11 @@ data <- readRDS("FRED-MD.rds")
 Let's shift the target to generate a forecast, and drop missing values:
 
 ```{r, eval=TRUE}
-data <- data %>% 
-  arrange(date) %>% 
+data <- data |>
+  arrange(date) |>
   # Shift the target by 1 month
-  mutate(Target = lead(INDPRO)) %>% 
-  drop_na %>% 
+  mutate(Target = lead(INDPRO)) |>
+  drop_na() |>
   select(-date)
 
 data
@@ -72,7 +72,7 @@ Filter methods are model-agnostic and perform univariate comparisons between eac
 
 ```{r}
 # Correlation
-algorithms_df <- data %>% 
+algorithms_df <- data |>
   regress(Target ~ ., Correlation = m("cor"))
 ```
 
@@ -80,9 +80,9 @@ The **ReliefF** algorithm is a popular nearest-neighbors-based approach to featu
 
 ```{r}
 # RReliefF
-algorithms_df <- algorithms_df %>% 
+algorithms_df <- algorithms_df |>
   bind_rows(
-    data %>% 
+    data |>
       regress(Target ~ ., RReliefF = m("relief"))
   )
 ```
@@ -91,11 +91,11 @@ Under the hood, `m("relief")` is a wrapper for `CORElearn::attrEval`, which bund
 
 ```{r}
 # Information Gain
-algorithms_df <- algorithms_df %>% 
+algorithms_df <- algorithms_df |>
   bind_rows(
-    data %>% 
+    data |>
       # Split target into buckets
-      mutate(Target = as.factor(ntile(Target, 10))) %>% 
+      mutate(Target = as.factor(ntile(Target, 10))) |>
       regress(Target ~ ., 
               `Information Gain` = m("relief", estimator = "InfGain"))
   )
@@ -107,9 +107,9 @@ The next set of methods perform iterative feature selection. The methods fit a m
 
 ```{r}
 # Forward Selection
-algorithms_df <- algorithms_df %>% 
+algorithms_df <- algorithms_df |>
   bind_rows(
-    data %>% 
+    data |>
       regress(Target ~ ., 
               `Forward Selection` = m("subset", method = "forward", nvmax = MODEL_SIZE))
   )
@@ -119,9 +119,9 @@ The opposite of forward selection is **backward elimination**. This method is al
 
 ```{r}
 # Backward Elimination
-algorithms_df <- algorithms_df %>% 
+algorithms_df <- algorithms_df |>
   bind_rows(
-    data %>% 
+    data |>
       regress(Target ~ ., 
               `Backward Elimination` = m("subset", method = "backward", nvmax = MODEL_SIZE))
   )
@@ -131,9 +131,9 @@ The final sequential algorithm examined here is **minimum redundancy, maximum re
 
 ```{r}
 # MRMR
-algorithms_df <- algorithms_df %>% 
+algorithms_df <- algorithms_df |>
   bind_rows(
-    data %>% 
+    data |>
       regress(Target ~ ., MRMR = m("mrmr", feature_count = MODEL_SIZE))
   )
 ```
@@ -144,9 +144,9 @@ The last group of feature selection algorithms, embedded methods, combine model 
 
 ```{r}
 # LASSO
-algorithms_df <- algorithms_df %>% 
+algorithms_df <- algorithms_df |>
   bind_rows(
-    data %>% 
+    data |>
       regress(Target ~ ., 
               `LASSO` = m("lasso", pmax = MODEL_SIZE + 1),
               .cv = "rolling_origin", 
@@ -159,9 +159,9 @@ algorithms_df <- algorithms_df %>%
 
 ```{r}
 # BMA
-algorithms_df <- algorithms_df %>% 
+algorithms_df <- algorithms_df |>
   bind_rows(
-    data %>% 
+    data |>
       regress(Target ~ ., 
               BMA = m("bma", burn = 10000, iter = 100000, 
                       mprior.size = MODEL_SIZE, mcmc = "rev.jump"))
@@ -172,7 +172,7 @@ Last, but not least, **Random Forests importance** is a popular machine learning
 
 ```{r}
 # Random Forest Importance
-nonlinear_algorithms_df <- data %>% 
+nonlinear_algorithms_df <- data |>
       regress(Target ~ ., `RF Importance` = m("rf"))
 ```
 
@@ -181,17 +181,17 @@ nonlinear_algorithms_df <- data %>%
 All information needed to select the top 10 features for each algorithm can be obtained using `coef(algorithms_df)` and unnesting the additional information stored in `model_info`: 
 
 ```{r}
-coef_df <- coef(algorithms_df) %>% 
-  unnest(model_info) %>%
+coef_df <- coef(algorithms_df) |>
+  unnest(model_info) |>
   bind_rows(explain(nonlinear_algorithms_df))
 ```
 
 Some algorithms return more than the maximum 10 variables. For instance, the filter methods (correlation, RReliefF and information gain) return a score for each feature. The below code chunk selects the top 10 features for each algorithm:
 
 ```{r}
-model_df <- coef_df %>% 
+model_df <- coef_df |>
   # Always remove the intercept
-  filter(term != "(Intercept)") %>% 
+  filter(term != "(Intercept)") |>
   
   mutate(selected = case_when(
     # Extract top 10 largest scores
@@ -203,17 +203,17 @@ model_df <- coef_df %>%
     model == "RF Importance" ~ rank(-importance) <= MODEL_SIZE,
     # For all other methods keep all features
     TRUE ~ TRUE
-  )) %>% 
+  )) |>
   
   # Keep only included terms
-  filter(selected) %>% 
+  filter(selected) |>
   select(model, term)
 ```
 
 Before examining the results, we will also add a **domain expert**. Here I simply add those features that are included in the US Conference Board Composite Leading Indicator and are available in our data set:
 
 ```{r}
-model_df <- model_df %>% 
+model_df <- model_df |>
   bind_rows(tibble(
     model = "Domain Expert",
     term = c("NAPMNOI", "ANDENOx", "CLAIMSx", "ACOGNO", 
@@ -224,20 +224,20 @@ model_df <- model_df %>%
 Now, let's examine the models selected by each of the various algorithms:
 
 ```{r, eval=T, class.source = 'fold-hide', fig.width=7, fig.height=2.5, fig.align='center'}
-model_df %>% 
+model_df |>
   # Add 'FALSE' entries, when a feature is not selected
-  mutate(selected = TRUE) %>% 
-  spread(term, selected) %>% 
-  gather("term", "selected", -model) %>% 
+  mutate(selected = TRUE) |>
+  spread(term, selected) |>
+  gather("term", "selected", -model) |>
   # Plotting color
-  mutate(selected = ifelse(is.na(selected), "white", "darkblue")) %>% 
+  mutate(selected = ifelse(is.na(selected), "white", "darkblue")) |>
   # Fix plotting order
-  group_by(term) %>% 
-  mutate(selected_sum = sum(selected=="darkblue")) %>% 
-  ungroup %>% 
-  arrange(desc(selected_sum)) %>% 
-  mutate(term = factor(term, levels = unique(term))) %>% 
-  mutate(model = factor(model, levels = unique(model_df$model))) %>% 
+  group_by(term) |>
+  mutate(selected_sum = sum(selected=="darkblue")) |>
+  ungroup() |>
+  arrange(desc(selected_sum)) |>
+  mutate(term = factor(term, levels = unique(term))) |>
+  mutate(model = factor(model, levels = unique(model_df$model))) |>
   ggplot(aes(term, model)) +
   geom_tile(aes(fill = selected)) +
   theme_bw(8) +
@@ -252,19 +252,19 @@ There is quite a lot of disagreement between different feature selection algorit
 model_names <- unique(model_df$model)
 
 # Retrieve selected variables
-selected_vars_list <- model_names %>% 
+selected_vars_list <- model_names |>
   map(function(mod) {
-    model_df %>% 
-      filter(model == mod) %>% 
+    model_df |>
+      filter(model == mod) |>
       pull(term)
   })
 names(selected_vars_list) <- model_names
 
 # Bootstrap resampling & regression
-boot_models_df <- selected_vars_list %>% 
+boot_models_df <- selected_vars_list |>
   map_dfr(function(selected_vars) {
-    data %>% 
-      select(all_of(c("Target", selected_vars))) %>% 
+    data |>
+      select(all_of(c("Target", selected_vars))) |>
       
       regress(Target ~ ., 
               # Use linear regression
@@ -276,18 +276,18 @@ boot_models_df <- selected_vars_list %>%
   }, .id = "model")
 
 # Finally, extract R2 from the model results
-boot_df <- boot_models_df %>% 
-  mutate(R2 = map_dbl(model_object, function(obj) summary(obj)$r.squared)) %>% 
+boot_df <- boot_models_df |>
+  mutate(R2 = map_dbl(model_object, function(obj) summary(obj)$r.squared)) |>
   select(model, R2)
 ```
 
 ```{r, eval=T, class.source = 'fold-hide', fig.width=7, fig.height=2.5, fig.align='center'}
-boot_df %>% 
-  group_by(model) %>% 
+boot_df |>
+  group_by(model) |>
   mutate(upper = mean(R2) + 2 * sd(R2) / sqrt(n()),
-         lower = mean(R2) - 2 * sd(R2) / sqrt(n())) %>% 
-  mutate(model = str_wrap(model, 10)) %>% 
-  mutate(model = factor(model, levels = str_wrap(unique(model_df$model), 10))) %>% 
+         lower = mean(R2) - 2 * sd(R2) / sqrt(n())) |>
+  mutate(model = str_wrap(model, 10)) |>
+  mutate(model = factor(model, levels = str_wrap(unique(model_df$model), 10))) |>
   ggplot(aes(model)) +
   geom_errorbar(aes(ymin = lower, ymax = upper), linewidth = 0.25, width = 0.25) +
   theme_bw(8) +
