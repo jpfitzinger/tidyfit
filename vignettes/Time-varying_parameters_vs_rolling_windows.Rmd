@@ -38,9 +38,9 @@ library(tidyfit)     # Model fitting
 
 ```{r, eval=TRUE}
 data <- Factor_Industry_Returns
-data <- data %>% 
-  mutate(Date = ym(Date)) %>%         # Parse dates
-  mutate(Return = Return - RF) %>%    # Excess return
+data <- data |>
+  mutate(Date = ym(Date)) |>         # Parse dates
+  mutate(Return = Return - RF) |>    # Excess return
   select(-RF)
 data
 ```
@@ -48,8 +48,8 @@ data
 We will examine only the HiTec industry to avoid unnecessary complexity:
 
 ```{r, eval=TRUE}
-data <- data %>% 
-  filter(Industry == "HiTec") %>% 
+data <- data |>
+  filter(Industry == "HiTec") |>
   select(-Industry)
 ```
 
@@ -58,7 +58,7 @@ data <- data %>%
 We begin by fitting a rolling window OLS regression with adjusted standard errors. In this example, we cannot simply pass both the TVP and the OLS models to the same `regress` function because the rolling window regression requires a `.force_cv = TRUE` argument, while the TVP model does not need to be fitted on rolling slices. The below code is adapted directly from the previous article on rolling window regressions:
 
 ```{r}
-mod_rolling <- data %>% 
+mod_rolling <- data |>
   regress(Return ~ CMA + HML + `Mkt-RF` + RMW + SMB,
           m("lm", vcov. = "HAC"),
           .cv = "sliding_index", .cv_args = list(lookback = years(5), step = 6, index = "Date"),
@@ -68,7 +68,7 @@ mod_rolling <- data %>%
 The TVP model is fitted next. `tidyfit` uses the `shrinkTVP` package to fit TVP models. The package is extremely powerful and provides a Bayesian implementation with a specialized hierarchical prior that automatically shrinks some of the parameters towards constant processes based on the data. While I do not discuss this in more detail, have a look here for more information.
 
 ```{r}
-mod_tvp <- data %>% 
+mod_tvp <- data |>
   regress(Return ~ .,
           m("tvp", sv = TRUE, niter = 1000, index_col = "Date"))
 ```
@@ -90,10 +90,10 @@ beta <- coef(mod_frame)
 Now, however, we require some wrangling to adapt the output of the two methods. First we unnest the detailed model information. This contains upper and lower credible intervals for the TVP model. For the OLS model we generate the confidence interval, as before. Finally, we combine the `slice_id` and `index` columns into a joint `date` column:
 
 ```{r}
-beta <- beta %>% 
-  unnest(model_info) %>% 
-  mutate(lower = ifelse(is.na(lower), estimate - 2*std.error, lower)) %>% 
-  mutate(upper = ifelse(is.na(upper), estimate + 2*std.error, upper)) %>% 
+beta <- beta |>
+  unnest(model_info) |>
+  mutate(lower = ifelse(is.na(lower), estimate - 2*std.error, lower)) |>
+  mutate(upper = ifelse(is.na(upper), estimate + 2*std.error, upper)) |>
   mutate(date = coalesce(as.Date(index), as.Date(slice_id)))
 ```
 
@@ -102,7 +102,7 @@ beta <- beta %>%
 Plotting the outcome is relatively simple with `ggplot2`:
 
 ```{r, fig.width=7, fig.height=6, fig.align="center", eval=TRUE}
-beta %>% 
+beta |>
   ggplot(aes(date, estimate)) +
   facet_wrap("term", scales = "free", ncol = 2) +
   geom_ribbon(aes(ymax = upper, ymin = lower, fill = model), alpha = 0.25) +

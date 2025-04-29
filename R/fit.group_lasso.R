@@ -88,7 +88,7 @@
   }
   if (self$mode == "classification") {
     if (!is.null(self$args$weights)) {
-      warning("group_lasso classification cannot handle weights, weights are ignored")
+      warning("group_lasso classification cannot handle weights, weights are ignored", call. = FALSE)
     }
     self$set_args(weights = NULL, overwrite = TRUE)
     self$set_args(loss = "logit", overwrite = FALSE)
@@ -115,7 +115,6 @@
   .store_on_self(self, res)
   if (!is.null(res$result$result$lambda))
     self$set_args(lambda = res$result$result$lambda)
-  self$estimator <- "gglasso::gglasso"
   self$inner_grid <- data.frame(
     grid_id = paste(substring(self$grid_id, 1, 4), formatC(1:length(self$args$lambda), 2, flag = "0"), sep = "|"),
     lambda = self$args$lambda
@@ -167,19 +166,19 @@
   } else {
     class_vals <- NULL
   }
-  pred <- pred_mat %>%
-    dplyr::as_tibble() %>%
+  pred <- pred_mat |>
+    dplyr::as_tibble() |>
     dplyr::mutate(row_n = dplyr::row_number())
   if (!is.null(truth)) {
     pred <- dplyr::mutate(pred, truth = truth)
   }
-  pred <- pred %>%
+  pred <- pred |>
     tidyr::gather("grid_id", "prediction", -dplyr::any_of(c("truth", "row_n")))
-  pred <- pred %>%
+  pred <- pred |>
     dplyr::select(-"row_n")
   if (length(class_vals)==2) {
-    pred <- pred %>%
-      dplyr::filter(.data$class == sort(class_vals)[2]) %>%
+    pred <- pred |>
+      dplyr::filter(.data$class == sort(class_vals)[2]) |>
       dplyr::select(-"class")
   }
   return(pred)

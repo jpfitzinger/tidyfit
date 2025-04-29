@@ -90,6 +90,7 @@ explain.tidyfit.models <- function(object,
                                    .keep_grid_id = FALSE) {
 
   object <- .warn_and_remove_errors(object)
+  object <- .nest_settings(object)
   additional_args <- list(...)
 
   get_explanation <- function(model) {
@@ -98,13 +99,13 @@ explain.tidyfit.models <- function(object,
 
   sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
   gr_vars <- attr(object, "structure")$groups
-  model_df <- object %>%
-    dplyr::select(-dplyr::any_of(sel_cols)) %>%
+  model_df <- object |>
+    dplyr::select(-dplyr::any_of(sel_cols)) |>
     dplyr::rename(grid_id_ = "grid_id")
   explanation_df <- purrr::map(model_df$model_object, get_explanation)
-  out <- model_df %>%
-    dplyr::mutate(importance = explanation_df) %>%
-    dplyr::select(-"model_object") %>%
+  out <- model_df |>
+    dplyr::mutate(importance = explanation_df) |>
+    dplyr::select(-"model_object") |>
     tidyr::unnest("importance")
 
   if ("grid_id" %in% colnames(out)) {
@@ -113,8 +114,8 @@ explain.tidyfit.models <- function(object,
     out <- dplyr::rename(out, grid_id = "grid_id_")
   }
 
-  out <- out %>%
-    dplyr::group_by(across(any_of(c(gr_vars, "model")))) %>%
+  out <- out |>
+    dplyr::group_by(across(any_of(c(gr_vars, "model")))) |>
     dplyr::mutate(nids = length(unique(.data$grid_id)))
 
   if (all(out$nids==1) & !.keep_grid_id) {
@@ -123,11 +124,11 @@ explain.tidyfit.models <- function(object,
   out <- dplyr::select(out, - "nids")
 
   col_ord <- c(gr_vars, "model", "term", "class", "importance", "grid_id", "slice_id")
-  out <- out %>%
+  out <- out |>
     dplyr::relocate(any_of(col_ord))
 
   # Remove backticks from names
-  out <- out %>%
+  out <- out |>
     mutate(term = gsub("`", "", .data$term))
 
   return(out)

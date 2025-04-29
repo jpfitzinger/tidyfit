@@ -68,7 +68,6 @@
   res <- do.call(eval_fun,
                  append(list(x = x, y = y), ctr))
   .store_on_self(self, res)
-  self$estimator <- "randomForest::randomForest"
   invisible(self)
 }
 
@@ -89,17 +88,17 @@
   } else {
     pred_mat <- stats::predict(object, newdata = x, type = "prob")
     if (ncol(pred_mat) > 2) {
-      pred <- pred_mat %>%
-        dplyr::as_tibble() %>%
+      pred <- pred_mat |>
+        dplyr::as_tibble() |>
         dplyr::mutate(row_n = dplyr::row_number())
       if (!is.null(truth)) {
         pred <- dplyr::mutate(pred, truth = truth)
       }
-      pred <- pred %>%
+      pred <- pred |>
         tidyr::pivot_longer(-dplyr::any_of(c("truth", "row_n")),
                             names_to = "class",
-                            values_to = "prediction") %>%
-        dplyr::select(-dplyr::any_of("row_n")) %>%
+                            values_to = "prediction") |>
+        dplyr::select(-dplyr::any_of("row_n")) |>
         dplyr::mutate(prediction = as.numeric(.data$prediction))
 
       return(pred)

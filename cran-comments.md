@@ -1,14 +1,7 @@
-## RESUBMISSION
-
-  - **Resolved:** NOTE for long-running examples: I reduced the running time of the relevant examples
-  - **Resolved:** ASAN errors from previous version: I have changed usage of the problematic dependency.
-
 ## Summary of changes
 
-This version includes two minor changes:
-
- - Minor bugfixes
- - Improves handling of groups for 'group_lasso' (for instance, missing groups, empty groups and ungrouped variables)
+ - This version introduces two new functions: get_model() and get_tidyFit().
+ - In addition, an updated vignette is provided describing how to access fitted models; and NOTEs from CRAN check are resolved
 
 ## R CMD check results
 

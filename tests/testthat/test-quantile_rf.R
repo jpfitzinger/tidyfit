@@ -8,6 +8,6 @@ test_that("quantile rf regression works", {
   expect_equal(nrow(predict(m_reg, df_reg)), 506)
   expect_equal(nrow(fitted(m_reg)), 506)
   expect_equal(nrow(resid(m_reg)), 506)
-  expect_equal(nrow(predict(m_reg, df_reg %>% select(-medv))), 506)
+  expect_equal(nrow(predict(m_reg, df_reg |> select(-medv))), 506)
 
 })

@@ -51,7 +51,7 @@
 ) {
 
   if (!is.null(self$args$weights)) {
-    warning("svm cannot handle weights, weights are ignored")
+    warning("svm cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   mf <- stats::model.frame(self$formula, data)
@@ -75,13 +75,12 @@
   res <- do.call(eval_fun,
                  append(list(x = x, y = y), ctr))
   .store_on_self(self, res)
-  self$estimator <- "e1071::svm"
   invisible(self)
 }
 
 .coef.svm <- function(object, self = NULL, ...) {
   if (self$args$kernel != "linear") {
-    warning("No coefficients produced for 'svm' with nonlinear kernel.")
+    warning("No coefficients produced for 'svm' with nonlinear kernel.", call. = FALSE)
     return(NULL)
   }
   raw_estimates <- stats::coef(object)
@@ -120,16 +119,16 @@
     pred_mat <- attr(pred_mat, "probabilities")
     pred_mat <- pred_mat[1:nrow(data),]
     if (ncol(pred_mat) > 2) {
-      pred <- pred_mat %>%
-        dplyr::as_tibble() %>%
+      pred <- pred_mat |>
+        dplyr::as_tibble() |>
         dplyr::mutate(row_n = dplyr::row_number())
       if (!is.null(truth)) {
         pred <- dplyr::mutate(pred, truth = truth)
       }
-      pred <- pred %>%
+      pred <- pred |>
         tidyr::pivot_longer(-dplyr::any_of(c("truth", "row_n")),
                             names_to = "class",
-                            values_to = "prediction") %>%
+                            values_to = "prediction") |>
         dplyr::select(-dplyr::any_of("row_n"))
 
       return(pred)

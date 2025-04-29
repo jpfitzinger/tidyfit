@@ -72,7 +72,7 @@
     self$set_args(weights = rep(1, NROW(x)), overwrite = TRUE)
   }
 
-  ctr <- self$args[names(self$args) %in% methods::formalArgs(nnet::nnet.default)]
+  ctr <- self$args[names(self$args) %in% c(methods::formalArgs(nnet::nnet.default), "subset", "contrasts")]
 
   # ignore duplicate arguments that nnet.formula passes for nnet.default
   # if these should be specified via the classify interface, switch to nnet.default
@@ -87,7 +87,6 @@
   res <- do.call(eval_fun,
                  append(list(formula = self$formula, data = data), ctr))
   .store_on_self(self, res)
-  self$estimator <- "nnet::nnet"
   invisible(self)
 
 }
@@ -110,10 +109,10 @@
   }
 
   if (self$mode == "classification") {
-    pred <- stats::predict(object, data) %>%
-      dplyr::as_tibble(.name_repair = ~ vctrs::vec_as_names(..., repair = "unique", quiet = TRUE)) %>%
-      dplyr::mutate(truth = truth_vec) %>%
-      tidyr::pivot_longer(-any_of("truth"), names_to = "class", values_to = "prediction") %>%
+    pred <- stats::predict(object, data) |>
+      dplyr::as_tibble(.name_repair = ~ vctrs::vec_as_names(..., repair = "unique", quiet = TRUE)) |>
+      dplyr::mutate(truth = truth_vec) |>
+      tidyr::pivot_longer(-any_of("truth"), names_to = "class", values_to = "prediction") |>
       dplyr::select(any_of(c("class", "prediction", "truth")))
   }
 

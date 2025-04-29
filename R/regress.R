@@ -62,7 +62,6 @@
 #'
 #' @seealso \code{\link{classify}}, \code{\link{coef.tidyfit.models}} and \code{\link{predict.tidyfit.models}} method
 #'
-#' @importFrom magrittr %>%
 #' @importFrom tidyr expand_grid
 #' @importFrom purrr map_dfr map transpose
 #' @importFrom dplyr coalesce group_vars group_split
@@ -126,8 +125,8 @@ regress <- function(
     out
   }
 
-  df <- eval_df %>%
-    purrr::transpose() %>%
+  df <- eval_df |>
+    purrr::transpose() |>
     map_dfr(function(row) fit_progress(row))
 
   df <- .post_process(df, .return_slices, .return_grid, .cv, .tune_each_group,

@@ -67,7 +67,6 @@
     grid_id = paste(substring(self$grid_id, 1, 4), formatC(1:length(self$args$kappa), 2, flag = "0"), sep = "|"),
     kappa = self$args$kappa
   )
-  self$estimator <- "hfr::cv.hfr"
   invisible(self)
 }
 
@@ -76,11 +75,11 @@
   coefs <- stats::coef(object)
   colnames(coefs) <- self$inner_grid$grid_id
   kappaSel <- self$args$kappa
-  estimates <- coefs %>%
-    dplyr::as_tibble() %>%
-    dplyr::mutate(term = rownames(coefs)) %>%
-    tidyr::pivot_longer(names_to = "grid_id", values_to = "estimate", -"term") %>%
-    dplyr::mutate(kappa = self$inner_grid[match(.data$grid_id, self$inner_grid$grid_id), "kappa"]) %>%
+  estimates <- coefs |>
+    dplyr::as_tibble() |>
+    dplyr::mutate(term = rownames(coefs)) |>
+    tidyr::pivot_longer(names_to = "grid_id", values_to = "estimate", -"term") |>
+    dplyr::mutate(kappa = self$inner_grid[match(.data$grid_id, self$inner_grid$grid_id), "kappa"]) |>
     dplyr::filter(appr_in(.data$kappa, kappaSel))
 
   return(estimates)
@@ -102,9 +101,9 @@
   if (is.null(dim(pred_mat)))
     pred_mat <- matrix(pred_mat, nrow = 1)
   colnames(pred_mat) <- self$inner_grid$grid_id[appr_in(self$inner_grid$kappa, self$args$kappa)]
-  pred <- pred_mat %>%
-    dplyr::as_tibble() %>%
-    dplyr::mutate(truth = truth) %>%
+  pred <- pred_mat |>
+    dplyr::as_tibble() |>
+    dplyr::mutate(truth = truth) |>
     tidyr::pivot_longer(-any_of("truth"), names_to = "grid_id", values_to = "prediction")
   return(pred)
 }

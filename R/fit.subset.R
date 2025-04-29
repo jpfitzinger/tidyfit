@@ -59,7 +59,7 @@
   # TODO: Request 'bestglm' maintainers to fix this
   ctr$weights <- NULL
   if (!is.null(self$args$weights)) {
-    warning("subset cannot handle weights, weights are ignored")
+    warning("subset cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   Xy <- data.frame(x, y, check.names = FALSE)
@@ -79,6 +79,5 @@
     ctr))
   .store_on_self(self, res)
   self$force_syntactic_names <- TRUE
-  self$estimator <- "bestglm::bestglm"
   invisible(self)
 }

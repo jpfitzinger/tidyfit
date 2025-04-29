@@ -55,7 +55,7 @@ The aim is to predict the median value of owner-occupied homes (`'medv'` in the 
 To establish a baseline, we fit an OLS regression model and examine the test and training set R-squared. The `predict` function can be used to obtain predictions, and `yardstick` is used to assess performance. The regression is estimated using `tidyfit::regress`. `tidyfit::m` is a generic model wrapper that is capable of fitting a large number of different algorithms:
 
 ```{r, eval=TRUE}
-model_frame <- data_trn %>% 
+model_frame <- data_trn |>
   regress(medv ~ ., OLS = m("lm"))
 ```
 
@@ -64,17 +64,17 @@ Let's create a helper function to assess performance. The helper function wraps 
 ```{r, eval=TRUE}
 assess <- function(model_frame, data_trn, data_tst) {
   
-  oos <- model_frame %>% 
-    predict(data_tst) %>% 
-    group_by(model, .add = TRUE) %>% 
-    yardstick::rsq_trad(truth, prediction) %>% 
-    mutate(type = "Out-of-sample") %>% 
+  oos <- model_frame |>
+    predict(data_tst) |>
+    group_by(model, .add = TRUE) |>
+    yardstick::rsq_trad(truth, prediction) |>
+    mutate(type = "Out-of-sample") |>
     arrange(desc(.estimate))
   
-  is <- model_frame %>% 
-    predict(data_trn) %>% 
-    group_by(model, .add = TRUE) %>% 
-    yardstick::rsq_trad(truth, prediction) %>% 
+  is <- model_frame |>
+    predict(data_trn) |>
+    group_by(model, .add = TRUE) |>
+    yardstick::rsq_trad(truth, prediction) |>
     mutate(type = "In-sample")
   
   return(bind_rows(oos, is))
@@ -82,10 +82,11 @@ assess <- function(model_frame, data_trn, data_tst) {
 }
 
 plotter <- function(df) {
-  df %>% 
-    mutate(lab = round(.estimate, 2)) %>% 
-    mutate(model = str_wrap(model, 12)) %>% 
-    mutate(model = factor(model, levels = unique(.$model))) %>% 
+  df <- df |>
+    mutate(lab = round(.estimate, 2)) |>
+    mutate(model = str_wrap(model, 12))
+  df |> 
+    mutate(model = factor(model, levels = unique(df$model))) |>
     ggplot(aes(model, .estimate)) +
     geom_point(aes(color = type), size = 2.5, shape = 4) + 
     geom_label(aes(label = lab, color = type), size = 2, nudge_x = 0.35) +
@@ -100,20 +101,20 @@ plotter <- function(df) {
 Now we plot the resulting metrics:
 
 ```{r, fig.width=3, fig.height=3, fig.align="center", eval=TRUE}
-model_frame %>% 
-  assess(data_trn, data_tst) %>% 
-  plotter
+model_frame |>
+  assess(data_trn, data_tst) |>
+  plotter()
 ```
 
 The in-sample fit of the regression is naturally better than out-of-sample, but the difference is not large. The results can be improved substantially by adding interaction terms between features. This leads to a vast improvement in in-sample fit (again, this is a logical consequence of including a large number of regressors), but leads to no improvement in out-of-sample fit, suggesting substantial overfit:
 
 ```{r, fig.width=3, fig.height=3, fig.align="center", eval=TRUE}
-model_frame <- data_trn %>% 
+model_frame <- data_trn |>
   regress(medv ~ .*., OLS = m("lm"))
 
-model_frame %>% 
-  assess(data_trn, data_tst) %>% 
-  plotter
+model_frame |>
+  assess(data_trn, data_tst) |>
+  plotter()
 ```
 
 ## Regularized regression estimators
@@ -138,7 +139,7 @@ tbl <- data.frame(
   `Bayesian` = c("Bayesian regression (`arm`)", "Bayesian model averaging (`BMS`)", "Bayesian Lasso (`monomvn`)", "Bayesian Ridge (`monomvn`)", "Spike and Slab Regression ('BoomSpikeSlab')"),
   check.names = F
 )
-kbl(tbl, align = "ccccc") %>% 
+kbl(tbl, align = "ccccc") |>
   kable_styling("striped")
 
 ```
@@ -146,7 +147,7 @@ kbl(tbl, align = "ccccc") %>%
 In the next code chunk, 17 of the available regression techniques are fitted to the data set. Hyperparameters are optimized using a 10-fold cross validation powered by `rsample` in the background. As a practical aside, it is possible to set a `future` plan to ensure hyperparameter tuning is performed on a parallelized backend.^[Parallelizing happens at the level of cross validation slices, so always consider if the overhead of parallel computation is worth it. For instance, parallelizing will likely be very useful with `.cv = "loo_cv"` but can be less useful with `.cv = "vfold_cv"`.] This is done using `plan(multisession(workers = n_workers))`, where `n_workers` is the number of available cores. Furthermore, a progress bar could be activated using `progressr::handlers(global = TRUE)`.
 
 ```{r}
-model_frame_all <- data_trn %>% 
+model_frame_all <- data_trn |>
   regress(medv ~ .*., 
           OLS = m("lm"),
           BAYES = m("bayes"),
@@ -173,13 +174,13 @@ model_frame_all <- data_trn %>%
 Let's use `yardstick` again to calculate in-sample and out-of-sample performance statistics. The models are arranged descending order of test set performance:
 
 ```{r}
-eval_frame <- model_frame_all %>% 
+eval_frame <- model_frame_all |>
   assess(data_trn, data_tst)
 ```
 
 ```{r, fig.width=7.25, fig.height=4.25, fig.align="center", eval=TRUE}
-eval_frame %>% 
-  plotter +
+eval_frame |>
+  plotter() +
   theme(legend.position = "top", 
         axis.text.x = element_text(angle = 90))
 ```

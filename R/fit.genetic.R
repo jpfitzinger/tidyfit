@@ -96,7 +96,6 @@
     res_mod <- NULL
   }
   .store_on_self(self, res)
-  self$estimator <- "gaselect::genAlg"
   self$fit_info <- list(var_names = colnames(x), fitted_regression = res_mod)
   self$force_syntactic_names <- TRUE
   invisible(self)

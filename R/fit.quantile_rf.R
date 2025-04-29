@@ -71,7 +71,6 @@
   res <- do.call(eval_fun,
                  append(list(x = x, y = y), ctr))
   .store_on_self(self, res)
-  self$estimator <- "quantregForest::quantregForest"
   invisible(self)
 }
 
@@ -99,8 +98,8 @@
     } else {
       pred_mat <- data.frame(pred_mat)
       colnames(pred_mat) <- tau
-      pred <- dplyr::tibble(pred_mat) %>%
-        dplyr::mutate(truth = truth) %>%
+      pred <- dplyr::tibble(pred_mat) |>
+        dplyr::mutate(truth = truth) |>
         tidyr::gather("tau", "prediction", -any_of(c("truth")))
     }
     pred <- dplyr::mutate(pred, tau = as.numeric(tau))
@@ -112,13 +111,13 @@
 }
 
 .fitted.quantregForest <- function(object, self = NULL, ...) {
-  .predict.quantregForest(object, data = .prepare_data(self, self$data), self = self, ...) %>%
-    dplyr::rename(fitted = "prediction") %>%
+  .predict.quantregForest(object, data = .prepare_data(self, self$data), self = self, ...) |>
+    dplyr::rename(fitted = "prediction") |>
     dplyr::select(-any_of(c("truth")))
 }
 
 .resid.quantregForest <- function(object, self = NULL, ...) {
-  .predict.quantregForest(object, data = .prepare_data(self, self$data), self = self, ...) %>%
-    dplyr::mutate(residual = .data$truth - .data$prediction) %>%
+  .predict.quantregForest(object, data = .prepare_data(self, self$data), self = self, ...) |>
+    dplyr::mutate(residual = .data$truth - .data$prediction) |>
     dplyr::select(-any_of(c("truth", "prediction")))
 }

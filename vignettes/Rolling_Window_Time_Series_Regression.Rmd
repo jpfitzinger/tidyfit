@@ -46,9 +46,9 @@ Returns are provided for 10 industries, and excess returns are calculated by sub
 
 ```{r, eval=TRUE}
 data <- Factor_Industry_Returns
-data <- data %>% 
-  mutate(Date = ym(Date)) %>%         # Parse dates
-  mutate(Return = Return - RF) %>%    # Excess return
+data <- data |>
+  mutate(Date = ym(Date)) |>         # Parse dates
+  mutate(Return = Return - RF) |>    # Excess return
   select(-RF)
 data
 ```
@@ -56,14 +56,14 @@ data
 The aim of the analysis is to calculate rolling window factor betas using a regression for each industry. To fit a regression for each industry, we simply group the data:
 
 ```{r, eval=TRUE}
-data <- data %>% 
+data <- data |>
   group_by(Industry)
 ```
 
 Let's verify that this fits individual regressions:
 
 ```{r, eval=TRUE}
-mod_frame <- data %>% 
+mod_frame <- data |>
   regress(Return ~ CMA + HML + `Mkt-RF` + RMW + SMB, m("lm"))
 
 mod_frame
@@ -72,7 +72,7 @@ mod_frame
 The model frame now contains 10 regressions estimated using `stats::lm`. We may want to fit the regression using a heteroscedasticity and autocorrelation consistent (HAC) estimate of the covariance matrix, since we are working with financial time series. This can be done by passing the additional argument to `m(...)`:^[Note that the `...` in `m()` passes arguments to the underlying method (i.e. `stats::lm`). However in some cases `tidyfit` adds convenience functions, such as the ability to pass a `vcov.` argument as used in `coeftest` for `lm`.]
 
 ```{r, eval=TRUE}
-mod_frame_hac <- data %>% 
+mod_frame_hac <- data |>
   regress(Return ~ CMA + HML + `Mkt-RF` + RMW + SMB, m("lm", vcov. = "HAC"))
 
 mod_frame_hac
@@ -83,7 +83,7 @@ A rolling window regression can be estimated by specifying an appropriate cross 
 Since the method `lm` has no hyperparameters, it is not passed to the cross validation loop by default, since this would create unnecessary computational overhead. To ensure that models are fitted on train slices, we need to add the additional argument `.force_cv = TRUE`. Furthermore, the CV slices are typically not returned but only used to select optimal hyperparameters. To return slices set `.return_slices = TRUE`:
 
 ```{r}
-mod_frame_rolling <- data %>% 
+mod_frame_rolling <- data |>
   regress(Return ~ CMA + HML + `Mkt-RF` + RMW + SMB,
           m("lm", vcov. = "HAC"),
           .cv = "sliding_index", .cv_args = list(lookback = years(5), step = 6, index = "Date"),
@@ -105,8 +105,8 @@ df_beta
 In order to plot the betas, we will add confidence bands. HAC standard errors are nested in `model_info` in the coefficients frame:
 
 ```{r, eval=TRUE}
-df_beta <- df_beta %>% 
-  unnest(model_info) %>% 
+df_beta <- df_beta |>
+  unnest(model_info) |>
   mutate(upper = estimate + 2 * std.error, lower = estimate - 2 * std.error)
 ```
 
@@ -117,9 +117,9 @@ df_beta
 Now, with all the pieces in place, we can plot the results. Let's begin by examining the market beta for each industry using `ggplot2`:
 
 ```{r, fig.width=7, fig.height=5, fig.align="center", eval=TRUE}
-df_beta %>% 
-  mutate(slice_id = as.Date(slice_id)) %>% 
-  filter(term == "Mkt-RF") %>% 
+df_beta |>
+  mutate(slice_id = as.Date(slice_id)) |>
+  filter(term == "Mkt-RF") |>
   ggplot(aes(slice_id)) +
   geom_hline(yintercept = 1) +
   facet_wrap("Industry", scales = "free") +
@@ -131,9 +131,9 @@ df_beta %>%
 Or plotting risk-adjusted return (alpha) given by the intercept:
 
 ```{r, fig.width=7, fig.height=5, fig.align="center", eval=TRUE}
-df_beta %>% 
-  mutate(slice_id = as.Date(slice_id)) %>% 
-  filter(term == "(Intercept)") %>% 
+df_beta |>
+  mutate(slice_id = as.Date(slice_id)) |>
+  filter(term == "(Intercept)") |>
   ggplot(aes(slice_id)) +
   geom_hline(yintercept = 0) +
   facet_wrap("Industry", scales = "free") +
@@ -145,9 +145,9 @@ df_beta %>%
 Or plotting all parameters for the HiTec industry:
 
 ```{r, fig.width=6, fig.height=4.25, fig.align="center", eval=TRUE}
-df_beta %>% 
-  mutate(slice_id = as.Date(slice_id)) %>% 
-  filter(Industry == "HiTec") %>% 
+df_beta |>
+  mutate(slice_id = as.Date(slice_id)) |>
+  filter(Industry == "HiTec") |>
   ggplot(aes(slice_id)) +
   geom_hline(yintercept = 0) +
   facet_wrap("term", scales = "free") +

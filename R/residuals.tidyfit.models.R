@@ -27,9 +27,10 @@ residuals.tidyfit.models <- function(object, ...) {
   .weights <- attr(object, "structure")$weights
 
   object <- .warn_and_remove_errors(object)
+  object <- .nest_settings(object)
 
   # Check mode
-  modes <- object$model_object %>%
+  modes <- object$model_object |>
     purrr::map(~.$mode)
   if (any(modes == "classification"))
     stop("cannot produce residuals for classification models")
@@ -39,20 +40,20 @@ residuals.tidyfit.models <- function(object, ...) {
   }
 
   sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
-  model_df <- object %>%
+  model_df <- object |>
     dplyr::select(-dplyr::any_of(sel_cols))
   resid_df <- purrr::map(model_df$model_object, get_residuals)
-  out <- model_df %>%
-    dplyr::mutate(residual = resid_df) %>%
-    dplyr::select(- "model_object") %>%
+  out <- model_df |>
+    dplyr::mutate(residual = resid_df) |>
+    dplyr::select(- "model_object") |>
     tidyr::unnest("residual")
 
   col_ord <- c(gr_vars, "model", "grid_id", "slice_id", "class", "residual")
-  out <- out %>%
+  out <- out |>
     dplyr::relocate(any_of(col_ord))
 
-  out <- out %>%
-    dplyr::group_by(across(any_of(c(gr_vars, "model")))) %>%
+  out <- out |>
+    dplyr::group_by(across(any_of(c(gr_vars, "model")))) |>
     dplyr::mutate(nids = length(unique(.data$grid_id)))
 
   if (all(out$nids==1)) {

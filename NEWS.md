@@ -1,3 +1,8 @@
+## tidyfit 0.7.4
+
+ - This version introduces two new functions: get_model() and get_tidyFit().
+ - In addition, an updated vignette is provided describing how to access fitted models; and NOTEs from CRAN check are resolved
+
 ## tidyfit 0.7.3
 
 This version includes two minor changes:

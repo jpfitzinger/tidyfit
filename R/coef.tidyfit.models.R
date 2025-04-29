@@ -42,6 +42,7 @@ coef.tidyfit.models <- function(
     .keep_grid_id = FALSE) {
 
   object <- .warn_and_remove_errors(object)
+  object <- .nest_settings(object)
 
   get_coefs <- function(model) {
     model$coef()
@@ -49,13 +50,13 @@ coef.tidyfit.models <- function(
 
   sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
   gr_vars <- attr(object, "structure")$groups
-  model_df <- object %>%
-    dplyr::select(-dplyr::any_of(sel_cols)) %>%
+  model_df <- object |>
+    dplyr::select(-dplyr::any_of(sel_cols)) |>
     dplyr::rename(grid_id_ = "grid_id")
   coef_df <- purrr::map(model_df$model_object, get_coefs)
-  out <- model_df %>%
-    dplyr::mutate(coefs = coef_df) %>%
-    dplyr::select(-"model_object") %>%
+  out <- model_df |>
+    dplyr::mutate(coefs = coef_df) |>
+    dplyr::select(-"model_object") |>
     tidyr::unnest("coefs")
 
   if ("grid_id" %in% colnames(out)) {
@@ -64,8 +65,8 @@ coef.tidyfit.models <- function(
     out <- dplyr::rename(out, grid_id = "grid_id_")
   }
 
-  out <- out %>%
-    dplyr::group_by(across(any_of(c(gr_vars, "model")))) %>%
+  out <- out |>
+    dplyr::group_by(across(any_of(c(gr_vars, "model")))) |>
     dplyr::mutate(nids = length(unique(.data$grid_id)))
 
   if (.add_bootstrap_interval) {
@@ -73,13 +74,13 @@ coef.tidyfit.models <- function(
       stop("only use '.add_bootstrap_interval = TRUE' if '.return_slices = TRUE'")
     if (!any(grepl("Bootstrap", out$slice_id)))
       stop("only use '.add_bootstrap_interval = TRUE' if '.cv = \"bootstraps\"'")
-    intervals <- out %>%
-      dplyr::group_by(.data$grid_id, .add = TRUE) %>%
-      dplyr::do(interval = .make_rsample_bootstraps(.)) %>%
+    intervals <- out |>
+      dplyr::group_by(.data$grid_id, .add = TRUE) |>
+      dplyr::do(interval = .make_rsample_bootstraps(.)) |>
       tidyr::unnest("interval")
-    out <- out %>%
-      dplyr::select(- "estimate", - "slice_id") %>%
-      dplyr::distinct() %>%
+    out <- out |>
+      dplyr::select(- "estimate", - "slice_id") |>
+      dplyr::distinct() |>
       dplyr::left_join(intervals, by = c(gr_vars, "model", "grid_id", "term"))
   }
 
@@ -89,12 +90,12 @@ coef.tidyfit.models <- function(
   out <- dplyr::select(out, - "nids")
 
   col_ord <- c(gr_vars, "model", "term", "class", "estimate", "grid_id", "slice_id")
-  out <- out %>%
-    tidyr::nest(model_info = -dplyr::any_of(col_ord)) %>%
+  out <- out |>
+    tidyr::nest(model_info = -dplyr::any_of(col_ord)) |>
     dplyr::relocate(any_of(col_ord))
 
   # Remove backticks from names
-  out <- out %>%
+  out <- out |>
     mutate(term = gsub("`", "", .data$term))
 
   return(out)

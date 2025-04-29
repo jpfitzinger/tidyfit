@@ -1,8 +1,8 @@
 Package: tidyfit
 Type: Package
 Title: Regularized Linear Modeling with Tidy Data
-Date: 2025-01-14
-Version: 0.7.3
+Date: 2025-04-29
+Version: 0.7.4
 Author: Johann Pfitzinger [aut, cre]
 Authors@R: person(given = "Johann", family = "Pfitzinger", role = c("aut", "cre"), email = "johann.pfitzinger@gmail.com")
 Maintainer: Johann Pfitzinger <johann.pfitzinger@gmail.com>
@@ -14,7 +14,7 @@ RoxygenNote: 7.3.2
 URL: https://tidyfit.residualmetrics.com,
     https://github.com/jpfitzinger/tidyfit
 Depends:
-   R (>= 3.5)
+   R (>= 4.1)
 Imports: 
   broom,
   crayon,
@@ -22,7 +22,6 @@ Imports:
   dplyr, 
   furrr,
   generics,
-  magrittr,
   MASS,
   methods,
   progressr,

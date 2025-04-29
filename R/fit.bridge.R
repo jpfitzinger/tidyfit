@@ -46,6 +46,10 @@
     data = NULL
 ) {
 
+  if (!is.null(self$args$weights)) {
+    warning("bridge cannot handle weights, weights are ignored", call. = FALSE)
+  }
+
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
   y <- stats::model.response(mf)
@@ -64,7 +68,6 @@
   res <- do.call(eval_fun,
                  append(list(X = x, y = y, icept = incl_intercept), ctr))
   .store_on_self(self, res)
-  self$estimator <- "monomvn::bridge"
   self$fit_info <- list(var_names = colnames(x))
   invisible(self)
 

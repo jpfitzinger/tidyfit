@@ -67,7 +67,6 @@
   if (self$mode == "classification") {
     self$fit_info <- list(class_names_map = class_names_map)
   }
-  self$estimator <- "stats::anova"
   invisible(self)
 }
 

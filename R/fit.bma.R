@@ -53,7 +53,7 @@
 ) {
 
   if (!is.null(self$args$weights)) {
-    warning("bma cannot handle weights, weights are ignored")
+    warning("bma cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   self$set_args(user.int = FALSE, overwrite = FALSE)
@@ -68,7 +68,7 @@
   x <- x[, qr(x)$pivot[seq_len(qr(x)$rank)]]
   model_var_names <- colnames(x)
   if (length(var_names) > length(model_var_names))
-    warning("some variables were dropped from BMA estimation due to linear dependence")
+    warning("some variables were dropped from BMA estimation due to linear dependence", call. = FALSE)
 
   y <- stats::model.response(mf)
   Xy <- cbind(y, x)
@@ -82,7 +82,6 @@
                  append(list(X.data = Xy), ctr))
   .store_on_self(self, res)
   self$fit_info = list(all_var_names = var_names, model_var_names = model_var_names)
-  self$estimator <- "BMS::bms"
   invisible(self)
 }
 

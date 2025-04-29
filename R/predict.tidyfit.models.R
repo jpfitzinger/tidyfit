@@ -34,30 +34,31 @@ predict.tidyfit.models <- function(object,
   .weights <- attr(object, "structure")$weights
 
   object <- .warn_and_remove_errors(object)
+  object <- .nest_settings(object)
 
   get_predictions <- function(model_row) {
     if (is.null(model_row$newdata)) return(NULL)
     out <- model_row$model_object$predict(as.data.frame(model_row$newdata))
     if (is.null(out)) return(NULL)
-    out <- out %>%
+    out <- out |>
       dplyr::mutate(model = model_row[["model"]], grid_id_ = model_row[["grid_id"]])
     return(dplyr::bind_cols(model_row[gr_vars], out))
   }
 
-  newdata <- newdata %>%
-    dplyr::select(-any_of(c(.mask, .weights))) %>%
+  newdata <- newdata |>
+    dplyr::select(-any_of(c(.mask, .weights))) |>
     tidyr::nest(newdata = -any_of(gr_vars))
   if (ncol(newdata) == 1) {
-    object <- object %>%
+    object <- object |>
       dplyr::bind_cols(newdata)
   } else {
-    object <- object %>%
+    object <- object |>
       dplyr::left_join(newdata, by = gr_vars)
   }
 
   sel_cols <- c("settings", "estimator_fct", "size (MB)", "errors", "warnings", "messages")
-  model_df <- object %>%
-    dplyr::select(-dplyr::any_of(sel_cols)) %>%
+  model_df <- object |>
+    dplyr::select(-dplyr::any_of(sel_cols)) |>
     purrr::transpose()
   out <- purrr::map_dfr(model_df, get_predictions)
 
@@ -68,11 +69,11 @@ predict.tidyfit.models <- function(object,
   }
 
   col_ord <- c(gr_vars, "model", "grid_id", "slice_id", "class", "prediction", "truth")
-  out <- out %>%
+  out <- out |>
     dplyr::relocate(any_of(col_ord))
 
-  out <- out %>%
-    dplyr::group_by(across(any_of(c(gr_vars, "model")))) %>%
+  out <- out |>
+    dplyr::group_by(across(any_of(c(gr_vars, "model")))) |>
     dplyr::mutate(nids = length(unique(.data$grid_id)))
 
   if (all(out$nids==1) & !.keep_grid_id) {

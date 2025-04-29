@@ -9,19 +9,19 @@
 .coef.glmnet <- function(object, self = NULL, ...) {
   estimates <- broom::tidy(object)
   lambdaSel <- self$args$lambda
-  estimates <- estimates %>%
-    dplyr::mutate(grid_id = self$inner_grid[.data$step, "grid_id"]) %>%
-    dplyr::select(-"step") %>%
-    dplyr::mutate(term = ifelse(.data$term == "", "(Intercept)", .data$term)) %>%
+  estimates <- estimates |>
+    dplyr::mutate(grid_id = self$inner_grid[.data$step, "grid_id"]) |>
+    dplyr::select(-"step") |>
+    dplyr::mutate(term = ifelse(.data$term == "", "(Intercept)", .data$term)) |>
     dplyr::filter(appr_in(.data$lambda, lambdaSel))
   if ("class" %in% colnames(estimates)) {
-    estimates <- estimates %>%
+    estimates <- estimates |>
       dplyr::mutate(class = self$fit_info$class_names_map[.data$class])
     class_vals <- unique(estimates$class)
     if (length(class_vals) == 2) {
-      estimates <- estimates %>%
-        dplyr::mutate(estimate = .data$estimate * 2) %>%
-        dplyr::filter(.data$class == sort(class_vals)[2]) %>%
+      estimates <- estimates |>
+        dplyr::mutate(estimate = .data$estimate * 2) |>
+        dplyr::filter(.data$class == sort(class_vals)[2]) |>
         dplyr::select(-"class")
     }
   }
@@ -79,7 +79,7 @@
   if (!is.null(self$args$jackknife) & !is.null(self$args$validation)) {
     if (self$args$jackknife) {
       jack_test <- pls::jack.test(object, ncomp = self$args$ncomp)
-      estimates <- estimates %>%
+      estimates <- estimates |>
         dplyr::mutate(std.error = drop(jack_test$sd)[.data$term],
                       statistic = drop(jack_test$tvalues)[.data$term],
                       p.value = drop(jack_test$pvalues)[.data$term])
@@ -113,11 +113,11 @@
 #' @importFrom tidyr pivot_longer
 .coef.merMod <- function(object, ...) {
   coefs <- stats::coef(object)
-  estimates <- coefs %>%
+  estimates <- coefs |>
     purrr::map2_dfr(names(coefs), function(cf, nam) {
-      coefs_ <- cf %>%
-        dplyr::as_tibble() %>%
-        dplyr::mutate(!! nam := rownames(cf)) %>%
+      coefs_ <- cf |>
+        dplyr::as_tibble() |>
+        dplyr::mutate(!! nam := rownames(cf)) |>
         tidyr::pivot_longer(-all_of(nam),
                             names_to = "term",
                             values_to = "estimate")
@@ -136,8 +136,8 @@
       index = self$fit_info$index_var
     )
   }, .id = "term")
-  estimates <- estimates %>%
-    dplyr::mutate(term = gsub("beta_", "", .data$term)) %>%
+  estimates <- estimates |>
+    dplyr::mutate(term = gsub("beta_", "", .data$term)) |>
     dplyr::mutate(term = ifelse(.data$term == "Intercept", "(Intercept)", .data$term))
   return(estimates)
 }
@@ -148,25 +148,25 @@
   probs <- data.matrix(object@Fit@smoProb[-1,])
   beta_probs <- probs %*% beta
   beta_se_probs <- sqrt(probs %*% beta_var)
-  estimates <- beta_probs %>%
-    dplyr::as_tibble() %>%
-    dplyr::mutate(index = self$fit_info$index_var) %>%
+  estimates <- beta_probs |>
+    dplyr::as_tibble() |>
+    dplyr::mutate(index = self$fit_info$index_var) |>
     tidyr::gather("term", "estimate", -.data$index)
-  estimates_se <- beta_se_probs %>%
-    dplyr::as_tibble() %>%
-    dplyr::mutate(index = self$fit_info$index_var) %>%
+  estimates_se <- beta_se_probs |>
+    dplyr::as_tibble() |>
+    dplyr::mutate(index = self$fit_info$index_var) |>
     tidyr::gather("term", "std.error", -.data$index)
-  estimates <- estimates %>%
+  estimates <- estimates |>
     dplyr::left_join(estimates_se, by = c("term", "index"))
   colnames(probs) <- paste("Regime", 1:object@k, "Prob")
-  probs_df <- dplyr::as_tibble(probs) %>%
+  probs_df <- dplyr::as_tibble(probs) |>
     dplyr::mutate(index = self$fit_info$index_var)
   beta_df <- t(beta)
   colnames(beta_df) <- paste("Regime", 1:object@k, "Beta")
-  beta_df <- dplyr::as_tibble(beta_df) %>%
+  beta_df <- dplyr::as_tibble(beta_df) |>
     dplyr::mutate(term = rownames(beta_df))
-  estimates <- estimates %>%
-    dplyr::left_join(probs_df, by = "index") %>%
+  estimates <- estimates |>
+    dplyr::left_join(probs_df, by = "index") |>
     dplyr::left_join(beta_df, by = "term")
   return(estimates)
 }

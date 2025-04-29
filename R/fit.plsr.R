@@ -57,13 +57,16 @@
     ) {
 
   if (!is.null(self$args$weights)) {
-    warning("plsr cannot handle weights, weights are ignored")
+    warning("plsr cannot handle weights, weights are ignored", call. = FALSE)
   }
 
   mf <- stats::model.frame(self$formula, data)
   x <- stats::model.matrix(self$formula, mf)
   if ("(Intercept)" %in% colnames(x)) x <- x[, -1]
   standard_sd <- apply(x, 2, stats::sd)
+
+  # data is always scaled
+  self$set_args(center = TRUE, scale = standard_sd, overwrite = TRUE)
 
   self$set_args(ncomp = unique(1 + round((NCOL(x) - 1) * self$args$ncomp_pct)),
                 overwrite = FALSE)
@@ -83,14 +86,12 @@
   }
   eval_fun <- purrr::safely(purrr::quietly(eval_fun_))
   res <- do.call(eval_fun,
-                 append(list(formula = self$formula, data = data,
-                             scale=standard_sd, center=T), ctr))
+                 append(list(formula = self$formula, data = data), ctr))
   .store_on_self(self, res)
   self$inner_grid <- data.frame(
     grid_id = paste(substring(self$grid_id, 1, 4), formatC(1:length(self$args$ncomp), 2, flag = "0"), sep = "|"),
     ncomp = self$args$ncomp
   )
   self$fit_info <- list(standard_sd = standard_sd)
-  self$estimator <- "pls::plsr"
   invisible(self)
 }
