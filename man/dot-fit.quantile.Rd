@@ -36,6 +36,7 @@ The function provides a wrapper for \code{quantreg::rq}. See \code{?rq} for more
 \examples{
 # Load data
 data <- tidyfit::Factor_Industry_Returns
+data <- dplyr::filter(data, Industry == "HiTec")
 
 fit <- regress(data, Return ~ .,
                m("quantile", tau = c(0.1, 0.5, 0.9)),
