@@ -4,12 +4,14 @@
 \alias{get_model}
 \title{Get a fitted model from a tidyfit.models frame}
 \usage{
-get_model(df, row = 1)
+get_model(df, ..., .first_row = TRUE)
 }
 \arguments{
 \item{df}{a tidyfit.models frame created using m(), regress(), classify() and similar methods}
 
-\item{row}{an integer index of the row number in 'df' for which the model should be returned}
+\item{...}{arguments passed to \code{dplyr::filter} to filter row in 'df' for which the model should be returned. filters can also include columns nested in \code{df$settings}.}
+
+\item{.first_row}{should the first row be returned if the (filtered) df contains multiple rows}
 }
 \value{
 An object of the class associated with the underyling fitting algorithm
@@ -22,11 +24,18 @@ This method is a utility to return the object fitted by the underlying algorithm
 }
 \examples{
 # Load data
-data <- tidyfit::Factor_Industry_Returns
+data("mtcars")
 
-# Stand-alone function
-fit <- m("lm", Return ~ ., data)
-summary(get_model(fit))
+# fit separate models for transmission types
+mtcars <- dplyr::group_by(mtcars, am)
+
+fit <- regress(mtcars, mpg ~ ., m("lm"))
+
+# get the model for single row
+summary(get_model(fit, am == 0))
+
+# get model by row number
+summary(get_model(fit, dplyr::row_number() == 2))
 
 }
 \seealso{

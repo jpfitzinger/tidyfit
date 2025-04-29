@@ -20,13 +20,13 @@
 #' # fit separate models for transmission types
 #' mtcars <- dplyr::group_by(mtcars, am)
 #'
-#' fit <- regress(mtcars, mpg ~ ., m("lasso", lambda = 1:2))
+#' fit <- regress(mtcars, mpg ~ ., m("lm"))
 #' 
 #' # get the model for single row
-#' plot(get_model(fit, am == 0, lambda == 1))
+#' summary(get_model(fit, am == 0))
 #' 
 #' # get model by row number
-#' plot(get_model(fit, dplyr::row_number() == 2))
+#' summary(get_model(fit, dplyr::row_number() == 2))
 #'
 #' @seealso \code{\link{get_tidyFit}} method
 #' 
@@ -61,10 +61,10 @@ get_model <- function(df, ..., .first_row = TRUE) {
 #' # fit separate models for transmission types
 #' mtcars <- dplyr::group_by(mtcars, am)
 #'
-#' fit <- regress(mtcars, mpg ~ ., m("lasso", lambda = 1:2))
+#' fit <- regress(mtcars, mpg ~ ., m("lm"))
 #' 
 #' # get the model for single row
-#' get_tidyFit(fit, am == 0, lambda == 1)
+#' get_tidyFit(fit, am == 0)
 #' 
 #' # get model by row number
 #' get_tidyFit(fit, dplyr::row_number() == 2)
@@ -84,7 +84,7 @@ get_tidyFit <- function(df, ..., .first_row = TRUE) {
   if (!"model_object" %in% colnames(df))
     stop("'model_object' column is missing in 'df'", call. = FALSE)
   if (length(dplyr::quos(...)) > 0) {
-    df_subset <- dplyr::filter(tidyr::unnest(df, .data$settings), ...)
+    df_subset <- dplyr::filter(tidyr::unnest(df, dplyr::any_of("settings")), ...)
     if ((nrow(df_subset) > 1) & .first_row) {
       warning("filters passed to '...' return more than 1 row. returning the first row.", call. = FALSE)
     } else if (nrow(df_subset) == 0) {

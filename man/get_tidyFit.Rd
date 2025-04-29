@@ -4,12 +4,14 @@
 \alias{get_tidyFit}
 \title{Get a tidyFit model from a tidyfit.models frame}
 \usage{
-get_tidyFit(df, row = 1)
+get_tidyFit(df, ..., .first_row = TRUE)
 }
 \arguments{
 \item{df}{a tidyfit.models frame created using m(), regress(), classify() and similar methods}
 
-\item{row}{an integer index of the row number in 'df' for which the model should be returned}
+\item{...}{arguments passed to \code{dplyr::filter} to filter row in 'df' for which the model should be returned. filters can also include columns nested in \code{df$settings}.}
+
+\item{.first_row}{should the first row be returned if the (filtered) df contains multiple rows}
 }
 \value{
 An object of the class associated with the underyling fitting algorithm
@@ -22,14 +24,18 @@ This method is a utility to return the tidyFit object from a row index of the ti
 }
 \examples{
 # Load data
-data <- tidyfit::Factor_Industry_Returns
+data("mtcars")
 
-# Stand-alone function
-fit <- m("lm", Return ~ ., data)
-model <- get_tidyFit(fit)
+# fit separate models for transmission types
+mtcars <- dplyr::group_by(mtcars, am)
 
-# Refit
-model$fit(data)
+fit <- regress(mtcars, mpg ~ ., m("lm"))
+
+# get the model for single row
+get_tidyFit(fit, am == 0)
+
+# get model by row number
+get_tidyFit(fit, dplyr::row_number() == 2)
 
 }
 \seealso{
