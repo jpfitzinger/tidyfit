@@ -26,7 +26,7 @@ Models fitted with `tidyfit` (e.g. using the `regress()` function) are stored in
 
 **Here's a simple example:**
 
-Suppose we want to fit a hierarchical features regression (HFR) --- <a href="https://www.sciencedirect.com/science/article/pii/S2452306224000029" target="_blank">paper</a>, <a href="https://hfr.residualmetrics.com" target="_blank">website</a> --- for different shrinkage penalties. We begin by loading Boston house price data and fitting a regression for 4 different shrinkage parameters:
+Suppose we want to fit a hierarchical features regression (HFR) --- <a href="https://hfr.residualmetrics.com" target="_blank">see here</a> --- for different shrinkage penalties. We begin by loading Boston house price data and fitting a regression for 4 different shrinkage parameters:
 
 ```{r}
 data <- MASS::Boston
