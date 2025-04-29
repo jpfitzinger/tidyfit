@@ -94,7 +94,7 @@ model_definition <- R6::R6Class(
           crayon::italic("mode:"), crayon::bold(self$mode), "|",
           crayon::italic("fitted:"), crayon::bold(ifelse(is.null(self$object), "no", "yes")), "\n",
           ifelse(is.null(self$error), crayon::green("no errors \u2714"), crayon::red("check errors \u2716")), "|",
-          ifelse(is.null(self$warnings), crayon::green("no warnings \u2714"), crayon::yellow("check warnings \u2716")))
+          ifelse(is.null(self$warnings), crayon::green("no warnings \u2714"), crayon::yellow("check warnings \u2716")), "\n")
     },
     set_args = function(..., overwrite = TRUE) {
       new_args <- lapply(list(...), unlist)
